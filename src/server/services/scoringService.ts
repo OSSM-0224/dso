@@ -14,7 +14,7 @@ import { matchScoreRepository } from '../repositories/matchScoreRepository.ts';
 import { userRepository } from '../repositories/userRepository.ts';
 import { auditLogRepository } from '../repositories/auditLogRepository.ts';
 import { matchService } from './matchService.ts';
-import { sanitizeMatchDto } from '../serializers/dtoSerializers.ts';
+import { sanitizeMatchDto, sanitizeMatchScoreDto } from '../serializers/dtoSerializers.ts';
 import { MatchDoc, MatchScoreDoc, MatchScoreViewDto, ScoreEventDoc, ScoringMatchListItem, TeamDoc, TournamentDoc, UserSession } from '../../shared/types.ts';
 import {
   getScoringEngine,
@@ -146,9 +146,16 @@ class ScoringService {
     const events = await matchScoreRepository.findEventsByMatchId(scoreDoc.matchId);
     const state = this.buildEngineState(scoreDoc, events);
 
+    // Server-authoritative clock: the event timeline is anchored to the score
+    // doc creation epoch, and every event is stamped with server wall time
+    // (client-supplied atMs is ignored). This makes turn durations and
+    // pause/resume windows tamper-proof while preserving inter-event deltas.
+    const epoch = Date.parse(scoreDoc.createdAt) || 0;
+    event.atMs = Math.max(0, Date.now() - epoch);
+
     const last = events.length > 0 ? events[events.length - 1].event : null;
     if (last && event.atMs < last.atMs) {
-      // Server-authoritative monotonic timeline: clamp late client clocks.
+      // Monotonic timeline: clamp out-of-order arrivals to the last stamp.
       event.atMs = last.atMs;
     }
 
@@ -189,7 +196,10 @@ class ScoringService {
     events: ScoreEventDoc[]
   ): Promise<MatchScoreViewDto> {
     const state = this.buildEngineState(scoreDoc, events);
-    const scoreboard = engine.getScoreboard(state, Date.now());
+    // `nowMs` must live on the same timeline axis as the (server-stamped,
+    // creation-epoch-anchored) events — see appendValidatedEvent.
+    const epoch = Date.parse(scoreDoc.createdAt) || 0;
+    const scoreboard = engine.getScoreboard(state, Math.max(0, Date.now() - epoch));
     return sanitizeMatchScoreDto(scoreDoc, scoreboard, events);
   }
 
@@ -384,9 +394,10 @@ class ScoringService {
     const state = this.buildEngineState(scoreDoc, events);
     const evaluation = engine.computeWinner(state);
     if (!evaluation.resolved || !evaluation.winnerTeamId) {
+      const epoch = Date.parse(scoreDoc.createdAt) || 0;
       throw new ApiError(
         409,
-        `MATCH_NOT_DECIDED: The match is not decided yet (phase: ${engine.getScoreboard(state, Date.now()).phase}).`
+        `MATCH_NOT_DECIDED: The match is not decided yet (phase: ${engine.getScoreboard(state, Math.max(0, Date.now() - epoch)).phase}).`
       );
     }
 
@@ -518,9 +529,11 @@ class ScoringService {
 
     await matchRepository.update(matchId, { scorerIds: uniqueIds });
 
-    const scorerNames = uniqueIds.map(
-      (id) => (await userRepository.findById(id))?.name || id
-    );
+    const scorerNames: string[] = [];
+    for (const id of uniqueIds) {
+      const user = await userRepository.findById(id);
+      scorerNames.push(user?.name || id);
+    }
 
     await auditLogRepository.create({
       tournamentId: match.tournamentId,

@@ -4,7 +4,7 @@ import { Icon } from '@/components/ui/Icon.tsx';
 
 interface QuickLoginDropdownProps {
   onSelect: (identifier: string, password: string) => void;
-  portalType?: 'school' | 'admin' | 'any';
+  portalType?: 'school' | 'admin' | 'scorer' | 'any';
 }
 
 export const QuickLoginDropdown: React.FC<QuickLoginDropdownProps> = ({
@@ -57,6 +57,7 @@ export const QuickLoginDropdown: React.FC<QuickLoginDropdownProps> = ({
   const filteredAccounts = accounts.filter((acc) => {
     if (portalType === 'school') return acc.role === 'participant';
     if (portalType === 'admin') return acc.role === 'admin' || acc.role === 'organizer';
+    if (portalType === 'scorer') return acc.role === 'scorer';
     return true;
   });
 

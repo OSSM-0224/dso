@@ -238,6 +238,7 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
     const scoreDoc = await matchScoreRepository.findByMatchId(seed.match.id);
     const audit = await auditLogRepository.findByTournamentId(seed.tournament.id);
     const notifsA = await notificationRepository.findBySchoolId(seed.schoolA.id);
+    const notifsB = await notificationRepository.findBySchoolId(seed.schoolB.id);
 
     const passed =
       result.match.winner?.id === seed.teamA.id &&
@@ -246,7 +247,8 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
       scoreDoc?.winnerTeamIds?.[0] === seed.teamA.id &&
       audit.some((a) => a.what === 'result_entry') &&
       audit.some((a) => a.what === 'score_override_winner') &&
-      notifsA.some((n) => n.type === 'result_entered');
+      notifsA.some((n) => n.type === 'team_advanced') &&
+      notifsB.some((n) => n.type === 'team_eliminated');
 
     await cleanupScoreableMatch(seed);
 

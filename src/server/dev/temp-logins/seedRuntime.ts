@@ -104,6 +104,42 @@ export async function runTempLoginSeed(options?: { remove?: boolean; tempPasswor
       console.log('[TEMP-LOGIN]: Created Organizer account (organizer@dso.gov.in / ORGANIZER)');
     }
 
+    // 2b. Seed two dedicated LIVE SCORER accounts (LIVE SCORER module)
+    const scorerSeeds = [
+      { name: 'Match Scorer One', email: 'scorer@dso.gov.in', code: 'SCORER' },
+      { name: 'Match Scorer Two', email: 'scorer2@dso.gov.in', code: 'SCORER2' },
+    ];
+    for (const sc of scorerSeeds) {
+      let scorer = await userRepository.findByEmail(sc.email);
+      if (!scorer) {
+        scorer = await userRepository.findBySchoolCode(sc.code);
+      }
+      if (scorer) {
+        await userRepository.update(scorer.id, {
+          role: 'scorer',
+          passwordHash: hash,
+          salt,
+          mustChangePassword: false,
+          isActive: true,
+          isTempSeed: true,
+        });
+        console.log(`[TEMP-LOGIN]: Updated existing Scorer account (${sc.email})`);
+      } else {
+        await userRepository.create({
+          name: sc.name,
+          email: sc.email,
+          schoolCode: sc.code,
+          role: 'scorer',
+          passwordHash: hash,
+          salt,
+          mustChangePassword: false,
+          isActive: true,
+          isTempSeed: true,
+        });
+        console.log(`[TEMP-LOGIN]: Created Scorer account (${sc.email} / ${sc.code})`);
+      }
+    }
+
     // 3. Seed 1 school account for each School that ALREADY exists in database
     // (Notice: script does NOT create any schools, teams, or matches)
     const existingSchools = await schoolRepository.findAll();
@@ -156,12 +192,13 @@ export async function runTempLoginSeed(options?: { remove?: boolean; tempPasswor
     }
 
     console.log(
-      `[TEMP-LOGIN]: Completed successfully. Seeded 1 Admin, 1 Organizer, and ${schoolAccountsCount} School accounts with shared password "${pwd}".`
+      `[TEMP-LOGIN]: Completed successfully. Seeded 1 Admin, 1 Organizer, 2 Scorers, and ${schoolAccountsCount} School accounts with shared password "${pwd}".`
     );
     return {
       action: 'seeded',
       admin: 'ADMIN or admin@dso.gov.in',
       organizer: 'ORGANIZER or organizer@dso.gov.in',
+      scorers: ['SCORER or scorer@dso.gov.in', 'SCORER2 or scorer2@dso.gov.in'],
       schoolAccountsCount,
       password: pwd,
     };

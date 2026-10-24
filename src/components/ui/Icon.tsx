@@ -71,6 +71,9 @@ export const ICON_MAP = {
   rotate: 'fa-solid fa-rotate-left',
   layers: 'fa-solid fa-layer-group',
   sparkles: 'fa-solid fa-wand-magic-sparkles',
+  pause: 'fa-solid fa-pause',
+  stopwatch: 'fa-solid fa-stopwatch',
+  gavel: 'fa-solid fa-gavel',
 } as const;
 
 export type IconName = keyof typeof ICON_MAP;

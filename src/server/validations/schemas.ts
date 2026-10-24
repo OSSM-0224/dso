@@ -126,11 +126,12 @@ export const SCORE_EVENT_TYPES = [
 ] as const;
 
 /** Incoming scoring event. Payload semantics are validated by the scoring
- * engine (`ScoringRuleError` → 409); the schema enforces the envelope. */
+ * engine (`ScoringRuleError` → 409); the schema enforces the envelope.
+ * `atMs` is assigned by the server (wall clock) — clients may omit it. */
 export const scoreEventSchema = z
   .object({
     eventId: z.string().min(1, 'eventId is required'),
-    atMs: z.number().int().min(0, 'atMs must be a non-negative integer'),
+    atMs: z.number().int().min(0).optional().default(0),
     type: z.enum(SCORE_EVENT_TYPES),
   })
   .passthrough();

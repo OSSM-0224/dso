@@ -11,7 +11,7 @@ import { Icon } from '@/components/ui/Icon.tsx';
  * of living permanently in the chrome.
  */
 export const Header: React.FC = () => {
-  const { user, role, switchRole } = useAuth();
+  const { user, role, canScore, switchRole } = useAuth();
   const pathname = usePathname() || '/';
   const [staffOpen, setStaffOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -129,7 +129,7 @@ export const Header: React.FC = () => {
                   <p className="px-2.5 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">
                     Preview as staff
                   </p>
-                  {(['organizer', 'admin', 'viewer', 'participant'] as UserRole[]).map((r) => (
+                  {(['admin', 'organizer', 'scorer', 'viewer', 'participant'] as UserRole[]).map((r) => (
                     <button
                       key={r}
                       role="menuitem"
@@ -143,6 +143,20 @@ export const Header: React.FC = () => {
                     </button>
                   ))}
                   <div className="my-1 border-t border-hairline" />
+                  {canScore && (
+                    <Link
+                      href="/score"
+                      onClick={() => setStaffOpen(false)}
+                      className={`flex items-center gap-2 rounded-[6px] px-2.5 py-2 text-[13px] ${
+                        role === 'scorer'
+                          ? 'font-semibold text-accent-strong'
+                          : 'text-muted hover:bg-canvas hover:text-ink'
+                      }`}
+                    >
+                      <Icon name="bolt" size="sm" className="text-muted" />
+                      Live scoring console
+                    </Link>
+                  )}
                   <Link
                     href="/school/login"
                     onClick={() => setStaffOpen(false)}

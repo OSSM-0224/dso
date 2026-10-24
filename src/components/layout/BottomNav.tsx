@@ -9,7 +9,7 @@ import { Icon } from '@/components/ui/Icon.tsx';
  * without nav). Thumb-friendly 44px+ targets.
  */
 export const BottomNav: React.FC = () => {
-  const { role, signOut } = useAuth();
+  const { role, canScore, signOut } = useAuth();
   const pathname = usePathname() || '/';
   const isParticipant = role === 'participant';
 
@@ -19,6 +19,7 @@ export const BottomNav: React.FC = () => {
   const isOnHistory = pathname.startsWith('/past-champions');
   const isOnTesting = pathname.startsWith('/engine-tests');
   const isOnPortal = pathname.startsWith('/school');
+  const isOnScoring = pathname.startsWith('/score');
 
   const item = (active: boolean) =>
     `flex min-h-[48px] min-w-[64px] flex-1 flex-col items-center justify-center gap-0.5 rounded-[8px] px-1 text-[10px] font-medium transition-colors duration-200 ${
@@ -60,6 +61,12 @@ export const BottomNav: React.FC = () => {
               <Icon name="users" size="md" />
               Teams
             </Link>
+            {canScore && (
+              <Link href="/score" className={item(isOnScoring)}>
+                <Icon name="bolt" size="md" />
+                Score
+              </Link>
+            )}
             <Link href="/school-accounts" className={item(isOnSchoolAccounts)}>
               <Icon name="clipboardList" size="md" />
               Accounts

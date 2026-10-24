@@ -1,11 +1,11 @@
 // TEMP-LOGIN: remove later
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { dbStore } from '../server/db/memoryStore.ts';
-import { userRepository } from '../server/repositories/userRepository.ts';
-import { schoolRepository } from '../server/repositories/schoolRepository.ts';
-import { passwordService } from '../server/services/passwordService.ts';
-import { UserDoc } from '../shared/types.ts';
+import { dbStore } from '../src/server/db/memoryStore.ts';
+import { userRepository } from '../src/server/repositories/userRepository.ts';
+import { schoolRepository } from '../src/server/repositories/schoolRepository.ts';
+import { passwordService } from '../src/server/services/passwordService.ts';
+import { UserDoc } from '../src/shared/types.ts';
 
 dotenv.config();
 

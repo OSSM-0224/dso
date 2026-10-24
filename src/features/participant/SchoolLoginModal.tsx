@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
+import { Icon } from '@/components/ui/Icon.tsx';
 import { useAuth } from '@/context/AuthContext.tsx';
-import { Building2, KeyRound, AlertCircle, X, ShieldCheck } from 'lucide-react';
 import { QuickLoginDropdown } from '@/dev/temp-logins/QuickLoginDropdown.tsx'; // TEMP-LOGIN: remove later
 
 interface SchoolLoginModalProps {
@@ -53,11 +53,11 @@ export const SchoolLoginModal: React.FC<SchoolLoginModalProps> = ({
             className="absolute top-4 right-4 text-white/80 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors"
             title="Close"
           >
-            <X className="w-5 h-5" />
+            <Icon name="xmark" size="lg" />
           </button>
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2.5 bg-white/15 rounded-xl backdrop-blur-xs">
-              <Building2 className="w-6 h-6 text-white" />
+              <Icon name="school" size="xl" className="text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold tracking-tight">Participant Portal Login</h2>
@@ -73,7 +73,7 @@ export const SchoolLoginModal: React.FC<SchoolLoginModalProps> = ({
         <div className="p-6">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-xs text-red-700 animate-in fade-in">
-              <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+              <Icon name="circleAlert" size="md" className="shrink-0 text-red-600 mt-0.5" />
               <div>
                 <p className="font-semibold">Unable to sign in</p>
                 <p>{error}</p>
@@ -169,7 +169,7 @@ export const SchoolLoginModal: React.FC<SchoolLoginModalProps> = ({
                   <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <KeyRound className="w-4 h-4" />
+                    <Icon name="key" size="md" />
                     <span>Sign In to School Portal</span>
                   </>
                 )}
@@ -180,7 +180,7 @@ export const SchoolLoginModal: React.FC<SchoolLoginModalProps> = ({
           {/* DSO Security Badge */}
           <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <Icon name="shieldCheck" size="sm" className="text-emerald-600" />
               Direct School Authorization
             </span>
             <span>Single-School Isolation</span>

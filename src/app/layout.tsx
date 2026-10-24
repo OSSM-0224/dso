@@ -1,7 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono, Fraunces } from "next/font/google";
+import Script from "next/script";
 import { AuthProvider } from "../context/AuthContext.tsx";
 import "./globals.css";
+
+/**
+ * Font Awesome Free kit. `data-auto-replace-svg="nest"` is REQUIRED: the kit
+ * keeps the React-rendered <i> element in the DOM and nests its SVG inside it
+ * (instead of replacing the node, which crashes React hydration).
+ */
+const FONT_AWESOME_KIT_URL = "https://kit.fontawesome.com/2aee0f29a0.js";
 
 const jakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -62,6 +70,12 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>{children}</AuthProvider>
+        <Script
+          src={FONT_AWESOME_KIT_URL}
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+          data-auto-replace-svg="nest"
+        />
       </body>
     </html>
   );

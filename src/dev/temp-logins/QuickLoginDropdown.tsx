@@ -1,6 +1,6 @@
-// TEMP-LOGIN: remove later
+﻿// TEMP-LOGIN: remove later
 import React, { useEffect, useState } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon.tsx';
 
 interface QuickLoginDropdownProps {
   onSelect: (identifier: string, password: string) => void;
@@ -65,7 +65,7 @@ export const QuickLoginDropdown: React.FC<QuickLoginDropdownProps> = ({
   return (
     <div className="p-2.5 bg-amber-50/90 border border-amber-200 rounded-xl text-xs space-y-1.5 my-3">
       <div className="flex items-center gap-1.5 text-amber-900 font-bold text-[11px]">
-        <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+        <Icon name="sparkles" size="sm" className="text-amber-600 shrink-0" />
         <span>Quick login (temporary)</span>
         <span className="text-[10px] text-amber-600 font-normal ml-auto">dev test only</span>
       </div>

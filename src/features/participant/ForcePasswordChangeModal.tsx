@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
+import { Icon } from '@/components/ui/Icon.tsx';
 import { useAuth } from '@/context/AuthContext.tsx';
-import { Lock, ShieldAlert, CheckCircle2 } from 'lucide-react';
 
 export const ForcePasswordChangeModal: React.FC = () => {
   const { user, mustChangePassword, changePassword } = useAuth();
@@ -41,7 +41,7 @@ export const ForcePasswordChangeModal: React.FC = () => {
         <div className="bg-amber-500 text-slate-950 p-6">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-amber-600/30 rounded-xl">
-              <ShieldAlert className="w-6 h-6 text-slate-950" />
+              <Icon name="shieldAlert" size="xl" className="text-slate-950" />
             </div>
             <div>
               <h2 className="text-lg font-bold">First Login Security Update</h2>
@@ -105,7 +105,7 @@ export const ForcePasswordChangeModal: React.FC = () => {
                 <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <Lock className="w-4 h-4" />
+                  <Icon name="lock" size="md" />
                   <span>Update Password & Enter Portal</span>
                 </>
               )}
@@ -113,7 +113,7 @@ export const ForcePasswordChangeModal: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 text-[11px] text-slate-500 justify-center pt-2">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+            <Icon name="circleCheck" size="sm" className="text-emerald-600" />
             <span>Encrypted with PBKDF2 high-grade key derivation</span>
           </div>
         </form>

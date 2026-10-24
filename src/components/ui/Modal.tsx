@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+﻿import React, { useCallback, useEffect, useRef } from 'react';
+import { Icon } from './Icon.tsx';
 
 interface ModalProps {
   open: boolean;
@@ -92,7 +92,7 @@ export const Modal: React.FC<ModalProps> = ({ open, onClose, title, side = false
             aria-label="Close"
             className="-mr-1.5 p-1.5 rounded-[6px] text-muted hover:text-ink hover:bg-canvas transition-colors duration-200"
           >
-            <X className="h-4 w-4" />
+            <Icon name="xmark" size="sm" />
           </button>
         </div>
         <div className="px-5 py-4">{children}</div>

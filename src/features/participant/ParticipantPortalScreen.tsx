@@ -1,29 +1,8 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
+import { Icon } from '@/components/ui/Icon.tsx';
 import { api } from '@/lib/api.ts';
 import { useAuth } from '@/context/AuthContext.tsx';
 import { MatchDetailModal } from './MatchDetailModal.tsx';
-import {
-  Building2,
-  Calendar,
-  Clock,
-  MapPin,
-  CheckCircle2,
-  CalendarPlus,
-  AlertCircle,
-  Bell,
-  CheckCheck,
-  ChevronRight,
-  Trophy,
-  Users,
-  Eye,
-  Filter,
-  RefreshCw,
-  LogOut,
-  ExternalLink,
-  Shield,
-  Layers,
-  ArrowRight,
-} from 'lucide-react';
 
 interface ParticipantPortalScreenProps {
   onOpenPublicBracket?: (tournamentId: string) => void;
@@ -202,7 +181,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
   if (isLoading && !dashboardData) {
     return (
       <div className="min-h-[500px] flex flex-col items-center justify-center p-8 text-center">
-        <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mb-3" />
+        <Icon name="refresh" size="xl" className="text-indigo-600 animate-spin mb-3" />
         <p className="text-sm font-semibold text-slate-700">Loading your school portal...</p>
         <p className="text-xs text-slate-400 mt-1">Fetching authorized match schedule and notifications</p>
       </div>
@@ -212,7 +191,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
   if (error) {
     return (
       <div className="max-w-2xl mx-auto my-12 p-6 bg-white border border-red-200 rounded-2xl shadow-sm text-center">
-        <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-3" />
+        <Icon name="circleAlert" size="md" className="text-red-500 mx-auto mb-3" />
         <h3 className="text-base font-bold text-slate-900">Access Error</h3>
         <p className="text-xs text-slate-600 mt-1">{error}</p>
         <button
@@ -238,7 +217,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center shrink-0">
-              <Building2 className="w-6 h-6 text-indigo-300" />
+              <Icon name="school" size="xl" className="text-indigo-300" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -265,7 +244,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
               className="relative p-2 rounded-xl bg-white/10 hover:bg-white/15 transition-colors"
               title="Notifications"
             >
-              <Bell className="w-5 h-5 text-indigo-200" />
+              <Icon name="bell" size="lg" className="text-indigo-200" />
               {unreadNotifsCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
                   {unreadNotifsCount}
@@ -277,7 +256,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
               onClick={signOut}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-slate-200 transition-colors"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <Icon name="rightFromBracket" size="sm" />
               <span>Sign Out</span>
             </button>
           </div>
@@ -365,7 +344,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
 
                   <div className="flex flex-wrap items-center gap-4 text-xs text-indigo-100 pt-1">
                     <span className="flex items-center gap-1.5">
-                      <Calendar className="w-4 h-4 text-indigo-300" />
+                      <Icon name="calendar" size="md" className="text-indigo-300" />
                       {nextMatch.match?.scheduledAt
                         ? new Date(nextMatch.match.scheduledAt).toLocaleDateString('en-IN', {
                             weekday: 'short',
@@ -375,7 +354,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                         : 'Date TBD'}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-indigo-300" />
+                      <Icon name="clock" size="md" className="text-indigo-300" />
                       {nextMatch.match?.scheduledAt
                         ? new Date(nextMatch.match.scheduledAt).toLocaleTimeString('en-IN', {
                             hour: '2-digit',
@@ -384,7 +363,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                         : 'Time TBD'}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <MapPin className="w-4 h-4 text-indigo-300" />
+                      <Icon name="location" size="md" className="text-indigo-300" />
                       {nextMatch.match?.venue || 'DSO Sports Complex'}
                     </span>
                   </div>
@@ -440,7 +419,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
             </div>
           ) : (
             <div className="p-8 bg-white border border-slate-200 rounded-2xl text-center shadow-xs">
-              <Calendar className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+              <Icon name="calendar" size="md" className="text-slate-400 mx-auto mb-2" />
               <h3 className="text-sm font-bold text-slate-800">No Upcoming Matches Scheduled</h3>
               <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
                 {stats?.activeTournamentsCount === 0
@@ -483,7 +462,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
             <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-xs space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <Trophy className="w-4 h-4 text-indigo-600" />
+                  <Icon name="trophy" size="md" className="text-indigo-600" />
                   <span>Enrolled Tournaments</span>
                 </h3>
                 <span className="text-xs font-semibold text-slate-400">
@@ -509,7 +488,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                         className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5"
                       >
                         <span>View Matches</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
+                        <Icon name="chevronRight" size="sm" />
                       </button>
                     </div>
                   ))}
@@ -525,7 +504,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
             <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-xs space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <Users className="w-4 h-4 text-indigo-600" />
+                  <Icon name="users" size="md" className="text-indigo-600" />
                   <span>School Teams Roster</span>
                 </h3>
                 <span className="text-xs font-semibold text-slate-400">
@@ -639,7 +618,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
           {/* Matches List */}
           {filteredMatches.length === 0 ? (
             <div className="p-12 bg-white border border-slate-200 rounded-2xl text-center shadow-xs">
-              <Calendar className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+              <Icon name="calendar" size="md" className="text-slate-400 mx-auto mb-2" />
               <h3 className="text-sm font-bold text-slate-800">No matches found matching criteria</h3>
               <p className="text-xs text-slate-500 mt-1">
                 Try switching filters or check back later once fixtures are updated.
@@ -712,7 +691,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                         )}
                         {m.byeAdvancementNote && (
                           <p className="text-xs text-indigo-600 font-medium mt-0.5 flex items-center gap-1">
-                            <Shield className="w-3 h-3" />
+                            <Icon name="shield" size="sm" />
                             <span>{m.byeAdvancementNote}</span>
                           </p>
                         )}
@@ -721,15 +700,15 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                       {/* Date, Time, Venue */}
                       <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
                         <span className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          <Icon name="calendar" size="sm" className="text-slate-400" />
                           <span>{formattedDate}</span>
                         </span>
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <Icon name="clock" size="sm" className="text-slate-400" />
                           <span>{formattedTime}</span>
                         </span>
                         <span className="flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                          <Icon name="location" size="sm" className="text-slate-400" />
                           <span>{m.venue || 'DSO Sports Complex'}</span>
                         </span>
                       </div>
@@ -739,7 +718,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                     <div className="flex items-center gap-2 shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
                       {m.isAcknowledged ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <Icon name="circleCheck" size="sm" className="text-emerald-600" />
                           <span>Acknowledged</span>
                         </span>
                       ) : (
@@ -764,7 +743,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                         className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors"
                         title="Download .ics Calendar"
                       >
-                        <CalendarPlus className="w-4 h-4 text-indigo-600" />
+                        <Icon name="calendarPlus" size="md" className="text-indigo-600" />
                       </a>
                     </div>
                   </div>
@@ -808,7 +787,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                   className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-lg transition-colors"
                 >
                   <span>Full Public Bracket</span>
-                  <ExternalLink className="w-3 h-3" />
+                  <Icon name="external" size="sm" />
                 </button>
               )}
             </div>
@@ -888,7 +867,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
             </div>
           ) : (
             <div className="p-8 bg-white border border-slate-200 rounded-2xl text-center shadow-xs">
-              <Layers className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+              <Icon name="layers" size="xl" className="text-slate-400 mx-auto mb-2" />
               <p className="text-xs text-slate-500">
                 No active paths found for your school teams in this tournament.
               </p>
@@ -913,7 +892,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                 onClick={handleMarkAllNotificationsRead}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
               >
-                <CheckCheck className="w-3.5 h-3.5 text-indigo-600" />
+                <Icon name="checkDouble" size="sm" className="text-indigo-600" />
                 <span>Mark All Read</span>
               </button>
             )}
@@ -921,7 +900,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
 
           {notifications.length === 0 ? (
             <div className="p-12 bg-white border border-slate-200 rounded-2xl text-center shadow-xs">
-              <Bell className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+              <Icon name="bell" size="md" className="text-slate-300 mx-auto mb-2" />
               <h4 className="text-sm font-bold text-slate-800">No notifications yet</h4>
               <p className="text-xs text-slate-500 mt-1">
                 You'll receive alerts here whenever matches are scheduled, rescheduled, or when fixtures are published.

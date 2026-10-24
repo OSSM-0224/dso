@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Icon } from './Icon.tsx';
 
 /* ── Tabs ───────────────────────────────────────────────────── */
 interface TabsProps {
@@ -73,7 +74,7 @@ export const Stepper: React.FC<StepperProps> = ({ steps, current, done = [], onS
                       : 'bg-surface border-hairline text-faint group-hover:border-faint'
                 }`}
               >
-                {isDone ? '✓' : i + 1}
+                {isDone ? <Icon name="check" size="xs" /> : i + 1}
               </span>
               <span
                 className={`mt-1.5 text-[11px] leading-tight font-medium ${
@@ -139,8 +140,8 @@ const Toast: React.FC<{ kind: ToastKind; message: string; onDismiss: () => void 
       } ${leaving ? 'opacity-0 translate-y-1' : 'opacity-100'}`}
     >
       <span className="grow">{message}</span>
-      <button onClick={onDismiss} aria-label="Dismiss" className="shrink-0 opacity-60 hover:opacity-100">
-        ✕
+      <button onClick={onDismiss} aria-label="Dismiss notification" className="shrink-0 opacity-60 hover:opacity-100">
+        <Icon name="xmark" size="sm" />
       </button>
     </div>
   );

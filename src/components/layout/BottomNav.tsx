@@ -1,8 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext.tsx';
-import { LogOut, Trophy, Users, ClipboardList, History, Calendar, LogIn } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon.tsx';
 
 /**
  * Fixed bottom navigation for small screens (top bar is a slimmer chrome
@@ -34,42 +34,42 @@ export const BottomNav: React.FC = () => {
         {isParticipant ? (
           <>
             <Link href="/school/dashboard" className={item(isOnPortal)}>
-              <Calendar className="h-5 w-5" />
+              <Icon name="calendar" size="md" />
               Matches
             </Link>
             <Link href="/" className={item(isOnTournaments)}>
-              <Trophy className="h-5 w-5" />
+              <Icon name="trophy" size="md" />
               Brackets
             </Link>
             <Link href="/past-champions" className={item(isOnHistory)}>
-              <History className="h-5 w-5" />
+              <Icon name="history" size="md" />
               History
             </Link>
             <button onClick={() => signOut()} className={item(false)}>
-              <LogOut className="h-5 w-5" />
+              <Icon name="rightFromBracket" size="md" />
               Sign out
             </button>
           </>
         ) : (
           <>
             <Link href="/" className={item(isOnTournaments)}>
-              <Trophy className="h-5 w-5" />
+              <Icon name="trophy" size="md" />
               Tournaments
             </Link>
             <Link href="/teams" className={item(isOnTeams)}>
-              <Users className="h-5 w-5" />
+              <Icon name="users" size="md" />
               Teams
             </Link>
             <Link href="/school-accounts" className={item(isOnSchoolAccounts)}>
-              <ClipboardList className="h-5 w-5" />
+              <Icon name="clipboardList" size="md" />
               Accounts
             </Link>
             <Link href="/past-champions" className={item(isOnHistory)}>
-              <History className="h-5 w-5" />
+              <Icon name="history" size="md" />
               History
             </Link>
             <Link href="/school/login" className={item(isOnPortal)}>
-              <LogIn className="h-5 w-5" />
+              <Icon name="rightToBracket" size="md" />
               School login
             </Link>
           </>

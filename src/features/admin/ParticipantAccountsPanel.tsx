@@ -1,20 +1,7 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
+import { Icon } from '@/components/ui/Icon.tsx';
 import { api } from '@/lib/api.ts';
 import { SchoolDoc } from '@/shared/types.ts';
-import {
-  KeyRound,
-  UserPlus,
-  ShieldCheck,
-  RotateCcw,
-  Power,
-  Copy,
-  Check,
-  AlertCircle,
-  Building2,
-  CalendarCheck,
-  Search,
-  Eye,
-} from 'lucide-react';
 
 interface ParticipantAccountsPanelProps {
   schools: SchoolDoc[];
@@ -174,7 +161,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
         <div>
           <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-indigo-600" />
+            <Icon name="shieldCheck" size="lg" className="text-indigo-600" />
             <span>Participant School Accounts</span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -186,7 +173,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
           onClick={() => handleOpenCreate()}
           className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors shrink-0"
         >
-          <UserPlus className="w-4 h-4" />
+          <Icon name="userPlus" size="md" />
           <span>Create School Account</span>
         </button>
       </div>
@@ -194,14 +181,14 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
       {/* Messages */}
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+          <Icon name="circleAlert" size="md" className="shrink-0 text-red-600 mt-0.5" />
           <span>{error}</span>
         </div>
       )}
 
       {successMsg && (
         <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-start gap-2">
-          <Check className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
+          <Icon name="check" size="md" className="shrink-0 text-emerald-600 mt-0.5" />
           <span>{successMsg}</span>
         </div>
       )}
@@ -220,7 +207,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
 
       {/* Search Bar */}
       <div className="relative">
-        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+        <Icon name="search" size="md" className="text-slate-400 absolute left-3.5 top-3" />
         <input
           type="text"
           placeholder="Search by school name, school code, or coach name..."
@@ -257,7 +244,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                   <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2.5">
-                        <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
+                        <Icon name="school" size="md" className="text-slate-400 shrink-0" />
                         <div>
                           <p className="font-bold text-slate-900">{p.schoolName}</p>
                           <span className="font-mono text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">
@@ -302,7 +289,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
 
                     <td className="py-3.5 px-4 text-center">
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
-                        <CalendarCheck className="w-3 h-3 text-indigo-600" />
+                        <Icon name="calendarCheck" size="sm" className="text-indigo-600" />
                         <span>{p.acknowledgementCount} matches</span>
                       </span>
                     </td>
@@ -314,7 +301,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                           className="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition-colors"
                           title="View as School (Read-Only Preview)"
                         >
-                          <Eye className="w-3.5 h-3.5" />
+                          <Icon name="eye" size="sm" />
                         </button>
                       )}
 
@@ -324,9 +311,9 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                         title="Copy School Credentials & Portal Link"
                       >
                         {copiedId === p.id ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <Icon name="check" size="sm" className="text-emerald-600" />
                         ) : (
-                          <Copy className="w-3.5 h-3.5" />
+                          <Icon name="copy" size="sm" />
                         )}
                       </button>
 
@@ -339,7 +326,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                         className="p-1.5 bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-800 rounded-lg transition-colors"
                         title="Reset Temporary Password"
                       >
-                        <RotateCcw className="w-3.5 h-3.5" />
+                        <Icon name="rotate" size="sm" />
                       </button>
 
                       <button
@@ -351,7 +338,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                         }`}
                         title={p.isActive ? 'Deactivate Account' : 'Reactivate Account'}
                       >
-                        <Power className="w-3.5 h-3.5" />
+                        <Icon name="power" size="sm" />
                       </button>
                     </td>
                   </tr>
@@ -368,7 +355,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
           <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
             <div className="bg-indigo-600 text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <UserPlus className="w-5 h-5" />
+                <Icon name="userPlus" size="lg" />
                 <h3 className="text-base font-bold">Issue School Participant Login</h3>
               </div>
               <button
@@ -503,7 +490,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
           <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
             <div className="bg-amber-600 text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <RotateCcw className="w-5 h-5" />
+                <Icon name="rotate" size="lg" />
                 <h3 className="text-base font-bold">Reset School Password</h3>
               </div>
               <button

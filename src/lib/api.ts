@@ -14,21 +14,24 @@ import { TestSuiteSummary } from '@/shared/types.ts';
 import { CsvImportReport, CsvImportRow } from '@/shared/types.ts';
 
 const ROLE_KEY = 'dso_auth_role';
+const VALID_ROLES: UserRole[] = ['admin', 'organizer', 'viewer', 'participant'];
 
 // Sessions are now httpOnly cookies issued by the API routes
 // (see src/server/auth/session.ts). The client only mirrors the role so the
 // UI state survives a reload.
-export function getStoredToken(): string | null {
-  return null;
-}
-
-export function setStoredSession(token: string, role: UserRole) {
+export function setStoredSession(role: UserRole) {
   localStorage.setItem(ROLE_KEY, role);
 }
 
 export function getStoredRole(): UserRole {
   if (typeof window === 'undefined') return 'organizer';
-  return (localStorage.getItem(ROLE_KEY) as UserRole) || 'organizer';
+  const stored = localStorage.getItem(ROLE_KEY) as UserRole | null;
+  if (stored && VALID_ROLES.includes(stored)) return stored;
+  if (stored) {
+    // Only call this inside effects (never during render/hydration).
+    localStorage.removeItem(ROLE_KEY);
+  }
+  return 'organizer';
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {

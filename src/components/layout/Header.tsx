@@ -1,5 +1,6 @@
 import React from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext.tsx';
 import { UserRole } from '@/shared/types.ts';
 import { Building2, LogOut } from 'lucide-react';
@@ -8,31 +9,22 @@ import { Building2, LogOut } from 'lucide-react';
 // header — school login lives only at the standalone /school/login page.
 export const Header: React.FC = () => {
   const { user, role, switchRole, signOut, isParticipant } = useAuth();
-  const router = useRouter();
   const pathname = usePathname() || '/';
 
-  const isActiveTournaments =
-    isParticipant
-      ? pathname === '/' || pathname.startsWith('/tournaments')
-      : pathname === '/' || pathname.startsWith('/tournaments');
+  const isOnTournaments = pathname === '/' || pathname.startsWith('/tournaments');
   const isOnTeams = pathname.startsWith('/teams');
   const isOnSchoolAccounts = pathname.startsWith('/school-accounts');
   const isOnHistory = pathname.startsWith('/past-champions');
   const isOnTesting = pathname.startsWith('/engine-tests');
   const isOnPortal = pathname.startsWith('/school');
 
-  const navigate = (path: string) => {
-    if (path === 'tournaments') path = '/';
-    router.push(path);
-  };
-
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-8 h-16">
           {/* Zone 1: Brand Wordmark (Single text element, 1 line) */}
-          <button
-            onClick={() => navigate(isParticipant ? '/school/dashboard' : '/')}
+          <Link
+            href={isParticipant ? '/school/dashboard' : '/'}
             className="text-lg font-bold tracking-tight text-slate-900 whitespace-nowrap shrink-0 hover:text-indigo-600 transition-colors flex items-center gap-2"
           >
             <span>DSO Navi Mumbai</span>
@@ -41,81 +33,81 @@ export const Header: React.FC = () => {
                 Portal
               </span>
             )}
-          </button>
+          </Link>
 
-          {/* Zone 2: Navigation Links */}
+          {/* Zone 2: Navigation Links (plain <Link> so Next.js prefetches each page) */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
             {isParticipant ? (
               <>
-                <button
-                  onClick={() => navigate('/school/dashboard')}
+                <Link
+                  href="/school/dashboard"
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
                     isOnPortal ? 'text-indigo-600 font-bold' : ''
                   }`}
                 >
                   <Building2 className="w-4 h-4" />
                   <span>My School Matches</span>
-                </button>
-                <button
-                  onClick={() => navigate('/')}
+                </Link>
+                <Link
+                  href="/"
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 ${
-                    isActiveTournaments ? 'text-slate-900 font-semibold' : ''
+                    isOnTournaments ? 'text-slate-900 font-semibold' : ''
                   }`}
                 >
                   Public Tournaments
-                </button>
-                <button
-                  onClick={() => navigate('/past-champions')}
+                </Link>
+                <Link
+                  href="/past-champions"
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 ${
                     isOnHistory ? 'text-slate-900 font-semibold' : ''
                   }`}
                 >
                   Past Champions
-                </button>
+                </Link>
               </>
             ) : (
               <>
-                <button
-                  onClick={() => navigate('/')}
+                <Link
+                  href="/"
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 ${
-                    isActiveTournaments ? 'text-slate-900 font-semibold' : ''
+                    isOnTournaments ? 'text-slate-900 font-semibold' : ''
                   }`}
                 >
                   Tournaments
-                </button>
-                <button
-                  onClick={() => navigate('/teams')}
+                </Link>
+                <Link
+                  href="/teams"
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 ${
                     isOnTeams ? 'text-slate-900 font-semibold' : ''
                   }`}
                 >
                   Teams & Schools
-                </button>
-                <button
-                  onClick={() => navigate('/school-accounts')}
+                </Link>
+                <Link
+                  href="/school-accounts"
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
                     isOnSchoolAccounts ? 'text-indigo-600 font-semibold' : ''
                   }`}
                 >
                   <Building2 className="w-4 h-4 text-indigo-500" />
                   <span>School Accounts</span>
-                </button>
-                <button
-                  onClick={() => navigate('/past-champions')}
+                </Link>
+                <Link
+                  href="/past-champions"
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 ${
                     isOnHistory ? 'text-slate-900 font-semibold' : ''
                   }`}
                 >
                   Past Champions
-                </button>
-                <button
-                  onClick={() => navigate('/engine-tests')}
+                </Link>
+                <Link
+                  href="/engine-tests"
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 ${
                     isOnTesting ? 'text-slate-900 font-semibold' : ''
                   }`}
                 >
                   Engine Tests
-                </button>
+                </Link>
               </>
             )}
           </nav>
@@ -150,10 +142,10 @@ export const Header: React.FC = () => {
                       const val = e.target.value as UserRole;
                       if (val === 'participant') {
                         // School login lives on its own standalone page.
-                        navigate('/school/login');
-                      } else {
-                        switchRole(val);
+                        window.location.assign('/school/login');
+                        return;
                       }
+                      switchRole(val);
                     }}
                     className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-800 rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     title="Switch user role for permissions testing"
@@ -173,57 +165,45 @@ export const Header: React.FC = () => {
         <div className="flex md:hidden items-center justify-around py-2 border-t border-slate-100 text-xs font-medium text-slate-600">
           {isParticipant ? (
             <>
-              <button
-                onClick={() => navigate('/school/dashboard')}
+              <Link
+                href="/school/dashboard"
                 className={`py-1 ${isOnPortal ? 'text-indigo-600 font-semibold' : ''}`}
               >
                 My Matches
-              </button>
-              <button
-                onClick={() => navigate('/')}
-                className={`py-1 ${pathname === '/' || pathname.startsWith('/tournaments') ? 'text-indigo-600 font-semibold' : ''}`}
+              </Link>
+              <Link
+                href="/"
+                className={`py-1 ${isOnTournaments ? 'text-indigo-600 font-semibold' : ''}`}
               >
                 Brackets
-              </button>
-              <button
-                onClick={() => signOut()}
-                className="py-1 text-slate-500"
-              >
+              </Link>
+              <button onClick={() => signOut()} className="py-1 text-slate-500">
                 Sign Out
               </button>
             </>
           ) : (
             <>
-              <button
-                onClick={() => navigate('/')}
-                className={`py-1 ${pathname === '/' || pathname.startsWith('/tournaments') ? 'text-indigo-600 font-semibold' : ''}`}
-              >
+              <Link href="/" className={`py-1 ${isOnTournaments ? 'text-indigo-600 font-semibold' : ''}`}>
                 Tournaments
-              </button>
-              <button
-                onClick={() => navigate('/teams')}
-                className={`py-1 ${isOnTeams ? 'text-indigo-600 font-semibold' : ''}`}
-              >
+              </Link>
+              <Link href="/teams" className={`py-1 ${isOnTeams ? 'text-indigo-600 font-semibold' : ''}`}>
                 Teams
-              </button>
-              <button
-                onClick={() => navigate('/school-accounts')}
+              </Link>
+              <Link
+                href="/school-accounts"
                 className={`py-1 ${isOnSchoolAccounts ? 'text-indigo-600 font-semibold' : ''}`}
               >
                 Accounts
-              </button>
-              <button
-                onClick={() => navigate('/past-champions')}
+              </Link>
+              <Link
+                href="/past-champions"
                 className={`py-1 ${isOnHistory ? 'text-indigo-600 font-semibold' : ''}`}
               >
                 History
-              </button>
-              <button
-                onClick={() => navigate('/school/login')}
-                className="py-1 text-indigo-600 font-bold"
-              >
+              </Link>
+              <Link href="/school/login" className="py-1 text-indigo-600 font-bold">
                 School Login
-              </button>
+              </Link>
             </>
           )}
         </div>

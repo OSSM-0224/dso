@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { api, getStoredRole, setStoredSession } from '@/lib/api.ts';
 import { UserRole, UserSession } from '@/shared/types.ts';
 
@@ -20,9 +20,14 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [role, setRole] = useState<UserRole>(getStoredRole());
+  // Hydration-safe: the first (server + client) paint always uses the same
+  // fixed default. The persisted role is restored from localStorage inside an
+  // effect, AFTER hydration — reading it during the initial render would make
+  // the client snapshot differ from the one the server rendered.
+  const [role, setRole] = useState<UserRole>('organizer');
   const [user, setUser] = useState<UserSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const hasInitialized = useRef(false);
 
   const initSession = async (targetRole: UserRole) => {
     try {
@@ -43,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const res = await api.auth.switchRole(targetRole);
-      setStoredSession(res.token, res.user.role);
+      setStoredSession(res.user.role);
       setRole(res.user.role);
       setUser(res.user);
     } catch (err) {
@@ -54,7 +59,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    initSession(role);
+    // Guard against React 18 StrictMode double-invoke (two /auth/session calls).
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+    const stored = getStoredRole();
+    setRole(stored);
+    initSession(stored);
   }, []);
 
   const switchRole = async (newRole: UserRole) => {
@@ -65,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const res = await api.auth.login(identifier, password);
-      setStoredSession(res.token, 'participant');
+      setStoredSession('participant');
       setRole('participant');
       setUser(res.user);
       return { mustChangePassword: res.mustChangePassword };
@@ -78,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const res = await api.auth.changePassword(newPassword, currentPassword);
-      setStoredSession(res.token, 'participant');
+      setStoredSession('participant');
       setUser(res.user);
     } finally {
       setIsLoading(false);

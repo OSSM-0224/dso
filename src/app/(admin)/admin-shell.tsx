@@ -10,7 +10,7 @@
  * NOTE: school login is NOT offered from the admin shell — it lives only at
  * /school/login (standalone page with its own layout).
  */
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useAuth } from '@/context/AuthContext.tsx';
@@ -47,22 +47,18 @@ export function useAdminPortal() {
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { role, canWrite, isParticipant } = useAuth();
-  void role;
+  const { canWrite, isParticipant } = useAuth();
 
   const [schools, setSchools] = useState<SchoolDoc[]>([]);
   const [adminPreviewSchool, setAdminPreviewSchool] = useState<AdminPreviewSchool | null>(null);
 
   useEffect(() => {
-    const loadSchools = async () => {
-      try {
-        const list = await api.schools.list();
-        setSchools(list);
-      } catch {
+    api.schools
+      .list()
+      .then(setSchools)
+      .catch(() => {
         // ignore (same as old App.tsx)
-      }
-    };
-    loadSchools();
+      });
   }, []);
 
   const openPublicView = useCallback(
@@ -89,13 +85,16 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const contextValue: AdminPortalContextValue = {
-    openPublicView,
-    viewAsSchool,
-    exitAdminPreview,
-    schools,
-    reloadSchools,
-  };
+  const contextValue = useMemo<AdminPortalContextValue>(
+    () => ({
+      openPublicView,
+      viewAsSchool,
+      exitAdminPreview,
+      schools,
+      reloadSchools,
+    }),
+    [openPublicView, viewAsSchool, exitAdminPreview, schools, reloadSchools]
+  );
 
   // In school participant mode or admin "View as School" preview mode the
   // admin chrome is replaced by the school portal (identical to App.tsx).

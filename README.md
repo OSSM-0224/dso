@@ -6,13 +6,53 @@ A production-grade tournament fixture and bracket management platform built for 
 
 ## Architecture & Tech Stack
 
-- **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS v4. Mobile-first responsive bracket tree, zero-pill typography, clean tabular statistics.
-- **Backend**: Node.js + Express layered architecture (`routes -> controllers -> services -> repositories -> models`) with in-memory persistence and Mongoose schemas ready for MongoDB (`MONGODB_URI`).
-- **Fixture Engine**: Pure, framework-free TypeScript engine located in `shared/engine/`. Zero database or UI dependencies, organized via the **Strategy Pattern** (`FixtureStrategy` -> `SingleEliminationStrategy`). New formats (round-robin, groups + knockout) can be plugged in by adding a strategy file and registering with `FixtureEngineRegistry`.
-- **Auth & RBAC**: JWT Bearer authentication with role enforcement (`admin`, `organizer`, `viewer`). Only `admin` and `organizer` have write privileges.
+- **Framework**: Next.js 16 (App Router) — a single full-stack application. React 19 + TypeScript + Tailwind CSS v4 (mobile-first responsive bracket tree, zero-pill typography, clean tabular statistics).
+- **Server**: Route Handlers in `src/app/api/**/route.ts` layered over `src/server/{controllers -> services -> repositories}` with in-memory persistence and Mongoose schemas ready for MongoDB (`MONGODB_URI`). "Dedicated `middleware.ts` for lightweight cookie checks (`/school/*`, `/api/my/*`), React 'use client' boundaries only where needed, `next/headers` for cookie sessions, Bearer tokens removed, all client data via `fetch` to its own `/api` boundaries and reads from the state store. Finally run a production build."
+- **Fixture Engine**: Pure, framework-free TypeScript engine located in `src/shared/engine/`. Zero database or UI dependencies, organized via the **Strategy Pattern** (`FixtureStrategy` -> `SingleEliminationStrategy`). New formats (round-robin, groups + knockout) can be plugged in by adding a strategy file and registering with `FixtureEngineRegistry`.
+- **Auth & RBAC (JWT, httpOnly cookies)**: JWT tokens are signed with `jsonwebtoken` and wrapped in **HttpOnly cookies**; role enforcement (`admin`, `organizer`, `viewer`) happens in Route Handlers through `src/server/auth/guards.ts`, which mirrors the old Bearer-token middleware including the default-organizer dev fallback and the exact legacy error messages. Only `admin` and `organizer` have write privileges.
 - **Validation**: Strict input validation with `Zod` schemas and centralized error handling.
+- **Sessions**: staff cookie `dso_staff_session`, participant cookie `dso_school_session` (7 days, `sameSite: lax`, secure in production). Client is cookie-based (`src/lib/api.ts`, `src/context/AuthContext.tsx`).
+
+### Project Structure
+
+```
+src/
+  app/
+    (admin)/           DSO admin organized as a route group: /, /tournaments/[id], /teams, /school-accounts, /past-champions, /engine-tests
+    school/            Participant portal: /school/login, /school/dashboard, /school/matches/[id], /school/notifications (no DSO menu)
+    public/tournaments/[id]  Fully server-rendered public bracket page (via generateMetadata, `revalidate = 30`)
+    api/               All REST endpoints as Route Handlers (same paths as the old Express API)
+  server/              Controllers, services, repositories, validations (Zod), serializers, tests + business logic (dbStore, auth session, guards)
+  shared/              Common types + the byte-identical pure fixture engine (src/shared/engine)
+  features/, components/, dev/  Pure React UI (identical, ported)
+  context/             AuthContext (cookie sessions)
+scripts/seed-temp-logins.ts  CLI wrapper for seeding temporary logins (TEMP-LOGIN scaffolding)
+middleware.ts          Lightweight cookie checks (/school/*, /api/my/*
+```
 
 ---
+
+## Commands
+
+```bash
+npm run dev        # Dev server on port 3000 (auto loads .env)
+npm run build      # Production build
+npm start          # Run the production build
+npm test           # 28 automated tests (engine + API suite + strict secrecy)
+npm run lint       # TypeScript check (tsc --noEmit)
+npm run seed:temp-logins        # TEMP-LOGIN: create temporary logins for existing schools (TEMP-LOGIN: remove later)
+npm run seed:temp-logins:remove # TEMP-LOGIN: remove temporary logins
+```
+
+### Environment Variables (see .env.example)
+
+- `MONGODB_URI` — optional; when absent everything runs on the in-memory store (same as before).
+- `JWT_SECRET` — signing key for the session cookies.
+- `TEMP_LOGIN_PASSWORD` — TEMP-LOGIN: password used for temporary logins (default `DSO@2026`).
+- `NEXT_PUBLIC_ENABLE_TEMP_LOGINS` — TEMP-LOGIN: shows the quick-login dropdown in dev only.
+
+---
+
 
 ## Core Fixture Rules Implemented
 
@@ -148,15 +188,13 @@ When testing is complete, remove all temporary login code by doing the following
    ```
 2. **Delete the seed script and dev folder**:
    - Delete `scripts/seed-temp-logins.ts`
-   - Delete `server/dev/temp-logins/` (route) and `client/dev/temp-logins/` (UI)
+   - Delete `src/server/dev/temp-logins/` (seeding runtime) and `src/app/api/dev/` (route handlers, already disabled in production builds) and `src/dev/temp-logins/` (UI)
 3. **Remove npm scripts from `package.json`**:
    - Remove `"seed:temp-logins"` and `"seed:temp-logins:remove"`
-4. **Remove the dev route mount in `server/app.ts` (dev mount)**:
-   - Remove the `devTempRoutes` mount at `/api/dev`
-5. **Clean environment flags**:
+4. **Clean environment flags**:
    - Remove `TEMP_LOGIN_PASSWORD` and `NEXT_PUBLIC_ENABLE_TEMP_LOGINS` from `.env`
-6. **Remove `isTempSeed` attribute from User model**:
-   - Remove `isTempSeed?: boolean;` from `UserDoc` in `shared/types.ts`
-7. **Remove QuickLoginDropdown from `SchoolLoginModal.tsx`**:
+5. **Remove `isTempSeed` attribute from User model**:
+   - Remove `isTempSeed?: boolean;` from `UserDoc` in `src/shared/types.ts`
+6. **Remove QuickLoginDropdown from `SchoolLoginModal.tsx`** and the temp-login strip from `admin-shell.tsx`:
    - Remove the import and `<QuickLoginDropdown ... />` component.
 All temporary login code is marked with the comment `// TEMP-LOGIN: remove later` for easy search.

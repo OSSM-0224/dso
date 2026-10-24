@@ -27,6 +27,7 @@ export function setStoredSession(token: string, role: UserRole) {
 }
 
 export function getStoredRole(): UserRole {
+  if (typeof window === 'undefined') return 'organizer';
   return (localStorage.getItem(ROLE_KEY) as UserRole) || 'organizer';
 }
 

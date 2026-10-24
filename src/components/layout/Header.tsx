@@ -1,20 +1,36 @@
 import React from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext.tsx';
 import { UserRole } from '@/shared/types.ts';
 import { Building2, LogOut, KeyRound } from 'lucide-react';
 
 interface HeaderProps {
-  currentTab: string;
-  onTabChange: (tab: string) => void;
   onOpenSchoolLogin: () => void;
 }
 
+// Same visuals/labels as the original tab-based Header, now driven by
+// Next.js file routes (client-side navigation via <Link>).
 export const Header: React.FC<HeaderProps> = ({
-  currentTab,
-  onTabChange,
   onOpenSchoolLogin,
 }) => {
   const { user, role, switchRole, signOut, isParticipant } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname() || '/';
+
+  const isActiveTournaments =
+    isParticipant
+      ? pathname === '/' || pathname.startsWith('/tournaments')
+      : pathname === '/' || pathname.startsWith('/tournaments');
+  const isOnTeams = pathname.startsWith('/teams');
+  const isOnSchoolAccounts = pathname.startsWith('/school-accounts');
+  const isOnHistory = pathname.startsWith('/past-champions');
+  const isOnTesting = pathname.startsWith('/engine-tests');
+  const isOnPortal = pathname.startsWith('/school');
+
+  const navigate = (path: string) => {
+    if (path === 'tournaments') path = '/';
+    router.push(path);
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
@@ -22,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center justify-between gap-8 h-16">
           {/* Zone 1: Brand Wordmark (Single text element, 1 line) */}
           <button
-            onClick={() => onTabChange(isParticipant ? 'participant-portal' : 'tournaments')}
+            onClick={() => navigate(isParticipant ? '/school/dashboard' : '/')}
             className="text-lg font-bold tracking-tight text-slate-900 whitespace-nowrap shrink-0 hover:text-indigo-600 transition-colors flex items-center gap-2"
           >
             <span>DSO Navi Mumbai</span>
@@ -38,28 +54,26 @@ export const Header: React.FC<HeaderProps> = ({
             {isParticipant ? (
               <>
                 <button
-                  onClick={() => onTabChange('participant-portal')}
+                  onClick={() => navigate('/school/dashboard')}
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
-                    currentTab === 'participant-portal' ? 'text-indigo-600 font-bold' : ''
+                    isOnPortal ? 'text-indigo-600 font-bold' : ''
                   }`}
                 >
                   <Building2 className="w-4 h-4" />
                   <span>My School Matches</span>
                 </button>
                 <button
-                  onClick={() => onTabChange('tournaments')}
+                  onClick={() => navigate('/')}
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 ${
-                    currentTab === 'tournaments' || currentTab === 'tournament-detail'
-                      ? 'text-slate-900 font-semibold'
-                      : ''
+                    isActiveTournaments ? 'text-slate-900 font-semibold' : ''
                   }`}
                 >
                   Public Tournaments
                 </button>
                 <button
-                  onClick={() => onTabChange('history')}
+                  onClick={() => navigate('/past-champions')}
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 ${
-                    currentTab === 'history' ? 'text-slate-900 font-semibold' : ''
+                    isOnHistory ? 'text-slate-900 font-semibold' : ''
                   }`}
                 >
                   Past Champions
@@ -68,44 +82,42 @@ export const Header: React.FC<HeaderProps> = ({
             ) : (
               <>
                 <button
-                  onClick={() => onTabChange('tournaments')}
+                  onClick={() => navigate('/')}
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 ${
-                    currentTab === 'tournaments' || currentTab === 'tournament-detail'
-                      ? 'text-slate-900 font-semibold'
-                      : ''
+                    isActiveTournaments ? 'text-slate-900 font-semibold' : ''
                   }`}
                 >
                   Tournaments
                 </button>
                 <button
-                  onClick={() => onTabChange('teams')}
+                  onClick={() => navigate('/teams')}
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 ${
-                    currentTab === 'teams' ? 'text-slate-900 font-semibold' : ''
+                    isOnTeams ? 'text-slate-900 font-semibold' : ''
                   }`}
                 >
                   Teams & Schools
                 </button>
                 <button
-                  onClick={() => onTabChange('school-accounts')}
+                  onClick={() => navigate('/school-accounts')}
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
-                    currentTab === 'school-accounts' ? 'text-indigo-600 font-semibold' : ''
+                    isOnSchoolAccounts ? 'text-indigo-600 font-semibold' : ''
                   }`}
                 >
                   <Building2 className="w-4 h-4 text-indigo-500" />
                   <span>School Accounts</span>
                 </button>
                 <button
-                  onClick={() => onTabChange('history')}
+                  onClick={() => navigate('/past-champions')}
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 ${
-                    currentTab === 'history' ? 'text-slate-900 font-semibold' : ''
+                    isOnHistory ? 'text-slate-900 font-semibold' : ''
                   }`}
                 >
                   Past Champions
                 </button>
                 <button
-                  onClick={() => onTabChange('testing')}
+                  onClick={() => navigate('/engine-tests')}
                   className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 ${
-                    currentTab === 'testing' ? 'text-slate-900 font-semibold' : ''
+                    isOnTesting ? 'text-slate-900 font-semibold' : ''
                   }`}
                 >
                   Engine Tests
@@ -127,7 +139,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </p>
                 </div>
                 <button
-                  onClick={signOut}
+                  onClick={() => signOut()}
                   className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
                   title="Sign out of school portal"
                 >
@@ -175,19 +187,19 @@ export const Header: React.FC<HeaderProps> = ({
           {isParticipant ? (
             <>
               <button
-                onClick={() => onTabChange('participant-portal')}
-                className={`py-1 ${currentTab === 'participant-portal' ? 'text-indigo-600 font-semibold' : ''}`}
+                onClick={() => navigate('/school/dashboard')}
+                className={`py-1 ${isOnPortal ? 'text-indigo-600 font-semibold' : ''}`}
               >
                 My Matches
               </button>
               <button
-                onClick={() => onTabChange('tournaments')}
-                className={`py-1 ${currentTab.startsWith('tournament') ? 'text-indigo-600 font-semibold' : ''}`}
+                onClick={() => navigate('/')}
+                className={`py-1 ${pathname === '/' || pathname.startsWith('/tournaments') ? 'text-indigo-600 font-semibold' : ''}`}
               >
                 Brackets
               </button>
               <button
-                onClick={signOut}
+                onClick={() => signOut()}
                 className="py-1 text-slate-500"
               >
                 Sign Out
@@ -196,26 +208,26 @@ export const Header: React.FC<HeaderProps> = ({
           ) : (
             <>
               <button
-                onClick={() => onTabChange('tournaments')}
-                className={`py-1 ${currentTab.startsWith('tournament') ? 'text-indigo-600 font-semibold' : ''}`}
+                onClick={() => navigate('/')}
+                className={`py-1 ${pathname === '/' || pathname.startsWith('/tournaments') ? 'text-indigo-600 font-semibold' : ''}`}
               >
                 Tournaments
               </button>
               <button
-                onClick={() => onTabChange('teams')}
-                className={`py-1 ${currentTab === 'teams' ? 'text-indigo-600 font-semibold' : ''}`}
+                onClick={() => navigate('/teams')}
+                className={`py-1 ${isOnTeams ? 'text-indigo-600 font-semibold' : ''}`}
               >
                 Teams
               </button>
               <button
-                onClick={() => onTabChange('school-accounts')}
-                className={`py-1 ${currentTab === 'school-accounts' ? 'text-indigo-600 font-semibold' : ''}`}
+                onClick={() => navigate('/school-accounts')}
+                className={`py-1 ${isOnSchoolAccounts ? 'text-indigo-600 font-semibold' : ''}`}
               >
                 Accounts
               </button>
               <button
-                onClick={() => onTabChange('history')}
-                className={`py-1 ${currentTab === 'history' ? 'text-indigo-600 font-semibold' : ''}`}
+                onClick={() => navigate('/past-champions')}
+                className={`py-1 ${isOnHistory ? 'text-indigo-600 font-semibold' : ''}`}
               >
                 History
               </button>

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { api, getStoredRole, setStoredSession } from '@/lib/api.ts';
 import { UserRole, UserSession } from '@/shared/types.ts';

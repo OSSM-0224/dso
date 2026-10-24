@@ -3,24 +3,35 @@ import { BracketView } from '../../components/bracket/BracketView.tsx';
 import { api } from '@/lib/api.ts';
 import { MatchDoc, TeamDoc, TournamentDoc } from '@/shared/types.ts';
 
+interface PublicTournamentData {
+  tournament: TournamentDoc;
+  teams: TeamDoc[];
+  matches: MatchDoc[];
+}
+
 interface PublicTournamentPageProps {
   tournamentId: string;
   onBack: () => void;
+  /** Pre-rendered sanitized payload (server component). When provided no
+   * client fetch happens — identical markup, instant paint. */
+  initialData?: PublicTournamentData | null;
 }
 
 export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
   tournamentId,
   onBack,
+  initialData = null,
 }) => {
-  const [tournament, setTournament] = useState<TournamentDoc | null>(null);
-  const [matches, setMatches] = useState<MatchDoc[]>([]);
-  const [teams, setTeams] = useState<TeamDoc[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [tournament, setTournament] = useState<TournamentDoc | null>(initialData?.tournament ?? null);
+  const [matches, setMatches] = useState<MatchDoc[]>(initialData?.matches ?? []);
+  const [teams, setTeams] = useState<TeamDoc[]>(initialData?.teams ?? []);
+  const [isLoading, setIsLoading] = useState<boolean>(!initialData);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (initialData) return;
     loadPublicData();
-  }, [tournamentId]);
+  }, [tournamentId, initialData]);
 
   const loadPublicData = async () => {
     try {

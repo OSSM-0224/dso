@@ -18,6 +18,8 @@ interface SchoolPortalLayoutProps {
   adminPreviewSchool?: { schoolId: string; schoolName: string; schoolCode: string } | null;
   onExitAdminPreview?: () => void;
   onOpenPublicBracket?: (tournamentId: string) => void;
+  /** Portal main content (defaults to the full ParticipantPortalScreen). */
+  children?: React.ReactNode;
 }
 
 export const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({
@@ -26,6 +28,7 @@ export const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({
   adminPreviewSchool,
   onExitAdminPreview,
   onOpenPublicBracket,
+  children,
 }) => {
   const { user, signOut } = useAuth();
 
@@ -101,9 +104,9 @@ export const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({
         </div>
       </header>
 
-      {/* Main Content: ParticipantPortalScreen */}
+      {/* Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <ParticipantPortalScreen onOpenPublicBracket={onOpenPublicBracket} />
+        {children ?? <ParticipantPortalScreen onOpenPublicBracket={onOpenPublicBracket} />}
       </main>
 
       {/* School Portal Footer */}

@@ -27,13 +27,19 @@ import {
 
 interface ParticipantPortalScreenProps {
   onOpenPublicBracket?: (tournamentId: string) => void;
+  /** Deep-link support for the /school/* Next.js routes (default 'dashboard'). */
+  initialTab?: 'dashboard' | 'schedule' | 'bracket' | 'notifications';
+  /** Auto-open the detail modal for this match id (used by /school/matches/[id]). */
+  openMatchId?: string | null;
 }
 
 export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = ({
   onOpenPublicBracket,
+  initialTab = 'dashboard',
+  openMatchId = null,
 }) => {
   const { user, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'schedule' | 'bracket' | 'notifications'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'schedule' | 'bracket' | 'notifications'>(initialTab);
 
   // Dashboard Data
   const [dashboardData, setDashboardData] = useState<any | null>(null);
@@ -88,6 +94,11 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
       if (dash.tournaments && dash.tournaments.length > 0 && !selectedBracketTournamentId) {
         setSelectedBracketTournamentId(dash.tournaments[0].id);
         loadBracketPath(dash.tournaments[0].id);
+      }
+
+      if (openMatchId) {
+        const linked = matchList.find((m: any) => m.id === openMatchId) || null;
+        if (linked) setSelectedMatchData(linked);
       }
     } catch (err: any) {
       setError(err.message || 'Failed to load school portal data');

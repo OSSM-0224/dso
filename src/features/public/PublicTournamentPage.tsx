@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { BracketView } from '../../components/bracket/BracketView.tsx';
 import { api } from '@/lib/api.ts';
 import { MatchDoc, TeamDoc, TournamentDoc } from '@/shared/types.ts';
+import { PublicMatchLiveScore } from '@/features/scoring/LiveScorePanel.tsx';
 
 interface PublicTournamentData {
   tournament: TournamentDoc;
@@ -48,6 +49,12 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
       setIsLoading(false);
     }
   };
+
+  // Matches with an active scorer session — each card polls its own score.
+  const liveMatches = useMemo(
+    () => matches.filter((m) => m.status === 'live' && !m.isBye),
+    [matches],
+  );
 
   if (isLoading) {
     return (
@@ -132,6 +139,32 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
           <span className="shrink-0 text-xs bg-amber-600/50 px-3 py-1 rounded font-mono font-medium">
             Champion
           </span>
+        </div>
+      )}
+
+      {/* LIVE NOW strip — one polling card per live match */}
+      {liveMatches.length > 0 && (
+        <div className="rounded-2xl border border-red-200/70 bg-red-50/60 p-4 sm:p-5 shadow-sm">
+          <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-red-700">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+            </span>
+            Live now · {liveMatches.length}
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {liveMatches.map((m) => (
+              <PublicMatchLiveScore
+                key={m.id}
+                matchId={m.id}
+                title={
+                  m.roundName
+                    ? `Match #${m.matchNumber} · ${m.roundName}`
+                    : `Match #${m.matchNumber}`
+                }
+              />
+            ))}
+          </div>
         </div>
       )}
 

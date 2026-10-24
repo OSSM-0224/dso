@@ -217,6 +217,14 @@ export interface MatchScoreViewDto {
 /** Response of a polling GET with an up-to-date ?version= check attached. */
 export type MatchScorePollDto = MatchScoreViewDto | { changed: false; version: number };
 
+/** A scorer account available for match assignment (admin picker). */
+export interface ScorerCandidate {
+  id: string;
+  name: string;
+  /** School code or email — the identifier the scorer logs in with. */
+  identifier: string | null;
+}
+
 /** One row of the scorer's "my matches" console list. */
 export interface ScoringMatchListItem {
   matchId: string;

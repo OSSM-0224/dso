@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { api } from '@/lib/api.ts';
+import { MyMatchLiveScore } from '@/features/scoring/LiveScorePanel.tsx';
 
 interface MatchDetailModalProps {
   matchData: any;
@@ -204,6 +205,17 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               </a>
             </div>
           </div>
+
+          {/* LIVE score (renders only when a scoring session exists for this match) */}
+          {!match.isBye &&
+            Boolean(myTeam) &&
+            (opponentDisplay.isDecided || match.status === 'completed') && (
+              <MyMatchLiveScore
+                matchId={match.id}
+                enabled={isOpen}
+                title={match.roundName ? `Match #${match.matchNumber} · ${match.roundName}` : undefined}
+              />
+            )}
 
           {/* Result if completed */}
           {match.status === 'completed' && (

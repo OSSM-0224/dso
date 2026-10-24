@@ -38,7 +38,7 @@ middleware.ts          Lightweight cookie checks (/school/*, /api/my/*
 npm run dev        # Dev server on port 3000 (auto loads .env)
 npm run build      # Production build
 npm start          # Run the production build
-npm test           # 28 automated tests (engine + API suite + strict secrecy)
+npm test           # 70 automated tests (engine + API suite + strict secrecy + LIVE SCORER access control)
 npm run lint       # TypeScript check (tsc --noEmit)
 npm run seed:temp-logins        # TEMP-LOGIN: create temporary logins for existing schools (TEMP-LOGIN: remove later)
 npm run seed:temp-logins:remove # TEMP-LOGIN: remove temporary logins
@@ -198,10 +198,10 @@ Run:
 ```bash
 npm run seed:temp-logins
 ```
-This reads existing schools in the database and creates 1 admin account, 1 organizer account, and 1 participant account per existing school using the password from `TEMP_LOGIN_PASSWORD` (default: `DSO@2026`).
+This reads existing schools in the database and creates 1 admin account, 1 organizer account, **2 scorer accounts (`scorer@dso.gov.in` / `SCORER`, `scorer2@dso.gov.in` / `SCORER2`)**, and 1 participant account per existing school using the password from `TEMP_LOGIN_PASSWORD` (default: `DSO@2026`).
 
 ### Quick Login Dropdown (Dev Only)
-When `NEXT_PUBLIC_ENABLE_TEMP_LOGINS=true` in development, the school login modal displays a small **"Quick login (temporary)"** dropdown that fills credentials with one click. It is strictly disabled in production.
+When `NEXT_PUBLIC_ENABLE_TEMP_LOGINS=true` in development, the login modals (school, admin, and the scorer console) display a small **"Quick login (temporary)"** dropdown that fills credentials with one click. It is strictly disabled in production.
 
 ### How to Clean Up and Remove Temp Logins Later
 When testing is complete, remove all temporary login code by doing the following:
@@ -218,6 +218,100 @@ When testing is complete, remove all temporary login code by doing the following
    - Remove `TEMP_LOGIN_PASSWORD` and `NEXT_PUBLIC_ENABLE_TEMP_LOGINS` from `.env`
 5. **Remove `isTempSeed` attribute from User model**:
    - Remove `isTempSeed?: boolean;` from `UserDoc` in `src/shared/types.ts`
-6. **Remove QuickLoginDropdown from `SchoolLoginModal.tsx`** and the temp-login strip from `admin-shell.tsx`:
+  6. **Remove QuickLoginDropdown from `SchoolLoginModal.tsx`, `AdminLoginPage` / login screen, and `ScorerLoginCard.tsx`**, and the temp-login strip from `admin-shell.tsx`:
    - Remove the import and `<QuickLoginDropdown ... />` component.
 All temporary login code is marked with the comment `// TEMP-LOGIN: remove later` for easy search.
+
+## LIVE SCORER Module (Kho-Kho)
+
+A server-authoritative live scoring system for Kho-Kho tournaments: dedicated scorers clock in from the
+field, every point/pause/turn is event-sourced through the server, and participants, schools, and the
+public watch the match update in near-real-time.
+
+### Roles & Access
+
+| Role | Ability |
+|------|---------|
+| `admin` / `organizer` | Score **any** match from `http://localhost:3000/score`, assign scorers, correct results after completion |
+| `scorer` | Score **only matches they are assigned to** (`MatchDoc.scorerIds`) |
+| `viewer` / `participant` / public | Read-only live score (`/api/.../matches/:id/score`) — never include scorer identity |
+
+### 1. Scorer Console (`http://localhost:3000/score`)
+
+- `/score` — list of scoreable matches (published/ongoing tournaments, both teams decided, not a bye).
+  Scorers see only their assigned matches; admins/organizers see everything. Inline login gate for staff.
+- `/score/[matchId]` — full-screen standalone console (outside the admin route group; page-level
+  `canScore` gate). Every visible prompt is driven by the **server-built scoreboard** (`nextAction`):
+  1. **Toss** (first-innings and extra-innings rounds) → Start turn
+  2. **Turn panel** — giant server-authoritative timer, current batch, chaser, live points
+  3. **Event buttons** — DISMISSAL (Tagged out / Out of bounds / Late entry, +1 pt), FOUL, PAUSE, RESUME, TURN_END (all-out / timer-expired hints, or manual with reason)
+  4. **DOWN/Undo last event** (VOID event) / \
+  5. **Follow-on decision** (enforce/decline), **sudden-death** timing panel, **manual decision** with mandatory reason
+  6. **Complete match** — finalized through the existing `matchService.recordResult` (bracket auto-advance + notifications) or **Override winner** (audit-logged `score_override_winner`)
+
+**Pause semantics**: pausing the turn **stops the clock**. The scoreboard shows a large
+`CLOCK STOPPED - waiting for the scorer to resume` amber banner with a raised reminder after 2 minutes
+(`PAUSE_REMINDER_MS = 120000`). The remaining turn time is frozen on the server.
+
+### 2. Server-Authoritative Clock (no client trust)
+
+- Events cannot fake time: the client sends no usable `atMs`. Every event is stamped with **server wall
+  time** anchored to the scoring-session creation epoch, and the timeline is **monotonic** (clamped).
+- The scoreboard is always computed from `engine.getScoreboard(state, Date.now() - epoch)` on the server;
+  clients only **interpolate** the remaining/paused time between polls using a `snapshotAt` anchor
+  (`src/hooks/useLiveScore.ts`, scorer console does the same with a 250 ms tick + light double-scorer polling).
+- Turn durations (420 s U-14 / 540 s U-17+ per age), pause windows, and sudden-death timings are therefore tamper-proof.
+
+### 3. Data & API
+
+- Event-sourced persistence: `MatchScoreDoc` (session) + `ScoreEventDoc` (append-only events) in
+  `src/server/repositories/matchScoreRepository.ts`; engine in `src/shared/scoring/` (pure, tested:
+  `scoringTestSuite.ts`, 37 cases), service in `src/server/services/scoringService.ts`.
+- All live-score reader DTOs (`MatchScoreViewDto`) are whitelisted through `sanitizeMatchScoreDto` —
+  `recordedBy`/`recordedByRole` are stripped; viewers can never learn who scored.
+- First scoring activity flips the match from `upcoming` to **`live`**; completion/override records the
+  result, marks the session `completed`, and re-uses the normal bracket auto-advance (`nextMatchId/nextSlot`).
+
+Routes (route.ts -> guards -> controller -> service):
+- `GET  /api/scoring/my-matches` — scorer console list (role-filtered)
+- `GET  /api/scoring/matches/:id` — console detail (match + session + scorerNames)
+- `POST /api/scoring/matches/:id` — create/resume the scoring session
+- `POST /api/scoring/matches/:id/events` — append one engine event (Zod `scoreEventSchema`)
+- `POST /api/scoring/matches/:id/undo` — VOID the last actionable event
+- `POST /api/scoring/matches/:id/complete` — finalize through `recordResult`
+- `POST /api/scoring/matches/:id/override-winner` — manual decision (reason mandatory)
+- `GET  /api/admin/scorers` — scorer accounts available for assignment
+- `PUT  /api/admin/matches/:id/scorers` — assign/replace the scorer roster (audit `assign_scorers`)
+- `GET  /api/my|school/matches/:id/score` — school-scoped live score (403 for other schools)
+- `GET  /api/public/matches/:id/score?version=` — anonymous live score (version short-circuit)
+
+Audit trail (`what` values): `assign_scorers`, `score_event`, `score_undo`, `score_complete`, `score_override_winner`.
+
+### 4. Live Views (`http://localhost:3000` surfaces)
+
+- `src/hooks/useLiveScore.ts` — transport-agnostic polling hook: version short-circuit
+  (`{changed:false}` costs nothing), hidden-tab suspension with instant resume, manual refresh, and the
+  `snapshotAt` interpolation anchor. Swapping to SSE/WS later only replaces the fetcher.
+- `src/features/scoring/LiveScoreCard.tsx` — shared presentational LIVE/FINAL card: team totals,
+  winner crown, turn strip with the big monospace server clock, `CLOCK STOPPED` banner, engine
+  winner label, attribution-free events ticker.
+- **Participant portal**: `MatchDetailModal` shows a live card whenever a scoring session exists
+  (`/api/my/matches/:id/score`, school-scoped).
+- **Public bracket**: `PublicTournamentPage` shows a **LIVE NOW** strip — one polling card per match
+  with `status === 'live'` (`/api/public/matches/:id/score`).
+
+### 5. Admin Corrections & Scorer Assignment (Phase 5)
+
+Published fixture list (`/tournaments/[id]` -> Match Schedule List) per real match:
+- **Scorers** — assign/replace the roster (assignment is scoped per match and audit-logged).
+- **Scorer Console** link for any `live` match (admins/organizers can score without assignment).
+- **Correct** — rewrite the official result of a completed match in amber correction mode; the change
+  re-advances the bracket from that point (finals re-crown the champion) and is audit-logged with the
+  previous winner.
+
+### 6. Tests (70 total)
+
+- `scoringTestSuite.ts` — 37 engine cases (toss, turn lifecycle, clock, pause/resume, dismissals,
+  all-out, follow-on, extra innings, sudden death, manual decision, undo/void).
+- `scoringAccessTestSuite.ts` — 5 authorization cases: scorer-scope enforcement, wrong-school 403s,
+  viewer 403, DTO secrecy (no scorer identity), and polling version short-circuit.

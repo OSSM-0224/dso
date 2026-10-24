@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { BracketView } from '../../components/bracket/BracketView.tsx';
 import { ResultEntryModal } from '../../components/matches/ResultEntryModal.tsx';
 import { ScheduleModal } from '../../components/matches/ScheduleModal.tsx';
+import { ScorerAssignModal } from './ScorerAssignModal.tsx';
 import { api } from '@/lib/api.ts';
 import { MatchDoc, TeamDoc, TournamentDoc } from '@/shared/types.ts';
 
@@ -25,7 +27,9 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<'bracket' | 'list'>('bracket');
   const [selectedMatchForResult, setSelectedMatchForResult] = useState<MatchDoc | null>(null);
+  const [selectedMatchForCorrection, setSelectedMatchForCorrection] = useState<MatchDoc | null>(null);
   const [selectedMatchForSchedule, setSelectedMatchForSchedule] = useState<MatchDoc | null>(null);
+  const [selectedMatchForScorers, setSelectedMatchForScorers] = useState<MatchDoc | null>(null);
   const [selectedRoundFilter, setSelectedRoundFilter] = useState<number | 'all'>('all');
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -65,6 +69,32 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
       onRefresh();
     } catch (err: any) {
       setError(err.message || 'Failed to update schedule');
+    }
+  };
+
+  // Phase 5: rewrite the official result of a completed match (correction).
+  const handleCorrectResult = async (result: {
+    winnerTeamId: string;
+    score?: {
+      teamAScore?: number | string;
+      teamBScore?: number | string;
+      details?: string;
+    };
+  }) => {
+    if (!selectedMatchForCorrection) return;
+    try {
+      const res = await api.matches.recordResult(selectedMatchForCorrection.id, {
+        ...result,
+        score: result.score
+          ? { ...result.score, details: `CORRECTED · ${result.score.details || 'result rewritten'}` }
+          : { details: 'CORRECTED · result rewritten' },
+      });
+      setSuccessMsg(
+        `Result corrected: "${res.match.winner?.name}" is the official winner; the bracket has been re-advanced.`
+      );
+      onRefresh();
+    } catch (err: any) {
+      setError(err.message || 'Failed to apply result correction');
     }
   };
 
@@ -217,6 +247,11 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
                   <div className="min-w-0">
                     <div className="font-semibold text-slate-900 flex items-center gap-2">
                       <span>{m.roundName}</span>
+                      {m.status === 'live' && (
+                        <span className="text-[10px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded font-bold">
+                          LIVE
+                        </span>
+                      )}
                       {m.status === 'completed' && (
                         <span className="text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded font-medium">
                           Completed
@@ -255,7 +290,17 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
                     ) : null}
 
                     {canWrite && !m.isBye && (
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {m.status === 'live' && m.teamA && m.teamB && (
+                          <Link
+                            href={`/score/${m.id}`}
+                            className="px-2.5 py-1 border border-emerald-300 bg-emerald-50 text-emerald-700 rounded font-medium flex items-center gap-1 hover:bg-emerald-100"
+                            title="Open the live scoring console for this match"
+                          >
+                            <Icon name="stopwatch" size="sm" />
+                            Scorer Console
+                          </Link>
+                        )}
                         <button
                           onClick={() => setSelectedMatchForSchedule(m)}
                           className="px-2.5 py-1 border border-slate-200 rounded text-slate-600 hover:bg-slate-50"
@@ -270,6 +315,26 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
                             Result
                           </button>
                         )}
+                        {m.status === 'completed' && m.teamA && m.teamB && (
+                          <button
+                            onClick={() => setSelectedMatchForCorrection(m)}
+                            className="px-2.5 py-1 border border-amber-300 bg-amber-50 text-amber-800 rounded font-medium hover:bg-amber-100 flex items-center gap-1"
+                            title="Rewrite the official result (audit-logged)"
+                          >
+                            <Icon name="pen" size="sm" />
+                            Correct
+                          </button>
+                        )}
+                        {m.teamA && m.teamB && (
+                          <button
+                            onClick={() => setSelectedMatchForScorers(m)}
+                            className="px-2.5 py-1 border border-slate-200 rounded text-slate-600 hover:bg-slate-50 flex items-center gap-1"
+                            title="Assign or replace the scorer roster for this match"
+                          >
+                            <Icon name="users" size="sm" />
+                            Scorers
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -280,13 +345,34 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
         </div>
       )}
 
-      {/* Result Entry Modal */}
+      {/* Result Entry Modal (new result) */}
       {selectedMatchForResult && (
         <ResultEntryModal
           match={selectedMatchForResult}
           isOpen={true}
           onClose={() => setSelectedMatchForResult(null)}
           onSubmit={handleRecordResult}
+        />
+      )}
+
+      {/* Result Correction Modal (rewrite a completed result) */}
+      {selectedMatchForCorrection && (
+        <ResultEntryModal
+          match={selectedMatchForCorrection}
+          isOpen={true}
+          mode="correction"
+          onClose={() => setSelectedMatchForCorrection(null)}
+          onSubmit={handleCorrectResult}
+        />
+      )}
+
+      {/* Scorer Assignment Modal */}
+      {selectedMatchForScorers && (
+        <ScorerAssignModal
+          match={selectedMatchForScorers}
+          isOpen={true}
+          onClose={() => setSelectedMatchForScorers(null)}
+          onSaved={onRefresh}
         />
       )}
 

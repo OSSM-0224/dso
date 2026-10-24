@@ -7,6 +7,7 @@ import {
   MatchScoreViewDto,
   PastTournamentDoc,
   SchoolDoc,
+  ScorerCandidate,
   ScoringMatchListItem,
   TeamDoc,
   TournamentDoc,
@@ -362,6 +363,9 @@ export const api = {
     },
 
     // LIVE SCORER admin (assignment of scorers to matches)
+    scorers: {
+      list: () => request<ScorerCandidate[]>('/admin/scorers'),
+    },
     matches: {
       setScorers: (matchId: string, scorerIds: string[]) =>
         request<{ matchId: string; scorerIds: string[]; scorerNames: string[] }>(

@@ -5,6 +5,7 @@ import 'server-only';
  * refinement (per-match scorer assignment) happens inside the service.
  */
 import {
+  ScorerCandidate,
   ScoringMatchListItem,
   MatchScorePollDto,
   MatchScoreViewDto,
@@ -59,6 +60,11 @@ export const scoringController = {
   ) {
     const parsed = parseBody(overrideWinnerSchema, body);
     return scoringService.overrideWinner(user, matchId, parsed);
+  },
+
+  /** GET /api/admin/scorers — scorer accounts available for assignment. */
+  async listScorerCandidates(admin: UserSession): Promise<ScorerCandidate[]> {
+    return scoringService.listScorerCandidates(admin);
   },
 
   /** PUT /api/admin/matches/:id/scorers — assign/remove scorers for a match. */

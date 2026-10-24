@@ -6,6 +6,9 @@ interface ResultEntryModalProps {
   match: MatchDoc;
   isOpen: boolean;
   onClose: () => void;
+  /** 'entry' = record a new result; 'correction' = rewrite a completed match's
+   * official result (re-advances the bracket, audit-logged). */
+  mode?: 'entry' | 'correction';
   onSubmit: (result: {
     winnerTeamId: string;
     score?: {
@@ -20,8 +23,10 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
   match,
   isOpen,
   onClose,
+  mode = 'entry',
   onSubmit,
 }) => {
+  const isCorrection = mode === 'correction';
   const [selectedWinnerId, setSelectedWinnerId] = useState<string>(
     match.winner?.id || match.teamA?.id || ''
   );
@@ -78,6 +83,8 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
     }
   };
 
+  const isFinalMatch = match.nextMatchId === null;
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
@@ -90,8 +97,8 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-full overflow-y-auto flex flex-col border border-slate-200">
         <div className="flex shrink-0 items-center justify-between p-4 sm:p-6 pb-3 border-b border-slate-100">
           <div className="min-w-0">
-            <h3 className="text-base font-semibold text-slate-900">
-              Record Match Result
+            <h3 className={`text-base font-semibold ${isCorrection ? 'text-amber-800' : 'text-slate-900'}`}>
+              {isCorrection ? 'Correct Match Result' : 'Record Match Result'}
             </h3>
             <p className="text-xs text-slate-500 truncate">
               Match #{match.matchNumber} · {match.roundName}
@@ -115,7 +122,7 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-2">
-              Select Winner (Auto-Advances to next round)
+              {isCorrection ? 'Corrected Winner (Bracket Re-Advances)' : 'Select Winner (Auto-Advances to next round)'}
             </label>
             <div className="space-y-2">
               {match.teamA && (
@@ -221,9 +228,28 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
             />
           </div>
 
-          {match.nextMatchId === null && (
+          {isCorrection && (
             <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-md text-[11px] text-amber-800">
-              <Icon name="trophy" size="sm" className="mr-1 inline" /><strong>Final Match:</strong> Submitting will mark this tournament as Completed, declare the champion, and store them for future lookback history!
+              <Icon name="triangleExclamation" size="sm" className="mr-1 inline" />
+              <strong>Correction mode:</strong> this match already has an official result.
+              Submitting rewrites the record and re-advances the bracket from this point.
+              The change is audit-logged with the previous winner.
+            </div>
+          )}
+
+          {isFinalMatch && (
+            <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-md text-[11px] text-amber-800">
+              <Icon name="trophy" size="sm" className="mr-1 inline" />
+              {isCorrection ? (
+                <>
+                  <strong>Final Match:</strong> the corrected winner becomes the tournament
+                  Champion and the public bracket updates immediately.
+                </>
+              ) : (
+                <>
+                  <strong>Final Match:</strong> Submitting will mark this tournament as Completed, declare the champion, and store them for future lookback history!
+                </>
+              )}
             </div>
           )}
 
@@ -238,9 +264,15 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+              className={`px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 text-xs font-medium text-white rounded-md disabled:opacity-50 transition-colors ${
+                isCorrection ? 'bg-amber-600 hover:bg-amber-700' : 'bg-indigo-600 hover:bg-indigo-700'
+              }`}
             >
-              {isSubmitting ? 'Saving...' : 'Confirm Winner & Advance'}
+              {isSubmitting
+                ? 'Saving...'
+                : isCorrection
+                  ? 'Apply Correction'
+                  : 'Confirm Winner & Advance'}
             </button>
           </div>
         </form>

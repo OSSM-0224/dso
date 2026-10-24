@@ -15,7 +15,7 @@ import { userRepository } from '../repositories/userRepository.ts';
 import { auditLogRepository } from '../repositories/auditLogRepository.ts';
 import { matchService } from './matchService.ts';
 import { sanitizeMatchDto, sanitizeMatchScoreDto } from '../serializers/dtoSerializers.ts';
-import { MatchDoc, MatchScoreDoc, MatchScoreViewDto, ScoreEventDoc, ScoringMatchListItem, TeamDoc, TournamentDoc, UserSession } from '../../shared/types.ts';
+import { MatchDoc, MatchScoreDoc, MatchScoreViewDto, ScoreEventDoc, ScorerCandidate, ScoringMatchListItem, TeamDoc, TournamentDoc, UserSession } from '../../shared/types.ts';
 import {
   getScoringEngine,
 } from '../../shared/scoring/engine.ts';
@@ -514,6 +514,26 @@ class ScoringService {
     };
   }
 
+  /** Admin/organizer: scorer accounts available for match assignment. */
+  async listScorerCandidates(user: UserSession): Promise<ScorerCandidate[]> {
+    if (user.role !== 'admin' && user.role !== 'organizer') {
+      throw new ApiError(
+        403,
+        `Access denied. Role "${user.role}" cannot manage scorer assignments.`
+      );
+    }
+
+    const users = await userRepository.findAll();
+    return users
+      .filter((u) => u.role === 'scorer' && u.isActive)
+      .map((u) => ({
+        id: u.id,
+        name: u.name,
+        identifier: u.schoolCode || u.email || null,
+      }));
+  }
+
+  /** Admin/organizer: assign or replace the scorer roster of a match. */
   async setScorers(admin: UserSession, matchId: string, scorerIds: string[]) {
     const match = await matchRepository.findById(matchId);
     if (!match) throw new ApiError(404, 'Match not found');

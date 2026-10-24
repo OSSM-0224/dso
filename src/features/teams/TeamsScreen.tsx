@@ -271,7 +271,7 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
                 onClick={() => setShowCsvModal(true)}
                 className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 transition-colors flex items-center gap-1.5 shadow-sm"
               >
-                <Icon name=`"fileCsv`" size=`"sm`" />
+                <Icon name="fileCsv" size="sm" />
                 <span>Bulk Import CSV</span>
               </button>
               <button
@@ -300,7 +300,7 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
       {successMsg && (
         <div className="p-4 bg-emerald-50 text-emerald-800 text-xs rounded-lg border border-emerald-200 flex items-center justify-between">
           <span>{successMsg}</span>
-          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4">aria-label="Dismiss message"><Icon name="xmark" size="sm" /></button>
+          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4" aria-label="Dismiss message"><Icon name="xmark" size="sm" /></button>
         </div>
       )}
 

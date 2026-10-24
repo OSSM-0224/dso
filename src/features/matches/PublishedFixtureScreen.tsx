@@ -91,7 +91,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
       {successMsg && (
         <div className="p-4 bg-emerald-50 text-emerald-800 text-xs rounded-lg border border-emerald-200 flex items-center justify-between">
           <span>{successMsg}</span>
-          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4">aria-label="Dismiss message"><Icon name="xmark" size="sm" /></button>
+          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4" aria-label="Dismiss message"><Icon name="xmark" size="sm" /></button>
         </div>
       )}
 
@@ -103,7 +103,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
               Tournament Champion Crowned
             </span>
             <h2 className="text-2xl font-extrabold tracking-tight">
-              <Icon name=`"trophy`" size=`"sm`" className=`"mr-1`" />{tournament.winnerName}
+              <Icon name="trophy" size="sm" className="mr-1" />{tournament.winnerName}
             </h2>
             <p className="text-xs text-amber-100">
               Completed {tournament.sport.toUpperCase()} {tournament.ageGroup} {tournament.gender} Championship ({tournament.year}). This team is now saved as a recent champion for upcoming seasons.
@@ -153,7 +153,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
             className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-md transition-colors shadow-sm flex items-center gap-1.5"
             title="Export / Print Bracket to PDF"
           >
-            <Icon name=`"print`" size=`"sm`" />
+            <Icon name="print" size="sm" />
             <span>Export to PDF / Print</span>
           </button>
         </div>

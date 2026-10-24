@@ -263,7 +263,7 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
                       <td className="px-3 py-2">
                         {item.status === 'valid' && (
                           <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            <Icon name=`"check`" size=`"sm`" />Ready
+                            <Icon name="check" size="sm" />Ready
                           </span>
                         )}
                         {item.status === 'duplicate' && (

@@ -200,7 +200,7 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
 
           {match.nextMatchId === null && (
             <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-md text-[11px] text-amber-800">
-              <Icon name=`"trophy`" size=`"sm`" className=`"mr-1 inline`" /><strong>Final Match:</strong> Submitting will mark this tournament as Completed, declare the champion, and store them for future lookback history!
+              <Icon name="trophy" size="sm" className="mr-1 inline" /><strong>Final Match:</strong> Submitting will mark this tournament as Completed, declare the champion, and store them for future lookback history!
             </div>
           )}
 

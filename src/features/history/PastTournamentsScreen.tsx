@@ -262,7 +262,7 @@ export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({ ca
               >
                 <div>
                   <div className="font-semibold text-slate-900 flex items-center gap-2">
-                    <Icon name=`"trophy`" size=`"sm`" />
+                    <Icon name="trophy" size="sm" />
                     <span>{r.winnerTeamName}</span>
                     <span className="text-[10px] bg-amber-100 text-amber-900 font-mono font-bold px-1.5 py-0.5 rounded">
                       {r.year}

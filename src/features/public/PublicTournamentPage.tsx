@@ -107,7 +107,7 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
             onClick={() => window.print()}
             className="px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 shadow-sm transition-colors"
           >
-            <Icon name=`"print`" size=`"sm`" className=`"mr-1`" />Print / Save PDF
+            <Icon name="print" size="sm" className="mr-1" />Print / Save PDF
           </button>
           <button
             onClick={onBack}
@@ -126,7 +126,7 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
               Championship Winner
             </div>
             <div className="text-xl font-extrabold tracking-tight">
-              <Icon name=`"trophy`" size=`"sm`" className=`"mr-1`" />{tournament.winnerName}
+              <Icon name="trophy" size="sm" className="mr-1" />{tournament.winnerName}
             </div>
           </div>
           <span className="text-xs bg-amber-600/50 px-3 py-1 rounded font-mono font-medium">

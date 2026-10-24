@@ -340,7 +340,7 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
 
                               <div className="flex items-center gap-1.5 shrink-0">
                                 <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
-                                  QF Bye <Icon name=`"check`" size=`"xs`" />
+                                  QF Bye <Icon name="check" size="xs" />
                                 </span>
                               </div>
                             </div>

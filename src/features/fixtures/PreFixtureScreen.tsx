@@ -217,7 +217,7 @@ export const PreFixtureScreen: React.FC<PreFixtureScreenProps> = ({
                   >
                     <div>
                       <div className="font-semibold text-amber-950 flex items-center gap-1.5">
-                        <Icon name=`"trophy`" size=`"sm`" />
+                        <Icon name="trophy" size="sm" />
                         <span>{champ.teamName}</span>
                       </div>
                       <div className="text-[11px] text-amber-800">

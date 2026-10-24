@@ -236,7 +236,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
       {successMsg && (
         <div className="p-4 bg-emerald-50 text-emerald-800 text-xs rounded-lg border border-emerald-200 flex items-center justify-between">
           <span>{successMsg}</span>
-          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4">aria-label="Dismiss message"><Icon name="xmark" size="sm" /></button>
+          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4" aria-label="Dismiss message"><Icon name="xmark" size="sm" /></button>
         </div>
       )}
 
@@ -417,7 +417,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                   onClick={() => setShowAddTeamShortcut(true)}
                   className="px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold rounded-md transition-colors"
                 >
-                  <Icon name=`"bolt`" size=`"sm`" className=`"mr-1`" />One-Click Add Team
+                  <Icon name="bolt" size="sm" className="mr-1" />One-Click Add Team
                 </button>
               )}
             </div>
@@ -620,7 +620,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200 space-y-4">
             <div className="flex items-center gap-2 text-amber-700 pb-2 border-b border-slate-100">
-              <Icon name=`"triangleExclamation`" size=`"lg`" className=`"text-red-text`" />
+              <Icon name="triangleExclamation" size="lg" className="text-red-text" />
               <h3 className="text-base font-bold text-slate-900">
                 Unlock Enrollment Warning
               </h3>

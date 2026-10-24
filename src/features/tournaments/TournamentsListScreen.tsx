@@ -122,7 +122,7 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
         </div>
       ) : tournaments.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm space-y-3">
-          <div className="text-3xl"><Icon name=`"trophy`" size=`"xl`" /></div>
+          <div className="text-3xl"><Icon name="trophy" size="xl" /></div>
           <h3 className="text-base font-bold text-slate-900">
             No Tournaments Created Yet
           </h3>
@@ -180,7 +180,7 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
 
                 {t.winnerName && (
                   <div className="text-xs bg-amber-50 text-amber-900 border border-amber-200 rounded p-2 flex items-center gap-1.5 font-medium">
-                    <span className=`"inline-flex items-center gap-1.5`"><Icon name=`"trophy`" size=`"sm`" />Champion:</span>
+                    <span className="inline-flex items-center gap-1.5"><Icon name="trophy" size="sm" />Champion:</span>
                     <span className="truncate">{t.winnerName}</span>
                   </div>
                 )}

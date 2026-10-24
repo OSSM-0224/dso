@@ -358,7 +358,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                 <Icon name="userPlus" size="lg" />
                 <h3 className="text-base font-bold">Issue School Participant Login</h3>
               </div>
-              <button
+              <button aria-label="Close"
                 onClick={() => setShowCreateModal(false)}
                 className="text-white/80 hover:text-white"
               >
@@ -464,7 +464,9 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
               </p>
 
               <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
-                <button                   type="button"\n                  onClick={() => setShowCreateModal(false)}
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
                   className="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl"
                 >
                   Cancel
@@ -491,7 +493,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                 <Icon name="rotate" size="lg" />
                 <h3 className="text-base font-bold">Reset School Password</h3>
               </div>
-              <button
+              <button aria-label="Close"
                 onClick={() => setShowResetModal(false)}
                 className="text-white/80 hover:text-white"
               >
@@ -519,7 +521,9 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
               </div>
 
               <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
-                <button                   type="button"\n                  onClick={() => setShowResetModal(false)}
+                <button
+                  type="button"
+                  onClick={() => setShowResetModal(false)}
                   className="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl"
                 >
                   Cancel

@@ -530,7 +530,9 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
               <h3 className="text-base font-bold text-slate-900">
                 {editingSchool ? 'Edit School' : 'Add School'}
               </h3>
-              <button                 type="button"\n                onClick={() => setShowSchoolModal(false)}
+              <button aria-label="Close"
+  type="button"
+                onClick={() => setShowSchoolModal(false)}
                 className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
               >
                 <Icon name="xmark" size="sm" align-middle />
@@ -569,7 +571,9 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-              <button                 type="button"\n                onClick={() => setShowSchoolModal(false)}
+              <button
+  type="button"
+                onClick={() => setShowSchoolModal(false)}
                 className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800"
               >
                 Cancel
@@ -596,7 +600,9 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
               <h3 className="text-base font-bold text-slate-900">
                 {editingTeam ? 'Edit Team' : 'Add Team Squad'}
               </h3>
-              <button                 type="button"\n                onClick={() => setShowTeamModal(false)}
+              <button aria-label="Close"
+  type="button"
+                onClick={() => setShowTeamModal(false)}
                 className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
               >
                 <Icon name="xmark" size="sm" align-middle />
@@ -688,7 +694,9 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-              <button                 type="button"\n                onClick={() => setShowTeamModal(false)}
+              <button
+  type="button"
+                onClick={() => setShowTeamModal(false)}
                 className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800"
               >
                 Cancel

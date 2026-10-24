@@ -75,7 +75,7 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
               Match #{match.matchNumber} · {match.roundName}
             </p>
           </div>
-          <button
+          <button aria-label="Close"
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 text-sm font-semibold p-1"
           >

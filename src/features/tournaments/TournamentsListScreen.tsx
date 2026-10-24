@@ -206,7 +206,9 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
               <h3 className="text-base font-bold text-slate-900">
                 Create New Tournament
               </h3>
-              <button                 type="button"\n                onClick={() => setShowCreateModal(false)}
+              <button aria-label="Close"
+  type="button"
+                onClick={() => setShowCreateModal(false)}
                 className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
               >
                 <Icon name="xmark" size="sm" align-middle />
@@ -327,7 +329,9 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
                   Select Enrolled Teams ({selectedTeams.length} selected)
                 </label>
                 {availableTeamsForForm.length > 0 && (
-                  <button                     type="button"\n                    onClick={() => {
+                  <button
+  type="button"
+                    onClick={() => {
                       if (selectedTeams.length === availableTeamsForForm.length) {
                         setSelectedTeams([]);
                       } else {
@@ -381,7 +385,9 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-              <button                 type="button"\n                onClick={() => setShowCreateModal(false)}
+              <button
+  type="button"
+                onClick={() => setShowCreateModal(false)}
                 className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800"
               >
                 Cancel

@@ -55,7 +55,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
               Match #{match.matchNumber} · {match.roundName}
             </p>
           </div>
-          <button
+          <button aria-label="Close"
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 text-sm font-semibold p-1"
           >
@@ -96,7 +96,9 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
           </div>
 
           <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-            <button               type="button"\n              onClick={onClose}
+            <button
+              type="button"
+              onClick={onClose}
               className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800"
             >
               Cancel

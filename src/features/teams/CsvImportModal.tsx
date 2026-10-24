@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Icon } from '@/components/ui/Icon.tsx';
 import { api } from '@/lib/api.ts';
 // Type-only dependency: CsvImportReport/CsvImportRow live in src/shared/types.ts
 // (team re-exports them for the server side) so this client component never
@@ -262,7 +263,7 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
                       <td className="px-3 py-2">
                         {item.status === 'valid' && (
                           <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            ✓ Ready
+                            <Icon name=`"check`" size=`"sm`" />Ready
                           </span>
                         )}
                         {item.status === 'duplicate' && (

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { api } from '@/lib/api.ts';
 import { useAuth } from '@/context/AuthContext.tsx';
@@ -666,7 +666,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                                 : 'bg-rose-100 text-rose-800'
                             }`}
                           >
-                            {m.outcome === 'won' ? '✓ Won' : '✗ Lost'}
+                            {m.outcome === 'won' ? (<span className="inline-flex items-center gap-1"><Icon name="check" size="sm" />Won</span>) : (<span className="inline-flex items-center gap-1"><Icon name="xmark" size="sm" />Lost</span>)}
                           </span>
                         )}
 
@@ -818,7 +818,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                       }`}
                     >
                       {tp.overallStatus === 'winner'
-                        ? '🏆 Tournament Winner'
+                        ? (<><Icon name="trophy" size="sm" />Tournament Winner</>)
                         : tp.overallStatus === 'eliminated'
                         ? 'Eliminated'
                         : 'Active in Tournament'}
@@ -849,8 +849,8 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                           <span>
                             {r.status === 'completed'
                               ? r.isWinner
-                                ? '✓ Advanced'
-                                : '✗ Eliminated'
+                                ? (<span className="inline-flex items-center gap-1"><Icon name="check" size="sm" />Advanced</span>)
+                                : (<span className="inline-flex items-center gap-1"><Icon name="xmark" size="sm" />Eliminated</span>)
                               : 'Upcoming'}
                           </span>
                           {r.score && (

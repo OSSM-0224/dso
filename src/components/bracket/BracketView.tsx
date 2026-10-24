@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icon } from '@/components/ui/Icon.tsx';
 import { MatchDoc, TeamDoc } from '@/shared/types.ts';
 
 interface BracketViewProps {
@@ -194,7 +195,7 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                             )}
                           </div>
                           <span className="font-mono font-bold text-xs shrink-0 tabular-nums">
-                            {match.score?.teamAScore !== undefined ? match.score.teamAScore : isWinnerA ? '✓' : ''}
+                            {match.score?.teamAScore !== undefined ? match.score.teamAScore : isWinnerA ? <Icon name="circleCheck" size="sm" /> : ''}
                           </span>
                         </div>
 
@@ -242,7 +243,7 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                               )}
                             </div>
                             <span className="font-mono font-bold text-xs shrink-0 tabular-nums">
-                              {match.score?.teamBScore !== undefined ? match.score.teamBScore : isWinnerB ? '✓' : ''}
+                              {match.score?.teamBScore !== undefined ? match.score.teamBScore : isWinnerB ? <Icon name="circleCheck" size="sm" /> : ''}
                             </span>
                           </div>
                         )}
@@ -339,7 +340,7 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
 
                               <div className="flex items-center gap-1.5 shrink-0">
                                 <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
-                                  QF Bye ✓
+                                  QF Bye <Icon name=`"check`" size=`"xs`" />
                                 </span>
                               </div>
                             </div>

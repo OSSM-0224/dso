@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { api } from '@/lib/api.ts';
 import { SchoolDoc } from '@/shared/types.ts';

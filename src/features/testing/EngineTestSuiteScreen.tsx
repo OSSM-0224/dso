@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Icon } from '@/components/ui/Icon.tsx';
 import type { TestSuiteSummary } from '@/shared/tests/testSuite.ts';
 import { api } from '@/lib/api.ts';
 
@@ -43,7 +44,7 @@ export const EngineTestSuiteScreen: React.FC = () => {
           disabled={isRunning}
           className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs rounded-lg transition-colors shadow-sm disabled:opacity-50 shrink-0"
         >
-          {isRunning ? 'Running Test Cases...' : '▶ Run All Engine Tests'}
+          {isRunning ? 'Running Test Cases...' : (<><Icon name="play" size="sm" />Run All Engine Tests</>)}
         </button>
       </div>
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Icon } from '@/components/ui/Icon.tsx';
 import { BracketView } from '../../components/bracket/BracketView.tsx';
 import { api } from '@/lib/api.ts';
 import { FixtureSnapshotDoc, MatchDoc, TeamDoc, TournamentDoc } from '@/shared/types.ts';
@@ -123,7 +124,7 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
       {successMsg && (
         <div className="p-4 bg-emerald-50 text-emerald-800 text-xs rounded-lg border border-emerald-200 flex items-center justify-between">
           <span>{successMsg}</span>
-          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4">✕</button>
+          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4">aria-label="Dismiss message"><Icon name="xmark" size="sm" /></button>
         </div>
       )}
 
@@ -161,7 +162,7 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
           {/* Warnings (if any constraint had to be relaxed) */}
           {snapshot.warnings && snapshot.warnings.length > 0 && (
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 space-y-1">
-              <div className="font-bold">⚠️ Applied Engine Constraint Warnings:</div>
+              <div className=`"font-bold flex items-center gap-1.5`"><Icon name=`"triangleExclamation`" size=`"sm`" />Applied Engine Constraint Warnings:</div>
               {snapshot.warnings.map((w, idx) => (
                 <div key={idx} className="ml-2 font-mono text-[11px]">• {w}</div>
               ))}
@@ -172,7 +173,7 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
           <div className="flex flex-wrap gap-2 text-[11px] text-slate-500 pt-2 border-t border-slate-100">
             {snapshot.appliedRules.map((rule, idx) => (
               <span key={idx} className="bg-slate-50 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
-                ✓ {rule}
+                <Icon name=`"check`" size=`"xs`" className=`"mr-1 inline`" />{rule}
               </span>
             ))}
           </div>
@@ -219,7 +220,7 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200">
             <div className="flex items-center gap-2 text-amber-700 pb-2 border-b border-slate-100 mb-3">
-              <span className="text-lg">⚠️</span>
+              <Icon name=`"triangleExclamation`" size=`"lg`" className=`"text-red-text`" />
               <h3 className="text-base font-bold text-slate-900">
                 Rule Violation Confirmation
               </h3>

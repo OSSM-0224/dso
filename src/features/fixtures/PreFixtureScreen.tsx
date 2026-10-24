@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Icon } from '@/components/ui/Icon.tsx';
 import { api } from '@/lib/api.ts';
 import { TeamDoc, TournamentDoc } from '@/shared/types.ts';
 
@@ -216,7 +217,7 @@ export const PreFixtureScreen: React.FC<PreFixtureScreenProps> = ({
                   >
                     <div>
                       <div className="font-semibold text-amber-950 flex items-center gap-1.5">
-                        <span>🏆</span>
+                        <Icon name=`"trophy`" size=`"sm`" />
                         <span>{champ.teamName}</span>
                       </div>
                       <div className="text-[11px] text-amber-800">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Icon } from '@/components/ui/Icon.tsx';
 import { MatchDoc } from '@/shared/types.ts';
 
 interface ScheduleModalProps {

@@ -63,6 +63,7 @@ export const ICON_MAP = {
   rightFromBracket: 'fa-solid fa-right-from-bracket',
   rightToBracket: 'fa-solid fa-right-to-bracket',
   spinner: 'fa-solid fa-spinner',
+  play: 'fa-solid fa-play',
   bars: 'fa-solid fa-bars',
   copy: 'fa-solid fa-copy',
   refresh: 'fa-solid fa-arrows-rotate',

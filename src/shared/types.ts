@@ -1,4 +1,6 @@
-export type UserRole = 'admin' | 'organizer' | 'viewer' | 'participant';
+import { KhoKhoScoreboard, KhoKhoScoreEvent, KhoKhoScoringConfig, ScoringSport, ScoringTeamRef } from './scoring/types.ts';
+
+export type UserRole = 'admin' | 'organizer' | 'scorer' | 'viewer' | 'participant';
 
 export interface UserSession {
   id: string;
@@ -149,11 +151,91 @@ export interface MatchDoc {
   scheduledAt: string | null;
   venue: string | null;
   quarter: 1 | 2 | 3 | 4;
+  /** UserDoc ids (role="scorer") authorised to score this match. */
+  scorerIds?: string[];
   score: {
     teamAScore?: number | string;
     teamBScore?: number | string;
     details?: string;
   } | null;
+}
+
+export type MatchScoreStatus = 'active' | 'completed';
+
+/** A single scoring event appended to a match, with server-side attribution. */
+export interface ScoreEventDoc {
+  id: string;
+  matchId: string;
+  event: KhoKhoScoreEvent;
+  recordedBy: string;
+  recordedByRole: string;
+  /** Server wall-clock ISO time when the event was accepted. */
+  recordedAt: string;
+  createdAt: string;
+}
+
+/** Persistent scoring session for one match (event-sourced via ScoreEventDoc). */
+export interface MatchScoreDoc {
+  id: string;
+  matchId: string;
+  tournamentId: string;
+  sport: string; // 'kho-kho'
+  config: KhoKhoScoringConfig;
+  teams: Array<ScoringTeamRef & { schoolName?: string }>;
+  /** Bumped on every state change (event, undo, completion). */
+  version: number;
+  status: MatchScoreStatus;
+  /** Non-empty once the match result was accepted through matchService.recordResult. */
+  winnerTeamIds: string[] | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Scoring event as exposed to callers (attribution stripped). */
+export type SanitizedScoreEvent = {
+  eventId: string;
+  atMs: number;
+  type: KhoKhoScoreEvent['type'];
+} & Record<string, unknown>;
+
+/** Live score payload returned to staff, participants, and the public view. */
+export interface MatchScoreViewDto {
+  id: string;
+  matchId: string;
+  tournamentId: string;
+  sport: string;
+  version: number;
+  status: MatchScoreStatus;
+  winnerTeamIds: string[] | null;
+  teams: Array<{ id: string; name: string; schoolName?: string }>;
+  scoreboard: KhoKhoScoreboard;
+  events: SanitizedScoreEvent[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Response of a polling GET with an up-to-date ?version= check attached. */
+export type MatchScorePollDto = MatchScoreViewDto | { changed: false; version: number };
+
+/** One row of the scorer's "my matches" console list. */
+export interface ScoringMatchListItem {
+  matchId: string;
+  tournamentId: string;
+  tournamentName: string;
+  tournamentStatus: TournamentStatus;
+  sport: string;
+  ageGroup: string;
+  gender: string;
+  round: number;
+  matchNumber: number;
+  roundName: string;
+  scheduledAt: string | null;
+  venue: string | null;
+  teamA: TeamDoc | null;
+  teamB: TeamDoc | null;
+  hasScore: boolean;
+  scoreVersion: number;
+  scorerNames: string[];
 }
 
 export interface FixtureSnapshotDoc {
@@ -213,7 +295,12 @@ export interface AuditLogDoc {
     | 'create_participant'
     | 'reset_password'
     | 'toggle_participant_status'
-    | 'change_password';
+    | 'change_password'
+    | 'assign_scorers'
+    | 'score_event'
+    | 'score_undo'
+    | 'score_override_winner'
+    | 'score_complete';
   before: any;
   after: any;
   details: string;

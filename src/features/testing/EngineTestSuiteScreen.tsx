@@ -18,7 +18,16 @@ export const EngineTestSuiteScreen: React.FC = () => {
       // never pulled into this page's bundle unless the server route fails).
       try {
         const { runFixtureEngineTestSuite } = await import('@/shared/tests/testSuite.ts');
-        setSummary(runFixtureEngineTestSuite());
+        const { runScoringEngineTestSuite } = await import('@/shared/tests/scoringTestSuite.ts');
+        const fixture = runFixtureEngineTestSuite();
+        const scoring = runScoringEngineTestSuite();
+        setSummary({
+          total: fixture.total + scoring.total,
+          passed: fixture.passed + scoring.passed,
+          failed: fixture.failed + scoring.failed,
+          durationMs: fixture.durationMs + scoring.durationMs,
+          results: [...fixture.results, ...scoring.results],
+        });
       } catch {
         // ignore
       }

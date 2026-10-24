@@ -3,8 +3,11 @@ import {
   EnrollmentDoc,
   FixtureSnapshotDoc,
   MatchDoc,
+  MatchScorePollDto,
+  MatchScoreViewDto,
   PastTournamentDoc,
   SchoolDoc,
+  ScoringMatchListItem,
   TeamDoc,
   TournamentDoc,
   UserRole,
@@ -14,7 +17,7 @@ import { TestSuiteSummary } from '@/shared/types.ts';
 import { CsvImportReport, CsvImportRow } from '@/shared/types.ts';
 
 const ROLE_KEY = 'dso_auth_role';
-const VALID_ROLES: UserRole[] = ['admin', 'organizer', 'viewer', 'participant'];
+const VALID_ROLES: UserRole[] = ['admin', 'organizer', 'scorer', 'viewer', 'participant'];
 
 // Sessions are now httpOnly cookies issued by the API routes
 // (see src/server/auth/session.ts). The client only mirrors the role so the
@@ -286,6 +289,11 @@ export const api = {
         matches: MatchDoc[];
         snapshot?: FixtureSnapshotDoc;
       }>(`/public/tournaments/${id}`),
+
+    getMatchScore: (matchId: string, version?: number) => {
+      const q = version !== undefined ? `?version=${version}` : '';
+      return request<MatchScorePollDto>(`/public/matches/${matchId}/score${q}`);
+    },
   },
 
   // Tests
@@ -350,7 +358,66 @@ export const api = {
           method: 'PUT',
           body: JSON.stringify({ isActive }),
         }),
+
     },
+
+    // LIVE SCORER admin (assignment of scorers to matches)
+    matches: {
+      setScorers: (matchId: string, scorerIds: string[]) =>
+        request<{ matchId: string; scorerIds: string[]; scorerNames: string[] }>(
+          `/admin/matches/${matchId}/scorers`,
+          {
+            method: 'PUT',
+            body: JSON.stringify({ scorerIds }),
+          }
+        ),
+    },
+  },
+
+  // LIVE SCORER Console (staff only; scorers limited to assigned matches)
+  scoring: {
+    myMatches: () => request<ScoringMatchListItem[]>('/scoring/my-matches'),
+    getMatch: (id: string) =>
+      request<{
+        match: MatchDoc;
+        tournament: {
+          id: string;
+          name: string;
+          sport: string;
+          status: string;
+          ageGroup: string;
+          gender: string;
+        };
+        scorerIds: string[];
+        scorerNames: string[];
+        score: MatchScoreViewDto | null;
+      }>(`/scoring/matches/${id}`),
+    ensureScore: (id: string) =>
+      request<MatchScoreViewDto>(`/scoring/matches/${id}`, { method: 'POST' }),
+    appendEvent: (id: string, event: Record<string, unknown>) =>
+      request<MatchScoreViewDto>(`/scoring/matches/${id}/events`, {
+        method: 'POST',
+        body: JSON.stringify(event),
+      }),
+    undo: (id: string) =>
+      request<MatchScoreViewDto>(`/scoring/matches/${id}/undo`, { method: 'POST' }),
+    complete: (id: string) =>
+      request<{
+        match: MatchDoc;
+        nextMatch: MatchDoc | null;
+        tournamentCompleted: boolean;
+        score: MatchScoreViewDto;
+      }>(`/scoring/matches/${id}/complete`, { method: 'POST' }),
+    overrideWinner: (id: string, data: { winnerTeamId: string; reason: string }) =>
+      request<{
+        match: MatchDoc;
+        nextMatch: MatchDoc | null;
+        tournamentCompleted: boolean;
+        score: MatchScoreViewDto | null;
+      }>(`/scoring/matches/${id}/override-winner`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
   },
 
   // Participant "My Matches" Portal (Server derives schoolId strictly from session)
@@ -483,6 +550,12 @@ export const api = {
 
     getCalendarDownloadUrl: (matchId: string) => {
       return `/api/my/matches/${matchId}/calendar`;
+    },
+
+    // Live score polling for the signed-in school (version short-circuit)
+    getMatchScore: (matchId: string, version?: number) => {
+      const q = version !== undefined ? `?version=${version}` : '';
+      return request<MatchScorePollDto>(`/my/matches/${matchId}/score${q}`);
     },
   },
 };

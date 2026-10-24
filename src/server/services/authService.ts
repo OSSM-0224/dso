@@ -217,6 +217,7 @@ export class AuthService {
     const roleNames: Record<UserRole, string> = {
       admin: 'DSO Admin (District Sports Officer)',
       organizer: 'Tournament Organizer (Navi Mumbai)',
+      scorer: 'Match Scorer',
       viewer: 'Public Spectator / School Coach',
       participant: 'School Participant',
     };

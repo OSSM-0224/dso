@@ -1,18 +1,20 @@
 ﻿import 'server-only';
 import 'dotenv/config';
 import { runFixtureEngineTestSuite, TestSuiteSummary } from '../../shared/tests/testSuite.ts';
+import { runScoringEngineTestSuite } from '../../shared/tests/scoringTestSuite.ts';
 import { runParticipantAccessTestSuite } from './participantAccessTestSuite.ts';
 
 async function main() {
   const engineSummary = runFixtureEngineTestSuite();
+  const scoringSummary = runScoringEngineTestSuite();
   const participantSummary = await runParticipantAccessTestSuite();
 
   const combined: TestSuiteSummary = {
-    total: engineSummary.total + participantSummary.total,
-    passed: engineSummary.passed + participantSummary.passed,
-    failed: engineSummary.failed + participantSummary.failed,
-    durationMs: engineSummary.durationMs + participantSummary.durationMs,
-    results: [...engineSummary.results, ...participantSummary.results],
+    total: engineSummary.total + scoringSummary.total + participantSummary.total,
+    passed: engineSummary.passed + scoringSummary.passed + participantSummary.passed,
+    failed: engineSummary.failed + scoringSummary.failed + participantSummary.failed,
+    durationMs: engineSummary.durationMs + scoringSummary.durationMs + participantSummary.durationMs,
+    results: [...engineSummary.results, ...scoringSummary.results, ...participantSummary.results],
   };
 
   for (const r of combined.results) {

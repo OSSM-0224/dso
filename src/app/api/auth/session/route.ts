@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     }
 
     const role = body.role || 'organizer';
-    if (!['admin', 'organizer', 'viewer', 'participant'].includes(role)) {
+    if (!['admin', 'organizer', 'scorer', 'viewer', 'participant'].includes(role)) {
       return errorResponse(new ApiError(400, 'Invalid role'));
     }
 

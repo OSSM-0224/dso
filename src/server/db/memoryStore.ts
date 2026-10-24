@@ -5,9 +5,11 @@ import {
   EnrollmentDoc,
   FixtureSnapshotDoc,
   MatchDoc,
+  MatchScoreDoc,
   NotificationDoc,
   PastTournamentDoc,
   SchoolDoc,
+  ScoreEventDoc,
   TeamDoc,
   TournamentDoc,
   UserDoc,
@@ -29,6 +31,8 @@ class MemoryStore {
   users = new Map<string, UserDoc>();
   notifications = new Map<string, NotificationDoc>();
   acknowledgements = new Map<string, AcknowledgementDoc>();
+  matchScores = new Map<string, MatchScoreDoc>(); // keyed by matchId
+  scoreEvents = new Map<string, ScoreEventDoc>();
 
   // Reset helper
   clearAll() {
@@ -43,6 +47,8 @@ class MemoryStore {
     this.users.clear();
     this.notifications.clear();
     this.acknowledgements.clear();
+    this.matchScores.clear();
+    this.scoreEvents.clear();
   }
 }
 

@@ -110,3 +110,36 @@ export const changePasswordSchema = z.object({
 export const resetPasswordSchema = z.object({
   newTemporaryPassword: z.string().min(6, 'Temporary password must be at least 6 characters long'),
 });
+
+export const SCORE_EVENT_TYPES = [
+  'TOSS',
+  'TURN_START',
+  'TURN_PAUSE',
+  'TURN_RESUME',
+  'TURN_END',
+  'DISMISSAL',
+  'FOUL_LOG',
+  'FOLLOW_ON_DECISION',
+  'MIN_TIME_RESULT',
+  'MANUAL_DECISION',
+  'VOID',
+] as const;
+
+/** Incoming scoring event. Payload semantics are validated by the scoring
+ * engine (`ScoringRuleError` → 409); the schema enforces the envelope. */
+export const scoreEventSchema = z
+  .object({
+    eventId: z.string().min(1, 'eventId is required'),
+    atMs: z.number().int().min(0, 'atMs must be a non-negative integer'),
+    type: z.enum(SCORE_EVENT_TYPES),
+  })
+  .passthrough();
+
+export const overrideWinnerSchema = z.object({
+  winnerTeamId: z.string().min(1, 'winnerTeamId is required'),
+  reason: z.string().min(5, 'A reason (at least 5 characters) is required for the override'),
+});
+
+export const setScorersSchema = z.object({
+  scorerIds: z.array(z.string().min(1)).max(10, 'At most 10 scorers can be assigned per match'),
+});

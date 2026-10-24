@@ -75,6 +75,7 @@ export const MatchSchema = new Schema(
     nextSlot: { type: String, enum: ['A', 'B', null], default: null },
     scheduledAt: { type: Date, default: null },
     venue: { type: String, default: null },
+    scorers: [{ type: String }], // UserDoc ids with role="scorer"
     score: {
       teamAScore: { type: Schema.Types.Mixed, default: null },
       teamBScore: { type: Schema.Types.Mixed, default: null },
@@ -150,7 +151,7 @@ export const UserSchema = new Schema(
     phone: { type: String, trim: true, default: null },
     role: {
       type: String,
-      enum: ['admin', 'organizer', 'viewer', 'participant'],
+      enum: ['admin', 'organizer', 'scorer', 'viewer', 'participant'],
       default: 'participant',
     },
     school: { type: Schema.Types.ObjectId, ref: 'School', default: null },
@@ -208,3 +209,49 @@ export const AcknowledgementSchema = new Schema(
   { timestamps: true }
 );
 AcknowledgementSchema.index({ match: 1, school: 1 }, { unique: true });
+
+export const MatchScoreSchema = new Schema(
+  {
+    match: { type: Schema.Types.ObjectId, ref: 'Match', required: true, unique: true },
+    tournament: { type: Schema.Types.ObjectId, ref: 'Tournament', required: true },
+    sport: { type: String, default: 'kho-kho' },
+    config: {
+      turnDurationSec: { type: Number },
+      activeSquadCount: { type: Number },
+      defendersPerBatch: { type: Number },
+      pointsPerOut: { type: Number },
+      followOnEnabled: { type: Boolean },
+      followOnThreshold: { type: Number },
+      extraInningsEnabled: { type: Boolean },
+      extraInningsRounds: { type: Number },
+      suddenDeathEnabled: { type: Boolean },
+      suddenDeathTurnDurationSec: { type: Number },
+      turnEndGraceMs: { type: Number },
+    },
+    teams: [
+      {
+        id: String,
+        name: String,
+        schoolName: { type: String, default: null },
+      },
+    ],
+    version: { type: Number, default: 0 },
+    status: { type: String, enum: ['active', 'completed'], default: 'active' },
+    winnerTeamIds: [{ type: String }],
+  },
+  { timestamps: true }
+);
+MatchScoreSchema.index({ match: 1 }, { unique: true });
+MatchScoreSchema.index({ tournament: 1 });
+
+export const MatchScoreEventSchema = new Schema(
+  {
+    match: { type: Schema.Types.ObjectId, ref: 'Match', required: true },
+    event: { type: Schema.Types.Mixed, required: true },
+    recordedBy: { type: String, required: true },
+    recordedByRole: { type: String, required: true },
+    recordedAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+MatchScoreEventSchema.index({ match: 1, recordedAt: 1 });

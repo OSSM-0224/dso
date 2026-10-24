@@ -1,5 +1,6 @@
 ﻿import 'server-only';
-import { MatchDoc, TeamDoc, TournamentDoc, NotificationDoc } from '../../shared/types.ts';
+import { MatchDoc, MatchScoreDoc, MatchScoreViewDto, NotificationDoc, ScoreEventDoc, TeamDoc, TournamentDoc } from '../../shared/types.ts';
+import { KhoKhoScoreboard } from '../../shared/scoring/types.ts';
 
 /**
  * Whitelist serializer for Team objects sent to public or participant callers.
@@ -66,6 +67,44 @@ export function sanitizeTournamentDto(tournament: TournamentDoc): any {
     publishedAt: tournament.publishedAt || null,
     createdAt: tournament.createdAt,
     updatedAt: tournament.updatedAt,
+  };
+}
+
+/**
+ * LIVE SCORER view serializer. Builds the whitelist MatchScoreViewDto:
+ * scoreboard, sanitized team refs and events (scorer attribution is ALWAYS
+ * stripped — `recordedBy` never leaves the server). Internal engine weights,
+ * seeds, snapshot, or audit fields cannot leak since only whitelisted fields
+ * are copied.
+ */
+export function sanitizeMatchScoreDto(
+  score: MatchScoreDoc,
+  scoreboard: KhoKhoScoreboard,
+  events: ScoreEventDoc[]
+): MatchScoreViewDto {
+  const safeEvents = events.map((ev) => {
+    const clone = { ...(ev.event as unknown as Record<string, unknown>) };
+    delete clone['recordedBy'];
+    return clone as unknown as MatchScoreViewDto['events'][number];
+  });
+
+  return {
+    id: score.id,
+    matchId: score.matchId,
+    tournamentId: score.tournamentId,
+    sport: score.sport,
+    version: score.version,
+    status: score.status,
+    winnerTeamIds: score.winnerTeamIds || null,
+    teams: score.teams.map((t) => ({
+      id: t.id,
+      name: t.name,
+      schoolName: t.schoolName || undefined,
+    })),
+    scoreboard,
+    events: safeEvents,
+    createdAt: score.createdAt,
+    updatedAt: score.updatedAt,
   };
 }
 

@@ -31,6 +31,29 @@ export async function requireAdminOrOrganizer(): Promise<UserSession> {
   return user;
 }
 
+/** Staff-session guard for the LIVE SCORER module. Admins and organizers may
+ * score every match; scorers are limited per match by `MatchDoc.scorerIds`
+ * (enforced in the scoring service once the match is loaded). */
+export async function requireScoringWriter(): Promise<UserSession> {
+  const user = await getStaffSession();
+
+  if (!user) {
+    throw new ApiError(
+      401,
+      'Authentication required. Please sign in with scoring staff credentials.'
+    );
+  }
+
+  if (!['admin', 'organizer', 'scorer'].includes(user.role)) {
+    throw new ApiError(
+      403,
+      `Access denied. Role "${user.role}" is not authorized to score (allowed: admin, organizer, scorer).`
+    );
+  }
+
+  return user;
+}
+
 export async function requireParticipant(): Promise<UserSession> {
   const user = await getParticipantSession();
 

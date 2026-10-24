@@ -53,6 +53,29 @@ npm run seed:temp-logins:remove # TEMP-LOGIN: remove temporary logins
 
 ---
 
+## Icons (Font Awesome Free kit)
+
+All icons are rendered through `src/components/ui/Icon.tsx` (`<Icon name="trophy" />`) and loaded from a
+Font Awesome kit script in `src/app/layout.tsx`.
+
+1. **Required setup (production)**: open your Font Awesome kit settings on fontawesome.com and add these to
+   **"Allowed Domains"**, otherwise icons will not render on those hosts:
+   - `localhost:3000`
+   - your Vercel (or other) production domain
+2. **If the kit is blocked/offline**: the app stays fully usable — icons are decorative (`aria-hidden`) with
+   text labels kept everywhere; you will only see small empty icon boxes.
+3. **Optional self-hosted alternative (faster, works offline)**:
+   ```bash
+   npm install @fortawesome/fontawesome-free
+   ```
+   then in `src/app/globals.css`:
+   ```css
+   @import '@fortawesome/fontawesome-free/css/all.min.css';
+   ```
+   and remove the `<Script>` kit tag from `src/app/layout.tsx` (the free CSS contains the same `_map` icons).
+
+---
+
 
 ## Core Fixture Rules Implemented
 

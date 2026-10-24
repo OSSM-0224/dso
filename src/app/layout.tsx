@@ -40,7 +40,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="bg-slate-50 text-slate-900 antialiased font-sans">
+      <body
+        className="bg-slate-50 text-slate-900 antialiased font-sans"
+        suppressHydrationWarning
+      >
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

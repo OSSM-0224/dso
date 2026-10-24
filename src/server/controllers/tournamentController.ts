@@ -3,7 +3,7 @@
  * by the /api/tournaments/* Route Handlers. Mirrors the old Express route
  * bodies one-to-one.
  */
-import { UserSession } from '../../shared/types.ts';
+import { UserSession, SchoolDoc, TeamDoc } from '../../shared/types.ts';
 import { ApiError } from '../apiError.ts';
 import { auditLogRepository } from '../repositories/auditLogRepository.ts';
 import { fixtureSnapshotRepository } from '../repositories/fixtureSnapshotRepository.ts';
@@ -133,7 +133,7 @@ export const teamController = {
   },
 
   async update(user: UserSession, id: string, body: unknown) {
-    const updated = await teamRepository.update(id, body);
+    const updated = await teamRepository.update(id, body as Partial<TeamDoc>);
     if (!updated) {
       throw new ApiError(404, 'Team not found');
     }
@@ -161,7 +161,7 @@ export const schoolController = {
   },
 
   async update(user: UserSession, id: string, body: unknown) {
-    const updated = await schoolRepository.update(id, body);
+    const updated = await schoolRepository.update(id, body as Partial<Pick<SchoolDoc, 'name' | 'mediums'>>);
     if (!updated) {
       throw new ApiError(404, 'School not found');
     }

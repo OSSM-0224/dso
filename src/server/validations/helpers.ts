@@ -41,7 +41,7 @@ export function errorResponse(err: unknown): NextResponse {
 
 /** Wraps a handler body with the same try/catch shape as the Express
  * try/catch(async, next(err)) chains in every route file. */
-export async function handler(fn: () => Promise<NextResponse> | NextResponse): Promise<NextResponse> {
+export async function handler(fn: () => Promise<Response> | Response): Promise<Response> {
   try {
     return await fn();
   } catch (err) {

@@ -8,7 +8,7 @@ import {
   sessionKindForRole,
   setSessionCookie,
 } from '@/server/auth/session';
-import { handler, ok, parseJsonRequest } from '@/server/validations/helpers';
+import { handler, ok, parseJsonRequest, errorResponse } from '@/server/validations/helpers';
 import { changePasswordSchema } from '@/server/validations/schemas';
 
 export async function POST(req: NextRequest) {

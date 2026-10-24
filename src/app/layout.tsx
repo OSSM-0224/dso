@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono, Fraunces } from "next/font/google";
 import { AuthProvider } from "../context/AuthContext.tsx";
 import "./globals.css";
 
@@ -14,6 +14,13 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   variable: "--font-jetbrains",
+  display: "swap",
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-fraunces",
   display: "swap",
 });
 
@@ -46,7 +53,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${jakartaSans.variable} ${jetbrainsMono.variable}`}>
+    <html
+      lang="en"
+      className={`${jakartaSans.variable} ${jetbrainsMono.variable} ${fraunces.variable}`}
+    >
       <body
         className="bg-slate-50 text-slate-900 antialiased font-sans"
         suppressHydrationWarning

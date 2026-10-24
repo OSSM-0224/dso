@@ -1,6 +1,74 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, sans-serif;
+/* ────────────────────────────────────────────────────────────────
+   DSO Navi Mumbai · Design tokens
+   Warm monochrome + one deep sporty green accent.
+   Re-theme the whole app from this one place.
+   ──────────────────────────────────────────────────────────────── */
+@theme {
+  /* Surfaces */
+  --color-canvas: #faf9f7;
+  --color-surface: #ffffff;
+  --color-hairline: #e8e6e1;
+
+  /* Ink */
+  --color-ink: #171613;
+  --color-muted: #78766f;
+  --color-faint: #a6a49c;
+
+  /* Single accent — deep sporty green (primary actions, live status, current round) */
+  --color-accent: #1e5c38;
+  --color-accent-strong: #164a2d;
+  --color-accent-soft: #eaf1ec;
+
+  /* Muted status tints (desaturated pastels only) */
+  --color-blue-soft: #e8f1f7;
+  --color-blue-text: #1f6c9f;
+  --color-red-soft: #f9ecec;
+  --color-red-text: #9f2f2d;
+  --color-green-soft: #edf3ec;
+  --color-green-text: #346538;
+  --color-sand-soft: #f7f2e7;
+  --color-sand-text: #956400;
+
+  /* Radii: crisp controls, softer containers */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+
+  /* Shadows: practically flat — one diffuse resting shadow, one raise */
+  --shadow-rest: 0 1px 2px rgba(23, 22, 19, 0.04);
+  --shadow-raise: 0 2px 12px rgba(23, 22, 19, 0.06);
+
+  /* Type families (wired from next/font variables) */
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), Georgia, serif;
   --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, monospace;
+}
+
+body {
+  /* Subtle warm grain so screens don't feel digitally flat */
+  background-image: radial-gradient(rgba(23, 22, 19, 0.015) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Hairline focus ring everywhere (keyboard accessibility) */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
 }

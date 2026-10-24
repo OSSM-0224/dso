@@ -64,7 +64,7 @@ export const Modal: React.FC<ModalProps> = ({ open, onClose, title, side = false
 
   return (
     <div
-      className="fixed inset-0 z-50 p-4 sm:p-6"
+      className={`fixed inset-0 z-50 p-4 sm:p-6 ${side ? 'flex justify-end' : 'flex items-center justify-center'}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby={labelId}
@@ -77,26 +77,26 @@ export const Modal: React.FC<ModalProps> = ({ open, onClose, title, side = false
       />
       <div
         ref={panelRef}
-        className={`relative bg-surface border border-hairline rounded-[12px] shadow-raise max-h-full overflow-y-auto ${
+        className={`relative flex flex-col bg-surface border border-hairline rounded-[12px] shadow-raise max-h-full overflow-hidden ${
           side
-            ? 'absolute inset-y-0 right-0 max-h-full rounded-none sm:rounded-l-[12px] h-full max-w-md w-full'
-            : `absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full ${maxWidth}`
+            ? 'h-full w-full max-w-md rounded-none sm:rounded-l-[12px]'
+            : `w-full ${maxWidth}`
         }`}
       >
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-hairline">
+        <div className="flex shrink-0 items-center justify-between px-4 py-3.5 sm:px-5 border-b border-hairline">
           <h2 id={labelId} className="text-[15px] font-semibold text-ink tracking-tight">
             {title}
           </h2>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="-mr-1.5 p-1.5 rounded-[6px] text-muted hover:text-ink hover:bg-canvas transition-colors duration-200"
+            className="-mr-1.5 p-2 rounded-[6px] text-muted hover:text-ink hover:bg-canvas transition-colors duration-200"
           >
             <Icon name="xmark" size="sm" />
           </button>
         </div>
-        <div className="px-5 py-4">{children}</div>
-        {footer && <div className="px-5 py-3.5 border-t border-hairline bg-canvas/60 rounded-b-[12px]">{footer}</div>}
+        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">{children}</div>
+        {footer && <div className="shrink-0 px-4 py-3.5 sm:px-5 border-t border-hairline bg-canvas/60 rounded-b-[12px]">{footer}</div>}
       </div>
     </div>
   );

@@ -115,10 +115,10 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
       {/* Controls & Share Strip */}
       <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
         {/* View Switcher Tabs */}
-        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg">
+        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg self-start">
           <button
             onClick={() => setViewMode('bracket')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
               viewMode === 'bracket'
                 ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
@@ -128,7 +128,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
               viewMode === 'list'
                 ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
@@ -139,7 +139,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={onOpenPublicView}
             className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-md transition-colors shadow-sm flex items-center gap-1.5"
@@ -177,7 +177,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
       {/* View Mode: Match Schedule List */}
       {viewMode === 'list' && (
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-slate-100 pb-3">
             <h3 className="text-sm font-bold text-slate-900">
               Round-wise Match List & Results
             </h3>
@@ -210,11 +210,11 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
                 key={m.id}
                 className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
               >
-                <div className="flex items-center gap-3">
-                  <span className="font-mono font-bold text-slate-400 w-10">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="font-mono font-bold text-slate-400 w-10 shrink-0">
                     M#{m.matchNumber}
                   </span>
-                  <div>
+                  <div className="min-w-0">
                     <div className="font-semibold text-slate-900 flex items-center gap-2">
                       <span>{m.roundName}</span>
                       {m.status === 'completed' && (
@@ -235,7 +235,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                   {/* Schedule */}
                   <div className="text-right text-[11px] text-slate-500">
                     {m.scheduledAt ? (

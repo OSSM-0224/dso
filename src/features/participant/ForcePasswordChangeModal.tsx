@@ -36,9 +36,9 @@ export const ForcePasswordChangeModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-amber-200 overflow-hidden animate-in fade-in zoom-in-95">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-amber-200 overflow-hidden animate-in fade-in zoom-in-95 flex flex-col max-h-full">
         {/* Banner */}
-        <div className="bg-amber-500 text-slate-950 p-6">
+        <div className="shrink-0 bg-amber-500 text-slate-950 p-4 sm:p-6">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-amber-600/30 rounded-xl">
               <Icon name="shieldAlert" size="xl" className="text-slate-950" />
@@ -54,7 +54,7 @@ export const ForcePasswordChangeModal: React.FC = () => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
               {error}

@@ -12,7 +12,7 @@ interface TabsProps {
 export const Tabs: React.FC<TabsProps> = ({ items, active, onChange, className = '' }) => (
   <div
     role="tablist"
-    className={`flex items-center gap-1 border-b border-hairline ${className}`}
+    className={`flex items-center gap-1 border-b border-hairline overflow-x-auto ${className}`}
   >
     {items.map((item) => {
       const selected = item.id === active;
@@ -22,7 +22,7 @@ export const Tabs: React.FC<TabsProps> = ({ items, active, onChange, className =
           role="tab"
           aria-selected={selected}
           onClick={() => onChange(item.id)}
-          className={`relative px-3 py-2 text-[13px] transition-colors duration-200 flex items-center gap-1.5 ${
+          className={`relative px-3 py-2 text-[13px] transition-colors duration-200 flex shrink-0 items-center gap-1.5 whitespace-nowrap ${
             selected ? 'text-ink font-semibold' : 'text-muted hover:text-ink'
           }`}
         >

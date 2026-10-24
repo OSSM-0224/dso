@@ -204,7 +204,7 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
         {report && (
           <div className="space-y-3 overflow-y-auto flex-1 pr-1">
             {/* Status counts banner */}
-            <div className="grid grid-cols-4 gap-2 text-center text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
               <div className="p-2 bg-slate-50 rounded border border-slate-200">
                 <span className="text-[10px] text-slate-500 block">Total Rows</span>
                 <span className="font-mono font-bold text-slate-900">{report.totalRows}</span>
@@ -224,7 +224,7 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
             </div>
 
             {/* Table */}
-            <div className="border border-slate-200 rounded-lg overflow-hidden">
+            <div className="border border-slate-200 rounded-lg overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200 text-xs">
                 <thead className="bg-slate-50 text-slate-500 text-[11px] font-semibold text-left">
                   <tr>
@@ -299,12 +299,12 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
         )}
 
         {/* Footer Actions */}
-        <div className="pt-3 border-t border-slate-100 flex items-center justify-between shrink-0">
+        <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 shrink-0">
           {report ? (
             <button
   type="button"
               onClick={() => setReport(null)}
-              className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 font-medium"
+              className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 font-medium whitespace-nowrap"
             >
               ← Edit CSV Data
             </button>
@@ -312,11 +312,11 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
             <div />
           )}
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
   type="button"
               onClick={onClose}
-              className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800"
+              className="px-3 py-2 sm:py-1.5 min-h-[40px] sm:min-h-0 text-xs text-slate-600 hover:text-slate-800 rounded-md"
             >
               Cancel
             </button>
@@ -326,7 +326,7 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
   type="button"
                 onClick={() => handlePreview()}
                 disabled={isValidating || !csvText.trim()}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-md shadow-sm disabled:opacity-50"
+                className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-md shadow-sm disabled:opacity-50"
               >
                 {isValidating ? 'Validating...' : 'Preview & Validate CSV'}
               </button>
@@ -335,7 +335,7 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
   type="button"
                 onClick={handleCommitImport}
                 disabled={isImporting || report.validCount === 0}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-md shadow-sm disabled:opacity-50"
+                className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-md shadow-sm disabled:opacity-50"
               >
                 {isImporting
                   ? 'Saving...'

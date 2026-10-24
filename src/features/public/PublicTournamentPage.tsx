@@ -87,7 +87,7 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             {tournament.name}
           </h1>
-          <div className="flex items-center gap-2 text-xs text-slate-600 mt-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-600 mt-1">
             <span className="font-semibold text-indigo-700 uppercase">
               {tournament.sport}
             </span>
@@ -102,7 +102,7 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button
             onClick={() => window.print()}
             className="px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 shadow-sm transition-colors"
@@ -120,23 +120,23 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
 
       {/* Champion Announcement */}
       {tournament.status === 'completed' && tournament.winnerName && (
-        <div className="bg-amber-500 text-white rounded-xl p-5 shadow-sm flex items-center justify-between">
-          <div>
+        <div className="bg-amber-500 text-white rounded-xl p-4 sm:p-5 shadow-sm flex flex-wrap items-center justify-between gap-2">
+          <div className="min-w-0">
             <div className="text-[11px] uppercase tracking-wider font-semibold text-amber-100">
               Championship Winner
             </div>
-            <div className="text-xl font-extrabold tracking-tight">
+            <div className="text-lg sm:text-xl font-extrabold tracking-tight break-words">
               <Icon name="trophy" size="sm" className="mr-1" />{tournament.winnerName}
             </div>
           </div>
-          <span className="text-xs bg-amber-600/50 px-3 py-1 rounded font-mono font-medium">
+          <span className="shrink-0 text-xs bg-amber-600/50 px-3 py-1 rounded font-mono font-medium">
             Champion
           </span>
         </div>
       )}
 
       {/* Read-Only Bracket */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm">
         <div className="text-xs text-slate-500 mb-2">
           Public Read-Only Bracket · Live match results and progression
         </div>

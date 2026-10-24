@@ -220,11 +220,11 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
               <Icon name="school" size="xl" className="text-indigo-300" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-500/30 text-indigo-200 border border-indigo-400/20">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-500/30 text-indigo-200 border border-indigo-400/20 truncate max-w-full">
                   School Code: {school?.schoolCode || 'DSO-PART'}
                 </span>
-                <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+                <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1 shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   Active Portal
                 </span>
@@ -266,7 +266,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
         <div className="flex items-center gap-1 mt-6 pt-4 border-t border-white/10 overflow-x-auto text-xs font-semibold">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`px-3.5 py-2 rounded-lg transition-colors whitespace-nowrap ${
+            className={`px-3.5 py-2 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
               activeTab === 'dashboard'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-300 hover:text-white hover:bg-white/5'
@@ -276,7 +276,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
           </button>
           <button
             onClick={() => setActiveTab('schedule')}
-            className={`px-3.5 py-2 rounded-lg transition-colors whitespace-nowrap ${
+            className={`px-3.5 py-2 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
               activeTab === 'schedule'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-300 hover:text-white hover:bg-white/5'
@@ -286,7 +286,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
           </button>
           <button
             onClick={() => setActiveTab('bracket')}
-            className={`px-3.5 py-2 rounded-lg transition-colors whitespace-nowrap ${
+            className={`px-3.5 py-2 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
               activeTab === 'bracket'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-300 hover:text-white hover:bg-white/5'
@@ -296,7 +296,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
           </button>
           <button
             onClick={() => setActiveTab('notifications')}
-            className={`px-3.5 py-2 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 rounded-lg transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
               activeTab === 'notifications'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-300 hover:text-white hover:bg-white/5'
@@ -304,7 +304,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
           >
             <span>Notifications</span>
             {unreadNotifsCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-red-500 text-white text-[10px]">
+              <span className="px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px]">
                 {unreadNotifsCount}
               </span>
             )}
@@ -473,9 +473,9 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
               {dashboardData?.tournaments && dashboardData.tournaments.length > 0 ? (
                 <div className="divide-y divide-slate-100">
                   {dashboardData.tournaments.map((t: any) => (
-                    <div key={t.id} className="py-2.5 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-bold text-slate-800">{t.name}</p>
+                <div key={t.id} className="py-2.5 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-800 truncate">{t.name}</p>
                         <p className="text-[11px] text-slate-500">
                           {t.ageGroup} ({t.gender}) · {t.sport}
                         </p>
@@ -485,7 +485,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                           setSelectedTournamentFilter(t.id);
                           setActiveTab('schedule');
                         }}
-                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5"
+                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5 shrink-0 whitespace-nowrap"
                       >
                         <span>View Matches</span>
                         <Icon name="chevronRight" size="sm" />
@@ -515,9 +515,9 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
               {dashboardData?.teams && dashboardData.teams.length > 0 ? (
                 <div className="divide-y divide-slate-100">
                   {dashboardData.teams.map((team: any) => (
-                    <div key={team.id} className="py-2.5 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-bold text-slate-800">{team.name}</p>
+                    <div key={team.id} className="py-2.5 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-800 truncate">{team.name}</p>
                         <p className="text-[11px] text-slate-500">
                           {team.medium} Medium · {team.ageGroup} ({team.gender})
                         </p>
@@ -549,10 +549,10 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
           <div className="bg-white p-4 border border-slate-200 rounded-2xl shadow-xs space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               {/* Date Filter Tabs */}
-              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold text-slate-600">
+              <div className="flex items-center gap-0.5 sm:gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold text-slate-600 max-w-full overflow-x-auto">
                 <button
                   onClick={() => setScheduleDateFilter('all')}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 ${
                     scheduleDateFilter === 'all' ? 'bg-white text-slate-900 shadow-2xs font-bold' : ''
                   }`}
                 >
@@ -560,7 +560,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                 </button>
                 <button
                   onClick={() => setScheduleDateFilter('today')}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 ${
                     scheduleDateFilter === 'today' ? 'bg-white text-slate-900 shadow-2xs font-bold' : ''
                   }`}
                 >
@@ -568,7 +568,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                 </button>
                 <button
                   onClick={() => setScheduleDateFilter('upcoming')}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 ${
                     scheduleDateFilter === 'upcoming' ? 'bg-white text-slate-900 shadow-2xs font-bold' : ''
                   }`}
                 >
@@ -576,7 +576,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                 </button>
                 <button
                   onClick={() => setScheduleDateFilter('past')}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 ${
                     scheduleDateFilter === 'past' ? 'bg-white text-slate-900 shadow-2xs font-bold' : ''
                   }`}
                 >
@@ -678,9 +678,9 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                       </div>
 
                       {/* Opponent & Matchup */}
-                      <div>
-                        <div className="text-sm sm:text-base font-bold text-slate-900">
-                          <span className="text-indigo-600">{m.myTeam?.name}</span>{' '}
+                      <div className="min-w-0">
+                        <div className="text-sm sm:text-base font-bold text-slate-900 break-words">
+                          <span className="text-indigo-600 break-words">{m.myTeam?.name}</span>{' '}
                           <span className="text-slate-400 font-normal">vs</span>{' '}
                           <span>{m.opponentDisplay?.label}</span>
                         </div>
@@ -715,7 +715,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                     </div>
 
                     {/* Right: Actions */}
-                    <div className="flex items-center gap-2 shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
+                    <div className="flex flex-wrap items-center gap-2 sm:shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
                       {m.isAcknowledged ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">
                           <Icon name="circleCheck" size="sm" className="text-emerald-600" />
@@ -800,16 +800,16 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                   key={tp.team.id}
                   className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4"
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex items-center justify-between gap-2 min-w-0">
+                    <div className="min-w-0">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                         {tp.team.medium} Medium · {tp.team.ageGroup} ({tp.team.gender})
                       </span>
-                      <h4 className="text-base font-black text-slate-900">{tp.team.name}</h4>
+                      <h4 className="text-base font-black text-slate-900 truncate">{tp.team.name}</h4>
                     </div>
 
                     <span
-                      className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
+                      className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
                         tp.overallStatus === 'winner'
                           ? 'bg-amber-100 text-amber-900 border border-amber-300'
                           : tp.overallStatus === 'eliminated'
@@ -879,7 +879,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
       {/* TAB 4: NOTIFICATIONS */}
       {activeTab === 'notifications' && (
         <div className="space-y-4">
-          <div className="bg-white p-4 border border-slate-200 rounded-2xl shadow-xs flex items-center justify-between">
+          <div className="bg-white p-4 border border-slate-200 rounded-2xl shadow-xs flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 className="text-sm font-bold text-slate-900">Notifications & Schedule Alerts</h3>
               <p className="text-xs text-slate-500">
@@ -890,7 +890,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
             {unreadNotifsCount > 0 && (
               <button
                 onClick={handleMarkAllNotificationsRead}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 min-h-[40px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
               >
                 <Icon name="checkDouble" size="sm" className="text-indigo-600" />
                 <span>Mark All Read</span>
@@ -939,7 +939,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
 
                         {/* Schedule Change Diff */}
                         {isScheduleChange && (notif.oldValue || notif.newValue) && (
-                          <div className="mt-2 p-2 bg-white/80 rounded-lg border border-slate-200 text-[11px] space-y-1">
+                          <div className="mt-2 p-2 bg-white/80 rounded-lg border border-slate-200 text-[11px] space-y-1 break-words">
                             {notif.oldValue?.scheduledAt !== notif.newValue?.scheduledAt && (
                               <div>
                                 <span className="text-slate-400 line-through mr-2">

@@ -362,7 +362,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
 
             {activeEnrollments.length === 0 ? (
               <div className="py-12 text-center text-xs text-slate-400">
-                No teams enrolled yet. Select available teams on the right or use &quot;+ Add Team&quot; shortcut.
+                No teams enrolled yet. Select available teams in the list alongside, or use &quot;+ Add Team&quot; shortcut.
               </div>
             ) : (
               <div className="divide-y divide-slate-100 max-h-[380px] overflow-y-auto pr-1">
@@ -371,10 +371,10 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                     key={enr.id}
                     className="py-2.5 flex items-center justify-between gap-2 text-xs"
                   >
-                    <div>
-                      <div className="font-semibold text-slate-900 flex items-center gap-1.5">
-                        <span>{enr.team?.name || enr.teamId}</span>
-                        <span className="text-[10px] bg-emerald-50 text-emerald-800 px-1.5 py-0.2 rounded font-medium border border-emerald-200">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-slate-900 flex items-center gap-1.5 min-w-0">
+                        <span className="truncate">{enr.team?.name || enr.teamId}</span>
+                        <span className="text-[10px] bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded font-medium border border-emerald-200 shrink-0">
                           {enr.status}
                         </span>
                       </div>
@@ -494,7 +494,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
 
           {/* Action Bar */}
           {!tournament.isEnrollmentLocked && availableTeams.length > 0 && (
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs text-slate-500">
                 {selectedToEnroll.length} team(s) selected
               </span>
@@ -512,10 +512,17 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
 
       {/* One-Click Add Team Shortcut Modal */}
       {showAddTeamShortcut && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowAddTeamShortcut(false);
+          }}
+        >
           <form
             onSubmit={handleAddTeamShortcut}
-            className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200 space-y-4"
+            className="bg-white rounded-xl shadow-xl max-w-md w-full p-4 sm:p-6 border border-slate-200 space-y-4 max-h-full overflow-y-auto"
           >
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div>
@@ -596,17 +603,17 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+            <div className="flex flex-col-reverse items-stretch sm:flex-row sm:items-center sm:justify-end gap-2 pt-2 border-t border-slate-100">
               <button
   type="button"
                 onClick={() => setShowAddTeamShortcut(false)}
-                className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800"
+                className="px-3 py-2.5 sm:py-1.5 min-h-[40px] sm:min-h-0 text-xs text-slate-600 hover:text-slate-800 rounded-md"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-md shadow-sm"
+                className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-md shadow-sm"
               >
                 Create & Auto-Enroll
               </button>
@@ -618,7 +625,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
       {/* Unlock Confirmation Modal */}
       {showUnlockModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200 space-y-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-4 sm:p-6 border border-slate-200 space-y-4 max-h-full overflow-y-auto">
             <div className="flex items-center gap-2 text-amber-700 pb-2 border-b border-slate-100">
               <Icon name="triangleExclamation" size="lg" className="text-red-text" />
               <h3 className="text-base font-bold text-slate-900">
@@ -634,18 +641,18 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
               Do you wish to proceed with unlocking team enrollment?
             </p>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+            <div className="flex flex-col-reverse items-stretch sm:flex-row sm:items-center sm:justify-end gap-2 pt-3 border-t border-slate-100">
               <button
   type="button"
                 onClick={() => setShowUnlockModal(false)}
-                className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800"
+                className="px-3 py-2.5 sm:py-1.5 min-h-[40px] sm:min-h-0 text-xs text-slate-600 hover:text-slate-800 rounded-md"
               >
                 Cancel
               </button>
               <button
   type="button"
                 onClick={handleConfirmUnlock}
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-md shadow-sm"
+                className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-md shadow-sm"
               >
                 Confirm & Unlock
               </button>

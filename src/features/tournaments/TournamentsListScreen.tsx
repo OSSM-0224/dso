@@ -197,7 +197,14 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
 
       {/* Create Tournament Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowCreateModal(false);
+          }}
+        >
           <form
             onSubmit={handleCreateTournament}
             className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto"
@@ -229,7 +236,7 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Sport
@@ -261,7 +268,7 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Age Group
@@ -324,7 +331,7 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
 
             {/* Team Selection */}
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
                 <label className="block text-xs font-semibold text-slate-700">
                   Select Enrolled Teams ({selectedTeams.length} selected)
                 </label>
@@ -384,18 +391,18 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+            <div className="flex flex-col-reverse items-stretch sm:flex-row sm:items-center sm:justify-end gap-2 pt-2 border-t border-slate-100">
               <button
   type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800"
+                className="px-3 py-2.5 sm:py-1.5 min-h-[40px] sm:min-h-0 text-xs text-slate-600 hover:text-slate-800 rounded-md"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-md shadow-sm disabled:opacity-50"
+                className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-md shadow-sm disabled:opacity-50"
               >
                 {isSubmitting ? 'Creating...' : 'Create Tournament'}
               </button>

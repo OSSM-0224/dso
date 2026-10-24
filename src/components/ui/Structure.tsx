@@ -25,7 +25,7 @@ export const EmptyState: React.FC<{
   action?: React.ReactNode;
   className?: string;
 }> = ({ title, description, action, className = '' }) => (
-  <div className={`rounded-[12px] border border-dashed border-hairline bg-surface px-8 py-14 text-center ${className}`}>
+  <div className={`rounded-[12px] border border-dashed border-hairline bg-surface px-4 py-10 sm:px-8 sm:py-14 text-center ${className}`}>
     <h3 className="font-serif text-lg text-ink">{title}</h3>
     {description && <p className="mx-auto mt-1.5 max-w-[44ch] text-[13px] leading-relaxed text-muted">{description}</p>}
     {action && <div className="mt-4 flex justify-center">{action}</div>}
@@ -77,7 +77,7 @@ export const Tooltip: React.FC<{ label: string; children: React.ReactElement; cl
     {children}
     <span
       role="tooltip"
-      className="pointer-events-none absolute bottom-full left-1/2 z-40 mb-1.5 -translate-x-1/2 translate-y-1 whitespace-nowrap rounded-[6px] bg-ink px-2 py-1 text-[11px] text-white opacity-0 shadow-rest transition-all duration-200 group-hover/tt:translate-y-0 group-hover/tt:opacity-100 group-focus-within/tt:opacity-100"
+      className="pointer-events-none absolute bottom-full left-1/2 z-40 mb-1.5 -translate-x-1/2 translate-y-1 max-w-[70vw] whitespace-normal break-words sm:whitespace-nowrap rounded-[6px] bg-ink px-2 py-1 text-[11px] text-white opacity-0 shadow-rest transition-all duration-200 group-hover/tt:translate-y-0 group-hover/tt:opacity-100 group-focus-within/tt:opacity-100"
     >
       {label}
     </span>

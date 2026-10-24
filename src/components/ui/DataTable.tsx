@@ -81,10 +81,15 @@ export function DataTable<T>({
             onClick={onRowClick ? () => onRowClick(row) : undefined}
             className={`rounded-[12px] border border-hairline bg-surface p-4 shadow-rest ${onRowClick ? 'cursor-pointer active:scale-[0.99] transition-transform duration-150' : ''}`}
           >
+            {columns[0] && (
+              <div className={`text-sm font-semibold text-ink pb-2 mb-1 border-b border-hairline ${colAlign[columns[0].key]}`}>
+                {columns[0].render(row)}
+              </div>
+            )}
             {columns.slice(1).map((c) => (
-              <div key={c.key} className="flex items-start justify-between gap-3 py-1">
+              <div key={c.key} className="flex items-start justify-between gap-3 py-1.5">
                 <span className="text-[11px] uppercase tracking-[0.05em] text-muted pt-0.5 shrink-0">{c.header}</span>
-                <span className="text-right text-[13px] text-ink">{c.render(row)}</span>
+                <span className={`text-right text-[13px] text-ink min-w-0 ${colAlign[c.key]}`}>{c.render(row)}</span>
               </div>
             ))}
           </div>

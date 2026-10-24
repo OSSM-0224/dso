@@ -76,8 +76,15 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
   const isChampion = (teamId?: string) => Boolean(canWrite && teamId && championTeamIds.includes(teamId));
 
   return (
-    <div className="w-full overflow-x-auto pb-6 pt-2">
-      <div className="flex gap-8 min-w-[800px] px-2 items-stretch">
+    <div className="w-full">
+      {/* Scroll hint for small screens only */}
+      <div className="mb-1.5 flex justify-end lg:hidden px-2">
+        <span className="text-[10px] text-slate-400 flex items-center gap-1">
+          Swipe to view later rounds <Icon name="arrowRight" size="xs" />
+        </span>
+      </div>
+      <div className="w-full overflow-x-auto pb-6 pt-2 touch-pan-y">
+        <div className="flex gap-8 min-w-[640px] lg:min-w-[800px] px-2 items-stretch">
         {rounds.map((round) => {
           const allRoundMatches = matches
             .filter((m) => m.round === round)
@@ -250,11 +257,11 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
 
                         {/* Actions footer if tournament is published/ongoing and user has write access */}
                         {canWrite && !isBye && match.teamA && match.teamB && (
-                          <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                          <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between gap-2 min-w-0">
                             {onEditSchedule && (
                               <button
                                 onClick={() => onEditSchedule(match)}
-                                className="text-[11px] text-slate-500 hover:text-slate-800 transition-colors"
+                                className="text-[11px] py-0.5 text-slate-500 hover:text-slate-800 transition-colors shrink-0"
                               >
                                 Schedule
                               </button>
@@ -262,13 +269,13 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                             {onEnterResult && match.status !== 'completed' && (
                               <button
                                 onClick={() => onEnterResult(match)}
-                                className="text-[11px] font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                                className="text-[11px] py-0.5 font-medium text-indigo-600 hover:text-indigo-800 transition-colors shrink-0"
                               >
                                 Enter Result
                               </button>
                             )}
                             {match.status === 'completed' && match.winner && (
-                              <span className="text-[10px] text-emerald-600 font-medium">
+                              <span className="text-[10px] text-emerald-600 font-medium truncate min-w-0">
                                 Winner: {match.winner.name}
                               </span>
                             )}
@@ -284,17 +291,17 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                 {isRound1 && byeMatchesInR1.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-dashed border-slate-200">
                     <div className="bg-slate-50/80 border border-slate-200/80 rounded-lg p-3 space-y-2">
-                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-200 text-[11px]">
+                      <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-slate-200 text-[11px] flex-wrap">
                         <span className="font-semibold text-emerald-800 flex items-center gap-1.5">
                           <span>🛡️</span>
                           <span>BYE → advances to Quarter Finals</span>
                         </span>
-                        <span className="text-[10px] font-mono text-slate-400 bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                        <span className="shrink-0 text-[10px] font-mono text-slate-400 bg-white px-1.5 py-0.5 rounded border border-slate-200">
                           {byeMatchesInR1.length} {byeMatchesInR1.length === 1 ? 'Team' : 'Teams'}
                         </span>
                       </div>
 
-                      <div className="space-y-1.5 max-h-[360px] overflow-y-auto pr-1">
+                      <div className="space-y-1.5 max-h-[280px] sm:max-h-[360px] overflow-y-auto pr-1">
                         {byeMatchesInR1.map((byeMatch) => {
                           const byeTeam = byeMatch.teamA || byeMatch.winner;
                           if (!byeTeam) return null;
@@ -355,6 +362,7 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
           );
         })}
       </div>
+    </div>
     </div>
   );
 };

@@ -110,15 +110,15 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
       {/* Back and Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-wrap">
             <button
               onClick={onBack}
-              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 shrink-0"
             >
               ← Back to Tournaments
             </button>
-            <span className="text-slate-300">|</span>
-            <span className="text-xs text-slate-500 font-mono">ID: {tournament.id}</span>
+            <span className="text-slate-300 hidden sm:inline">|</span>
+            <span className="text-xs text-slate-500 font-mono min-w-0 max-w-full truncate">ID: {tournament.id}</span>
           </div>
 
           <h1 className="text-xl font-bold tracking-tight text-slate-900">
@@ -166,10 +166,10 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
       </div>
 
       {/* Main Feature Tabs */}
-      <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg max-w-md">
+      <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg max-w-md overflow-x-auto">
         <button
           onClick={() => setActiveTab('fixtures')}
-          className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+          className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
             activeTab === 'fixtures'
               ? 'bg-white text-slate-900 shadow-sm'
               : 'text-slate-600 hover:text-slate-900'
@@ -179,7 +179,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('teams')}
-          className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+          className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
             activeTab === 'teams'
               ? 'bg-white text-slate-900 shadow-sm'
               : 'text-slate-600 hover:text-slate-900'
@@ -189,7 +189,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('audit')}
-          className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+          className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
             activeTab === 'audit'
               ? 'bg-white text-slate-900 shadow-sm'
               : 'text-slate-600 hover:text-slate-900'

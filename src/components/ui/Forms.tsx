@@ -1,7 +1,7 @@
 import React, { forwardRef, useId } from 'react';
 
 const controlBase =
-  'w-full text-[13px] text-ink bg-surface border border-hairline rounded-[6px] px-3 py-2 placeholder:text-faint transition-colors duration-200 hover:border-faint focus:outline-none focus:border-accent';
+  'w-full text-base text-ink bg-surface border border-hairline rounded-[6px] px-3 py-2 min-h-[44px] sm:text-[13px] sm:min-h-[38px] placeholder:text-faint transition-colors duration-200 hover:border-faint focus:outline-none focus:border-accent';
 
 const labelBase = 'block text-xs font-medium text-muted mb-1.5';
 
@@ -85,7 +85,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({ label, cl
         ref={ref}
         id={checkId}
         type="checkbox"
-        className="h-4 w-4 rounded-[4px] border border-hairline text-accent accent-[#1e5c38] focus:outline-none"
+        className="h-5 w-5 box-content p-2 -m-2 rounded-[4px] border border-hairline text-accent accent-[#1e5c38] focus:outline-none"
         {...rest}
       />
       {label && <span className="text-[13px] text-ink">{label}</span>}
@@ -110,7 +110,7 @@ export const Switch: React.FC<SwitchProps> = ({ checked, onChange, label, id }) 
       id={id}
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative h-5 w-9 rounded-full border transition-colors duration-200 ${
+      className={`relative h-5 w-9 box-content p-2 -m-2 rounded-full border transition-colors duration-200 ${
         checked ? 'bg-accent border-transparent' : 'bg-canvas border-hairline'
       }`}
     >

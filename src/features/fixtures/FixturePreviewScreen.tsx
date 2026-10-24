@@ -141,7 +141,7 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={handleRegenerate}
                 disabled={isRegenerating || !canWrite}
@@ -182,9 +182,9 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
 
       {/* Manual Swap Instruction Card */}
       {canWrite && (
-        <div className="p-3 bg-indigo-50/50 border border-indigo-200 rounded-lg text-xs text-indigo-900 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">Manual Swap:</span>
+        <div className="p-3 bg-indigo-50/50 border border-indigo-200 rounded-lg text-xs text-indigo-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-semibold shrink-0">Manual Swap:</span>
             <span>
               {selectedTeamA
                 ? `1st team selected: "${selectedTeamA.name}". Click another team in Round 1 to swap.`
@@ -218,7 +218,7 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
       {/* Swap Confirmation Modal when rule violation is detected */}
       {swapWarningModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-4 sm:p-6 border border-slate-200 max-h-full overflow-y-auto">
             <div className="flex items-center gap-2 text-amber-700 pb-2 border-b border-slate-100 mb-3">
               <Icon name="triangleExclamation" size="lg" className="text-red-text" />
               <h3 className="text-base font-bold text-slate-900">
@@ -240,17 +240,17 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
               Do you wish to override and apply this manual swap anyway? This action will be recorded in the tournament audit log.
             </p>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <div className="flex flex-col-reverse items-stretch sm:flex-row sm:items-center sm:justify-end gap-3 pt-3 border-t border-slate-100">
               <button
                 onClick={() => setSwapWarningModal(null)}
-                className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800"
+                className="px-3 py-2.5 sm:py-1.5 min-h-[40px] sm:min-h-0 text-xs text-slate-600 hover:text-slate-800 rounded-md"
               >
                 Cancel Swap
               </button>
               <button
                 onClick={() => triggerSwap(swapWarningModal.teamA, swapWarningModal.teamB, true)}
                 disabled={isSwapping}
-                className="px-4 py-2 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-md transition-colors shadow-sm"
+                className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-md transition-colors shadow-sm"
               >
                 {isSwapping ? 'Applying...' : 'Confirm Override & Swap'}
               </button>

@@ -223,13 +223,13 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="py-3 px-4">School & Code</th>
-                <th className="py-3 px-4">Representative</th>
-                <th className="py-3 px-4">Account Status</th>
-                <th className="py-3 px-4">Password State</th>
-                <th className="py-3 px-4">Last Login</th>
-                <th className="py-3 px-4 text-center">Acknowledgements</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th className="py-3 px-3">School & Code</th>
+                <th className="py-3 px-3">Representative</th>
+                <th className="py-3 px-3">Account Status</th>
+                <th className="py-3 px-3">Password State</th>
+                <th className="py-3 px-3">Last Login</th>
+                <th className="py-3 px-3 text-center">Acknowledgements</th>
+                <th className="py-3 px-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -242,7 +242,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
               ) : (
                 filteredParticipants.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-3">
                       <div className="flex items-center gap-2.5">
                         <Icon name="school" size="md" className="text-slate-400 shrink-0" />
                         <div>
@@ -254,12 +254,12 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                       </div>
                     </td>
 
-                    <td className="py-3.5 px-4 text-slate-700">
+                    <td className="py-3.5 px-3 text-slate-700">
                       <p className="font-semibold">{p.name}</p>
                       <p className="text-[11px] text-slate-400">{p.email || p.phone || 'No direct contact'}</p>
                     </td>
 
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-3">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           p.isActive
@@ -271,7 +271,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-3">
                       {p.mustChangePassword ? (
                         <span className="text-[11px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
                           Pending First Change
@@ -283,18 +283,18 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                       )}
                     </td>
 
-                    <td className="py-3.5 px-4 text-slate-500 text-[11px]">
+                    <td className="py-3.5 px-3 text-slate-500 text-[11px]">
                       {p.lastLoginAt ? new Date(p.lastLoginAt).toLocaleString() : 'Never logged in'}
                     </td>
 
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3.5 px-3 text-center">
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
                         <Icon name="calendarCheck" size="sm" className="text-indigo-600" />
                         <span>{p.acknowledgementCount} matches</span>
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-4 text-right space-x-1.5 whitespace-nowrap">
+                    <td className="py-3.5 px-3 text-right space-x-1.5 whitespace-nowrap">
                       {onViewAsSchool && (
                         <button
                           onClick={() => onViewAsSchool(p)}
@@ -351,8 +351,15 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
 
       {/* CREATE MODAL */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowCreateModal(false);
+          }}
+        >
+          <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-full">
             <div className="bg-indigo-600 text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Icon name="userPlus" size="lg" />
@@ -366,7 +373,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
               </button>
             </div>
 
-            <form onSubmit={handleCreateSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleCreateSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Select School *
@@ -463,18 +470,18 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                 School coaches will be prompted to set a permanent password immediately upon their first login.
               </p>
 
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+              <div className="pt-3 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl"
+                  className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs"
+                  className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs"
                 >
                   {isSubmitting ? 'Creating...' : 'Create Account'}
                 </button>
@@ -487,7 +494,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
       {/* RESET PASSWORD MODAL */}
       {showResetModal && resetTargetUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-full">
             <div className="bg-amber-600 text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Icon name="rotate" size="lg" />
@@ -520,18 +527,18 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                 />
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+              <div className="pt-3 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowResetModal(false)}
-                  className="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl"
+                  className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-xs"
+                  className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-xs"
                 >
                   {isSubmitting ? 'Resetting...' : 'Confirm Reset'}
                 </button>

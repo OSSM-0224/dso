@@ -1,8 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { api } from '@/lib/api.ts';
 import { SchoolDoc, TeamDoc } from '@/shared/types.ts';
-import { CsvImportModal } from './CsvImportModal.tsx';
-import { ParticipantAccountsPanel } from '../admin/ParticipantAccountsPanel.tsx';
+
+// Heavy, rarely-mounted surfaces are code-split so the core Teams/Schools
+// render path stays small (UI output identical once loaded).
+const CsvImportModal = dynamic(() => import('./CsvImportModal.tsx').then((m) => m.CsvImportModal), {
+  ssr: false,
+  loading: () => null,
+});
+const ParticipantAccountsPanel = dynamic(
+  () => import('../admin/ParticipantAccountsPanel.tsx').then((m) => m.ParticipantAccountsPanel),
+  { ssr: false, loading: () => null }
+);
 
 interface TeamsScreenProps {
   canWrite: boolean;

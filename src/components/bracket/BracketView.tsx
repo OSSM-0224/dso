@@ -13,7 +13,7 @@ interface BracketViewProps {
   canWrite?: boolean;
 }
 
-export const BracketView: React.FC<BracketViewProps> = ({
+const BracketViewInner: React.FC<BracketViewProps> = ({
   matches,
   strongTeamIds = [],
   championTeamIds = [],
@@ -357,3 +357,7 @@ export const BracketView: React.FC<BracketViewProps> = ({
     </div>
   );
 };
+
+// Memoized: the bracket tree is expensive to re-render; skip re-renders when
+// the parent re-runs but props are unchanged (same matches/slots/callbacks).
+export const BracketView: React.FC<BracketViewProps> = React.memo(BracketViewInner);

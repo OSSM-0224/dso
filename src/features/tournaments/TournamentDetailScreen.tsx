@@ -1,11 +1,37 @@
 import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { api } from '@/lib/api.ts';
 import { FixtureSnapshotDoc, MatchDoc, TeamDoc, TournamentDoc } from '@/shared/types.ts';
-import { PreFixtureScreen } from '../fixtures/PreFixtureScreen.tsx';
-import { FixturePreviewScreen } from '../fixtures/FixturePreviewScreen.tsx';
-import { PublishedFixtureScreen } from '../matches/PublishedFixtureScreen.tsx';
-import { AuditLogScreen } from '../audit/AuditLogScreen.tsx';
-import { TournamentTeamsTab } from './TournamentTeamsTab.tsx';
+
+// Each status/tab view is a self-contained heavy screen. Splitting them keeps
+// only the loader in the initial bundle; the view streams in on demand.
+const TabLoading = () => (
+  <div className="py-16 text-center">
+    <div className="inline-block animate-spin h-7 w-7 border-3 border-indigo-600 border-t-transparent rounded-full mb-2" />
+    <div className="text-xs text-slate-500">Loading view...</div>
+  </div>
+);
+
+const PreFixtureScreen = dynamic(
+  () => import('../fixtures/PreFixtureScreen.tsx').then((m) => m.PreFixtureScreen),
+  { loading: () => <TabLoading /> }
+);
+const FixturePreviewScreen = dynamic(
+  () => import('../fixtures/FixturePreviewScreen.tsx').then((m) => m.FixturePreviewScreen),
+  { loading: () => <TabLoading /> }
+);
+const PublishedFixtureScreen = dynamic(
+  () => import('../matches/PublishedFixtureScreen.tsx').then((m) => m.PublishedFixtureScreen),
+  { loading: () => <TabLoading /> }
+);
+const AuditLogScreen = dynamic(
+  () => import('../audit/AuditLogScreen.tsx').then((m) => m.AuditLogScreen),
+  { loading: () => <TabLoading /> }
+);
+const TournamentTeamsTab = dynamic(
+  () => import('./TournamentTeamsTab.tsx').then((m) => m.TournamentTeamsTab),
+  { loading: () => <TabLoading /> }
+);
 
 interface TournamentDetailScreenProps {
   tournamentId: string;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { runFixtureEngineTestSuite, TestSuiteSummary } from '@/shared/tests/testSuite.ts';
+import type { TestSuiteSummary } from '@/shared/tests/testSuite.ts';
 import { api } from '@/lib/api.ts';
 
 export const EngineTestSuiteScreen: React.FC = () => {
@@ -13,9 +13,14 @@ export const EngineTestSuiteScreen: React.FC = () => {
       const res = await api.tests.run();
       setSummary(res);
     } catch {
-      // Fallback to local synchronous engine suite
-      const res = runFixtureEngineTestSuite();
-      setSummary(res);
+      // Fallback to local synchronous engine suite (lazy: the pure engine is
+      // never pulled into this page's bundle unless the server route fails).
+      try {
+        const { runFixtureEngineTestSuite } = await import('@/shared/tests/testSuite.ts');
+        setSummary(runFixtureEngineTestSuite());
+      } catch {
+        // ignore
+      }
     } finally {
       setIsRunning(false);
     }

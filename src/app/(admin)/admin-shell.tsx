@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 
 import { useAuth } from '@/context/AuthContext.tsx';
 import { Header } from '@/components/layout/Header.tsx';
+import { BottomNav } from '@/components/layout/BottomNav.tsx';
 import { SchoolPortalLayout } from '@/features/participant/SchoolPortalLayout.tsx';
 import { ForcePasswordChangeModal } from '@/features/participant/ForcePasswordChangeModal.tsx';
 import { api } from '@/lib/api.ts';
@@ -113,26 +114,31 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <AdminPortalContext.Provider value={contextValue}>
-      <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+      {/* Skip-to-content for keyboard users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[70] focus:rounded-[6px] focus:bg-ink focus:px-3 focus:py-1.5 focus:text-xs focus:text-white"
+      >
+        Skip to content
+      </a>
+
+      <div className="min-h-[100dvh] flex flex-col bg-canvas font-sans">
         <Header />
 
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <main id="main-content" className="flex-1 mx-auto w-full max-w-6xl px-4 py-6 pb-[calc(72px+env(safe-area-inset-bottom))] sm:px-6 md:pb-8 lg:px-8">
           {children}
         </main>
 
         {/* Mandatory Password Change on First Login */}
         <ForcePasswordChangeModal />
 
-        <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <div>
-              District Sports Office (DSO) Navi Mumbai · Multi-Sport Fixture Administration Platform
-            </div>
-            <div className="text-[11px] text-slate-400">
-              Participant Portal & Match Isolation Active
-            </div>
+        <footer className="hidden border-t border-hairline py-5 text-center text-xs text-faint md:block">
+          <div className="mx-auto max-w-6xl px-4">
+            District Sports Office (DSO) Navi Mumbai · Fixture administration platform
           </div>
         </footer>
+
+        <BottomNav />
       </div>
     </AdminPortalContext.Provider>
   );

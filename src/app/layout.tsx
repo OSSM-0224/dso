@@ -58,7 +58,7 @@ export default function RootLayout({
       className={`${jakartaSans.variable} ${jetbrainsMono.variable} ${fraunces.variable}`}
     >
       <body
-        className="bg-slate-50 text-slate-900 antialiased font-sans"
+        className="bg-canvas text-ink antialiased font-sans"
         suppressHydrationWarning
       >
         <AuthProvider>{children}</AuthProvider>

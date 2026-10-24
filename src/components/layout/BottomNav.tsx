@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext.tsx';
-import { LogOut, Trophy, Users, ClipboardList, History, FlaskConical, Building2, Calendar, LogIn } from 'lucide-react';
+import { LogOut, Trophy, Users, ClipboardList, History, Calendar, LogIn } from 'lucide-react';
 
 /**
  * Fixed bottom navigation for small screens (top bar is a slimmer chrome

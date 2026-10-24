@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext.tsx';
 import { UserRole } from '@/shared/types.ts';
-import { Building2, ChevronDown } from 'lucide-react';
+import { Building2, ChevronDown, FlaskConical } from 'lucide-react';
 
 /**
  * Slim top bar. The staff permissions-preview control (role switcher) is
@@ -150,6 +150,14 @@ export const Header: React.FC = () => {
                   >
                     <Building2 className="h-3.5 w-3.5" />
                     School login page
+                  </Link>
+                  <Link
+                    href="/engine-tests"
+                    onClick={() => setStaffOpen(false)}
+                    className="flex items-center gap-2 rounded-[6px] px-2.5 py-2 text-[13px] text-muted hover:bg-canvas hover:text-ink"
+                  >
+                    <FlaskConical className="h-3.5 w-3.5" />
+                    Engine tests
                   </Link>
                 </div>
               )}

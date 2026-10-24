@@ -79,7 +79,7 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 text-sm font-semibold p-1"
           >
-            ✕
+            <Icon name="xmark" size="sm" align-middle />
           </button>
         </div>
 

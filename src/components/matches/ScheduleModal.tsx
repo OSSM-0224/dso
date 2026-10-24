@@ -59,7 +59,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 text-sm font-semibold p-1"
           >
-            ✕
+            <Icon name="xmark" size="sm" align-middle />
           </button>
         </div>
 
@@ -96,9 +96,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
           </div>
 
           <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
+            <button               type="button"\n              onClick={onClose}
               className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800"
             >
               Cancel

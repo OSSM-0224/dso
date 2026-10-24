@@ -148,7 +148,7 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 text-sm font-semibold p-1"
           >
-            ✕
+            <Icon name="xmark" size="sm" align-middle />
           </button>
         </div>
 
@@ -179,9 +179,7 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
                 </label>
                 <span className="text-xs text-slate-500">or paste CSV text below</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setCsvText(sampleCsv)}
+              <button                 type="button"\n                onClick={() => setCsvText(sampleCsv)}
                 className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
               >
                 Load Sample Template
@@ -301,9 +299,7 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
         {/* Footer Actions */}
         <div className="pt-3 border-t border-slate-100 flex items-center justify-between shrink-0">
           {report ? (
-            <button
-              type="button"
-              onClick={() => setReport(null)}
+            <button               type="button"\n              onClick={() => setReport(null)}
               className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 font-medium"
             >
               ← Edit CSV Data
@@ -313,27 +309,21 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
           )}
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onClose}
+            <button               type="button"\n              onClick={onClose}
               className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800"
             >
               Cancel
             </button>
 
             {!report ? (
-              <button
-                type="button"
-                onClick={() => handlePreview()}
+              <button                 type="button"\n                onClick={() => handlePreview()}
                 disabled={isValidating || !csvText.trim()}
                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-md shadow-sm disabled:opacity-50"
               >
                 {isValidating ? 'Validating...' : 'Preview & Validate CSV'}
               </button>
             ) : (
-              <button
-                type="button"
-                onClick={handleCommitImport}
+              <button                 type="button"\n                onClick={handleCommitImport}
                 disabled={isImporting || report.validCount === 0}
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-md shadow-sm disabled:opacity-50"
               >

@@ -438,9 +438,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                     className="flex-1 text-xs px-2.5 py-1.5 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                   {filteredAvailableTeams.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={handleSelectAll}
+                    <button                       type="button"\n                      onClick={handleSelectAll}
                       className="text-xs text-indigo-600 hover:text-indigo-800 font-medium whitespace-nowrap"
                     >
                       {selectedToEnroll.length === filteredAvailableTeams.length
@@ -526,12 +524,10 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                   Creates squad and immediately enrolls into {tournament.name}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowAddTeamShortcut(false)}
+              <button                 type="button"\n                onClick={() => setShowAddTeamShortcut(false)}
                 className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
               >
-                ✕
+                <Icon name="xmark" size="sm" align-middle />
               </button>
             </div>
 
@@ -597,9 +593,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setShowAddTeamShortcut(false)}
+              <button                 type="button"\n                onClick={() => setShowAddTeamShortcut(false)}
                 className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800"
               >
                 Cancel
@@ -635,16 +629,12 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
             </p>
 
             <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setShowUnlockModal(false)}
+              <button                 type="button"\n                onClick={() => setShowUnlockModal(false)}
                 className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800"
               >
                 Cancel
               </button>
-              <button
-                type="button"
-                onClick={handleConfirmUnlock}
+              <button                 type="button"\n                onClick={handleConfirmUnlock}
                 className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-md shadow-sm"
               >
                 Confirm & Unlock

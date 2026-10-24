@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { api } from '@/lib/api.ts';
-import { CsvImportReport, CsvImportRow } from '@/server/services/teamService.ts';
+// Type-only dependency: CsvImportReport/CsvImportRow live in src/shared/types.ts
+// (team re-exports them for the server side) so this client component never
+// reaches into src/server.
+import { CsvImportReport, CsvImportRow } from '@/shared/types.ts';
 
 interface CsvImportModalProps {
   isOpen: boolean;

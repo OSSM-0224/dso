@@ -1,4 +1,4 @@
-import { runFixtureEngineTestSuite } from '@/server/tests/testSuite';
+import { runFixtureEngineTestSuite } from '@/shared/tests/testSuite';
 import { runParticipantAccessTestSuite } from '@/server/tests/participantAccessTestSuite';
 import { handler, ok } from '@/server/validations/helpers';
 

@@ -2,17 +2,11 @@ import React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext.tsx';
 import { UserRole } from '@/shared/types.ts';
-import { Building2, LogOut, KeyRound } from 'lucide-react';
+import { Building2, LogOut } from 'lucide-react';
 
-interface HeaderProps {
-  onOpenSchoolLogin: () => void;
-}
-
-// Same visuals/labels as the original tab-based Header, now driven by
-// Next.js file routes (client-side navigation via <Link>).
-export const Header: React.FC<HeaderProps> = ({
-  onOpenSchoolLogin,
-}) => {
+// NOTE: there is deliberately NO "School Login" button/modal in the DSO admin
+// header — school login lives only at the standalone /school/login page.
+export const Header: React.FC = () => {
   const { user, role, switchRole, signOut, isParticipant } = useAuth();
   const router = useRouter();
   const pathname = usePathname() || '/';
@@ -149,21 +143,14 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <button
-                  onClick={onOpenSchoolLogin}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold rounded-lg shadow-2xs transition-colors"
-                >
-                  <KeyRound className="w-3.5 h-3.5" />
-                  <span>School Login</span>
-                </button>
-
                 <div className="hidden sm:flex items-center gap-1.5">
                   <select
                     value={role}
                     onChange={(e) => {
                       const val = e.target.value as UserRole;
                       if (val === 'participant') {
-                        onOpenSchoolLogin();
+                        // School login lives on its own standalone page.
+                        navigate('/school/login');
                       } else {
                         switchRole(val);
                       }
@@ -232,7 +219,7 @@ export const Header: React.FC<HeaderProps> = ({
                 History
               </button>
               <button
-                onClick={onOpenSchoolLogin}
+                onClick={() => navigate('/school/login')}
                 className="py-1 text-indigo-600 font-bold"
               >
                 School Login

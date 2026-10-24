@@ -1,3 +1,4 @@
+﻿import 'server-only';
 import { schoolRepository } from '../repositories/schoolRepository.ts';
 import { teamRepository } from '../repositories/teamRepository.ts';
 import {

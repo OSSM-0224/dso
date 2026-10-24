@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { runFixtureEngineTestSuite, TestSuiteSummary } from '@/server/tests/testSuite.ts';
+import { runFixtureEngineTestSuite, TestSuiteSummary } from '@/shared/tests/testSuite.ts';
 import { api } from '@/lib/api.ts';
 
 export const EngineTestSuiteScreen: React.FC = () => {

@@ -1,3 +1,4 @@
+﻿import 'server-only';
 import { fixtureEngine } from '../../shared/engine/engineRegistry.ts';
 import { EngineMatch, EngineTeam } from '../../shared/engine/types.ts';
 import {

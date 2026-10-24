@@ -1,3 +1,4 @@
+﻿import 'server-only';
 import { notificationRepository } from '../repositories/notificationRepository.ts';
 import { tournamentRepository } from '../repositories/tournamentRepository.ts';
 import { teamRepository } from '../repositories/teamRepository.ts';

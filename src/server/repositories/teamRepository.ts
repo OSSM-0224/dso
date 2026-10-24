@@ -1,3 +1,4 @@
+﻿import 'server-only';
 import { dbStore } from '../db/memoryStore.ts';
 import { TeamDoc } from '../../shared/types.ts';
 import { schoolRepository } from './schoolRepository.ts';

@@ -1,3 +1,4 @@
+﻿import 'server-only';
 import { dbStore } from '../db/memoryStore.ts';
 import { AcknowledgementDoc } from '../../shared/types.ts';
 

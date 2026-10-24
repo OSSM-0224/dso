@@ -1,3 +1,4 @@
+﻿import 'server-only';
 import mongoose, { Schema } from 'mongoose';
 
 export const SchoolSchema = new Schema(

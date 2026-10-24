@@ -1,3 +1,4 @@
+﻿import 'server-only';
 /**
  * Thin wrappers around tournament/team/match/enrollment/fixture services used
  * by the /api/tournaments/* Route Handlers. Mirrors the old Express route

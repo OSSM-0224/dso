@@ -1,3 +1,4 @@
+﻿import 'server-only';
 import { dbStore } from '../db/memoryStore.ts';
 import { EnrollmentDoc, EnrollmentStatus } from '../../shared/types.ts';
 import { teamRepository } from './teamRepository.ts';

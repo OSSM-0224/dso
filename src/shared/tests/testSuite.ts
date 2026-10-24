@@ -1,13 +1,18 @@
-import { fixtureEngine } from '../../shared/engine/engineRegistry.ts';
-import { EngineTeam, FixtureGenerationResult } from '../../shared/engine/types.ts';
+/**
+ * Pure framework-free fixture-engine unit tests. Lives in src/shared (NOT in
+ * src/server) because the Engine Tests screen also runs it directly in the
+ * browser as a synchronous fallback when /api/tests/run is unreachable.
+ */
+import { fixtureEngine } from '../engine/engineRegistry.ts';
+import { EngineTeam, FixtureGenerationResult } from '../engine/types.ts';
 import {
   validateRound1SchoolSeparation,
   validateRound2SchoolSeparationWithPlayIn,
   validateAllSchoolSeparation,
-} from '../../shared/engine/rules/sameSchoolRule.ts';
-import { validateStrongTeamsQuarterSeparation } from '../../shared/engine/rules/quarterSeparationRule.ts';
-import { validateByeDistribution, validateChampionsReceivedByes } from '../../shared/engine/rules/byeDistributionRule.ts';
-import { TestResult, TestSuiteSummary } from '../../shared/types.ts';
+} from '../engine/rules/sameSchoolRule.ts';
+import { validateStrongTeamsQuarterSeparation } from '../engine/rules/quarterSeparationRule.ts';
+import { validateByeDistribution, validateChampionsReceivedByes } from '../engine/rules/byeDistributionRule.ts';
+import { TestResult, TestSuiteSummary } from '../types.ts';
 
 export type { TestResult, TestSuiteSummary };
 

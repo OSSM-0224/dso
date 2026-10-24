@@ -1,5 +1,6 @@
+﻿import 'server-only';
 /**
- * Public tournament payload builder — used by the public Route Handler
+ * Public tournament payload builder â€” used by the public Route Handler
  * (/api/public/tournaments/:id) AND the server-rendered public bracket page
  * (/public/tournaments/:id). Strict whitelist DTOs, no strong/seed/champion/
  * snapshot/warning/audit information ever leaves this function.

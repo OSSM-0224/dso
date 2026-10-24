@@ -1,7 +1,8 @@
+﻿import 'server-only';
 /**
  * Extracted logic of the old `routes/participantPortalRoutes.ts` Express
  * handler bodies. schoolId is ALWAYS taken from the server-side participant
- * session — no client-supplied schoolId can override it.
+ * session â€” no client-supplied schoolId can override it.
  */
 import { MatchDoc, NotificationDoc, TeamDoc, TournamentDoc, UserSession } from '../../shared/types.ts';
 import { ApiError } from '../apiError.ts';

@@ -1,5 +1,6 @@
+﻿import 'server-only';
 import 'dotenv/config';
-import { runFixtureEngineTestSuite, TestSuiteSummary } from './testSuite.ts';
+import { runFixtureEngineTestSuite, TestSuiteSummary } from '../../shared/tests/testSuite.ts';
 import { runParticipantAccessTestSuite } from './participantAccessTestSuite.ts';
 
 async function main() {

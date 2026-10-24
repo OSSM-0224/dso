@@ -1,3 +1,4 @@
+﻿import 'server-only';
 import { dbStore } from '../db/memoryStore.ts';
 import { PastTournamentDoc } from '../../shared/types.ts';
 

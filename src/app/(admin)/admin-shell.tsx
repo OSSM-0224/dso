@@ -3,11 +3,12 @@
 /**
  * Client shell for the DSO admin/organizer route group. Reproduces the old
  * App.tsx behaviour on top of Next.js routing:
- *  - holds the School Login modal state,
  *  - holds the admin "View as School" preview state (renders SchoolPortalLayout
  *    while active, exactly like App.tsx did),
  *  - swaps the whole shell to the participant portal when the visitor holds a
  *    real participant session.
+ * NOTE: school login is NOT offered from the admin shell — it lives only at
+ * /school/login (standalone page with its own layout).
  */
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -16,7 +17,6 @@ import { useAuth } from '@/context/AuthContext.tsx';
 import { Header } from '@/components/layout/Header.tsx';
 import { SchoolPortalLayout } from '@/features/participant/SchoolPortalLayout.tsx';
 import { ForcePasswordChangeModal } from '@/features/participant/ForcePasswordChangeModal.tsx';
-import { SchoolLoginModal } from '@/features/participant/SchoolLoginModal.tsx';
 import { api } from '@/lib/api.ts';
 import { SchoolDoc } from '@/shared/types.ts';
 
@@ -50,7 +50,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const { role, canWrite, isParticipant } = useAuth();
   void role;
 
-  const [showSchoolLoginModal, setShowSchoolLoginModal] = useState<boolean>(false);
   const [schools, setSchools] = useState<SchoolDoc[]>([]);
   const [adminPreviewSchool, setAdminPreviewSchool] = useState<AdminPreviewSchool | null>(null);
 
@@ -116,20 +115,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <AdminPortalContext.Provider value={contextValue}>
       <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-        <Header onOpenSchoolLogin={() => setShowSchoolLoginModal(true)} />
+        <Header />
 
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {children}
         </main>
-
-        {/* School Login Modal */}
-        <SchoolLoginModal
-          isOpen={showSchoolLoginModal}
-          onClose={() => setShowSchoolLoginModal(false)}
-          onSuccess={() => {
-            setShowSchoolLoginModal(false);
-          }}
-        />
 
         {/* Mandatory Password Change on First Login */}
         <ForcePasswordChangeModal />

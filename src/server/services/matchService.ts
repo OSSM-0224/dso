@@ -1,3 +1,4 @@
+﻿import 'server-only';
 import { auditLogRepository } from '../repositories/auditLogRepository.ts';
 import { matchRepository } from '../repositories/matchRepository.ts';
 import { teamRepository } from '../repositories/teamRepository.ts';
@@ -157,7 +158,7 @@ export class MatchService {
         score: data.score,
         tournamentCompleted,
       },
-      details: `Recorded result for Match ${match.matchNumber} (${match.roundName}): Winner "${winnerTeam.name}"${scoreStr}${tournamentCompleted ? ' — TOURNAMENT COMPLETED! Winner crowned champion.' : ' — advanced to next round.'}`,
+      details: `Recorded result for Match ${match.matchNumber} (${match.roundName}): Winner "${winnerTeam.name}"${scoreStr}${tournamentCompleted ? ' â€” TOURNAMENT COMPLETED! Winner crowned champion.' : ' â€” advanced to next round.'}`,
     });
 
     // Notify schools of result and advancement / elimination

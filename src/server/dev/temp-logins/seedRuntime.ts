@@ -1,3 +1,4 @@
+﻿import 'server-only';
 // TEMP-LOGIN: remove later
 import mongoose from 'mongoose';
 import { dbStore } from '../../db/memoryStore.ts';

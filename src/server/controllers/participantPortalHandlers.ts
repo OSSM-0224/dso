@@ -1,7 +1,8 @@
+﻿import 'server-only';
 /**
  * Next.js request handlers for the participant portal. The old Express
  * router `participantPortalRoutes.ts` was mounted at BOTH /api/my/* AND
- * /api/school/* — these handlers are shared by both mounts, and every one
+ * /api/school/* â€” these handlers are shared by both mounts, and every one
  * of them resolves schoolId strictly from the school session cookie.
  */
 import { NextRequest, NextResponse } from 'next/server';

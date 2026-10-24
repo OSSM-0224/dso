@@ -1,3 +1,4 @@
+﻿import 'server-only';
 /**
  * Extracted logic of the old `routes/participantAdminRoutes.ts` Express
  * handler bodies (staff-only surface).

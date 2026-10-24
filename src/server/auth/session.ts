@@ -1,3 +1,4 @@
+﻿import 'server-only';
 import { cookies } from 'next/headers';
 import type { NextRequest } from 'next/server';
 
@@ -54,12 +55,17 @@ export async function clearSessionCookie(kind: SessionKind): Promise<void> {
   jar.set(sessionCookieName(kind), '', { ...cookieOptions(), maxAge: 0 });
 }
 
-/** Staff-side session resolution: explicit staff cookie, otherwise the same
- * dev fallback organizer user Express used to inject (`optionalAuth`). */
-export async function getStaffSession(): Promise<UserSession> {
+/** Staff-side session resolution: explicit staff cookie. Outside production the
+ * same dev fallback organizer user Express used to inject (`optionalAuth`) is
+ * returned so local DX stays identical; in production an unauthenticated staff
+ * request resolves to `null` and the guards reject it with 401. */
+export async function getStaffSession(): Promise<UserSession | null> {
   const user = await readSession('staff');
   if (user) return user;
-  return defaultOrganizerSession();
+  if (process.env.NODE_ENV !== 'production') {
+    return defaultOrganizerSession();
+  }
+  return null;
 }
 
 /** Strict participant session: school cookie only, never a fallback

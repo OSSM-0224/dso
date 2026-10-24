@@ -1,4 +1,5 @@
-import { TestResult, TestSuiteSummary } from './testSuite.ts';
+﻿import 'server-only';
+import { TestResult, TestSuiteSummary } from '../../shared/tests/testSuite.ts';
 import { dbStore } from '../db/memoryStore.ts';
 import { matchRepository } from '../repositories/matchRepository.ts';
 import { tournamentRepository } from '../repositories/tournamentRepository.ts';

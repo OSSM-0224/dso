@@ -1,7 +1,8 @@
+﻿import 'server-only';
 /**
  * Role guard logic extracted from the old `middlewares/authMiddleware.ts`,
  * now backed by httpOnly cookie sessions (see server/auth/session.ts).
- * Full authorization decisions stay server-side here — the Next.js
+ * Full authorization decisions stay server-side here â€” the Next.js
  * middleware layer only does lightweight cookie-presence checks.
  */
 import { UserSession } from '../../shared/types.ts';
@@ -12,11 +13,11 @@ export async function requireAdminOrOrganizer(): Promise<UserSession> {
   const user = await getStaffSession();
 
   if (!user) {
-    // Old Express behaviour: with no Bearer header the default organizer
-    // fallback user was injected, so this branch was effectively unreachable.
+    // Production: no staff cookie â†’ 401. (In non-production builds
+    // getStaffSession injects the legacy default-organizer dev fallback.)
     throw new ApiError(
       401,
-      'Authentication required. Please sign in or provide a valid Bearer token.'
+      'Authentication required. Please sign in with staff credentials.'
     );
   }
 

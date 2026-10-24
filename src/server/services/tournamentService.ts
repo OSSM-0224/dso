@@ -1,3 +1,4 @@
+﻿import 'server-only';
 import { auditLogRepository } from '../repositories/auditLogRepository.ts';
 import { pastTournamentRepository } from '../repositories/pastTournamentRepository.ts';
 import { teamRepository } from '../repositories/teamRepository.ts';

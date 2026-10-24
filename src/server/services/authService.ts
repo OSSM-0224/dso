@@ -1,3 +1,4 @@
+﻿import 'server-only';
 import jwt from 'jsonwebtoken';
 import { userRepository } from '../repositories/userRepository.ts';
 import { schoolRepository } from '../repositories/schoolRepository.ts';

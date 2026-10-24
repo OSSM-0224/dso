@@ -1,0 +1,6 @@
+{
+  "name": "DSO Navi Mumbai Fixtures",
+  "description": "Multi-sport fixture generation, bracket management, and tournament administration platform for District Sports Office (DSO) Navi Mumbai.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

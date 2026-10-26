@@ -12,8 +12,13 @@ import Link from 'next/link';
 
 import { api } from '@/lib/api.ts';
 import type { MatchScoreViewDto } from '@/shared/types.ts';
-import type { KhoKhoNextAction, KhoKhoTurnSummary } from '@/shared/scoring/types.ts';
+import type {
+  KhoKhoNextAction,
+  KhoKhoScoreEvent,
+  KhoKhoTurnSummary,
+} from '@/shared/scoring/types.ts';
 import { PAUSE_REMINDER_MS } from '@/shared/scoring/types.ts';
+import { getScoringEngine } from '@/shared/scoring/engine.ts';
 import { useAuth } from '@/context/AuthContext.tsx';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { ScorerLoginCard } from './ScorerLoginCard.tsx';
@@ -66,8 +71,13 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
   const [pending, setPending] = useState(false);
   const [toast, setToast] = useState<{ tone: 'error' | 'info' | 'success'; text: string } | null>(null);
   const [nowTick, setNowTick] = useState<number>(() => Date.now());
+  const [queuedEvents, setQueuedEvents] = useState<KhoKhoScoreEvent[]>([]);
   const snapshotAtRef = useRef<number>(Date.now());
   const autoCompletingRef = useRef(false);
+  const queueRef = useRef<KhoKhoScoreEvent[]>([]);
+  const flushingRef = useRef(false);
+  const serverScoreRef = useRef<MatchScoreViewDto | null>(null);
+  const serverScoreReceivedAtRef = useRef<number>(Date.now());
 
   const [showOverride, setShowOverride] = useState(false);
   const [overrideWinner, setOverrideWinner] = useState<string>('');
@@ -80,10 +90,72 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
 
   // ---------------- data ----------------
 
-  const applyScore = useCallback((score: MatchScoreViewDto | null) => {
-    snapshotAtRef.current = Date.now();
-    setDetail((prev) => (prev ? { ...prev, score } : prev));
-  }, []);
+  const replayScore = useCallback(
+    (
+      base: MatchScoreViewDto,
+      pending: KhoKhoScoreEvent[],
+      nowAt = Date.now()
+    ): MatchScoreViewDto => {
+      const localEngine = getScoringEngine('kho-kho');
+      let state = localEngine.createInitialState({
+        teams: base.teams,
+        config: base.config,
+      });
+
+      // The server DTO is trusted; a malformed legacy event should not blank
+      // the entire optimistic view.
+      for (const event of base.events) {
+        try {
+          state = localEngine.applyEvent(state, event as KhoKhoScoreEvent);
+        } catch {
+          // Ignore: the next authoritative refresh will reconcile.
+        }
+      }
+
+      const confirmedIds = new Set(base.events.map((event) => event.eventId));
+      const unconfirmed = pending.filter((event) => !confirmedIds.has(event.eventId));
+      for (const event of unconfirmed) {
+        try {
+          state = localEngine.applyEvent(state, event);
+        } catch {
+          // Ignore: the server will reject and we will reconcile on failure.
+        }
+      }
+
+      const nowMs =
+        base.serverNowMs + Math.max(0, nowAt - serverScoreReceivedAtRef.current);
+      return {
+        ...base,
+        version: base.version + unconfirmed.length,
+        scoreboard: localEngine.getScoreboard(state, nowMs),
+        serverNowMs: nowMs,
+      };
+    },
+    []
+  );
+
+  const showScore = useCallback(
+    (base: MatchScoreViewDto, pending: KhoKhoScoreEvent[]) => {
+      const score = pending.length > 0 ? replayScore(base, pending) : base;
+      snapshotAtRef.current = Date.now();
+      setDetail((prev) => (prev ? { ...prev, score } : prev));
+    },
+    [replayScore]
+  );
+
+  const applyScore = useCallback(
+    (score: MatchScoreViewDto | null) => {
+      serverScoreRef.current = score;
+      serverScoreReceivedAtRef.current = Date.now();
+      if (!score) {
+        snapshotAtRef.current = Date.now();
+        setDetail((prev) => (prev ? { ...prev, score: null } : prev));
+        return;
+      }
+      showScore(score, queueRef.current);
+    },
+    [showScore]
+  );
 
   const refresh = useCallback(
     async (silent = false) => {
@@ -92,8 +164,14 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
       }
       try {
         const d = await api.scoring.getMatch(matchId);
+        serverScoreRef.current = d.score;
+        serverScoreReceivedAtRef.current = Date.now();
+        const nextScore =
+          d.score && queueRef.current.length > 0
+            ? replayScore(d.score, queueRef.current)
+            : d.score;
         snapshotAtRef.current = Date.now();
-        setDetail(d);
+        setDetail({ ...d, score: nextScore });
         setNeedsLogin(false);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -104,8 +182,41 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
         }
       }
     },
-    [matchId]
+    [matchId, replayScore]
   );
+
+  const flushQueue = useCallback(async () => {
+    if (flushingRef.current) return;
+    flushingRef.current = true;
+    setPending(true);
+    try {
+      while (queueRef.current.length > 0) {
+        const event = queueRef.current[0];
+        try {
+          const dto = await api.scoring.appendEvent(
+            matchId,
+            event as unknown as Record<string, unknown>
+          );
+          queueRef.current = queueRef.current.filter(
+            (queued) => queued.eventId !== event.eventId
+          );
+          setQueuedEvents(queueRef.current);
+          applyScore(dto);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Event rejected';
+          queueRef.current = queueRef.current.filter(
+            (queued) => queued.eventId !== event.eventId
+          );
+          setQueuedEvents(queueRef.current);
+          setToast({ tone: 'error', text: message.replace(/^[A-Z_]+:\s*/, '') });
+          await refresh(true);
+        }
+      }
+    } finally {
+      flushingRef.current = false;
+      setPending(false);
+    }
+  }, [matchId, applyScore, refresh]);
 
   useEffect(() => {
     if (authLoading || !canScore) return;
@@ -138,21 +249,35 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
 
   const postEvent = useCallback(
     async (payload: Record<string, unknown>) => {
-      setPending(true);
-      try {
-        const dto = await api.scoring.appendEvent(matchId, { eventId: newEventId(), ...payload });
-        applyScore(dto);
-        return true;
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Event rejected';
-        setToast({ tone: 'error', text: message.replace(/^[A-Z_]+:\s*/, '') });
-        refresh(true);
+      const base = serverScoreRef.current;
+      if (!base) {
+        setToast({ tone: 'error', text: 'The score session is still loading. Try again.' });
         return false;
-      } finally {
-        setPending(false);
       }
+
+      const nowAt = Date.now();
+      const serverNowMs =
+        base.serverNowMs + Math.max(0, nowAt - serverScoreReceivedAtRef.current);
+      const lastQueued = queueRef.current[queueRef.current.length - 1];
+      const clientAtMs = Math.max(
+        lastQueued?.atMs ?? 0,
+        Math.round(serverNowMs)
+      );
+
+      const event = {
+        ...payload,
+        eventId: newEventId(),
+        atMs: clientAtMs,
+        clientAtMs,
+      } as unknown as KhoKhoScoreEvent;
+
+      queueRef.current = [...queueRef.current, event];
+      setQueuedEvents(queueRef.current);
+      showScore(base, queueRef.current);
+      void flushQueue();
+      return true;
     },
-    [matchId, applyScore, refresh]
+    [flushQueue, showScore]
   );
 
   const doUndo = useCallback(async () => {
@@ -703,7 +828,9 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
           )}
         </div>
         <p className="mt-2 text-center text-[10px] text-faint">
-          Signed in as {user?.name || 'scorer'} · server-validated events only
+          {queuedEvents.length > 0
+            ? `Syncing ${queuedEvents.length} event${queuedEvents.length === 1 ? '' : 's'}\u2026`
+            : `Signed in as ${user?.name || 'scorer'} \u00b7 server-validated events only`}
         </p>
       </div>
     </div>

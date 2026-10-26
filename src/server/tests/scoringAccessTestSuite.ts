@@ -420,6 +420,100 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
     });
   }
 
+  // Test 6: Idempotent re-delivery + server-clamped client timestamps
+  const t6Start = Date.now();
+  try {
+    const seed = await seedScoreableMatch('idempotent');
+    const organizer: UserSession = { id: 'org-idempotent', name: 'Organizer', role: 'organizer' };
+
+    await scoringService.ensureMatchScore(organizer, seed.match.id);
+    const afterToss = await scoringService.appendEvent(organizer, seed.match.id, {
+      ...tossEvent(seed.teamA.id, 'idem'),
+      clientAtMs: 0,
+    });
+
+    const turnStart = {
+      eventId: 'turn-start-idem',
+      atMs: 0,
+      type: 'TURN_START',
+    };
+    const afterTurnStart = await scoringService.appendEvent(
+      organizer,
+      seed.match.id,
+      { ...turnStart, clientAtMs: 0 }
+    );
+    const duplicateTurnStart = await scoringService.appendEvent(
+      organizer,
+      seed.match.id,
+      { ...turnStart, clientAtMs: 0 }
+    );
+
+    const dismissal = {
+      eventId: 'dismissal-idem',
+      atMs: 0,
+      type: 'DISMISSAL',
+      dismissalType: 'TAG',
+    };
+    const afterDismissal = await scoringService.appendEvent(
+      organizer,
+      seed.match.id,
+      { ...dismissal, clientAtMs: Number.MAX_SAFE_INTEGER }
+    );
+    const duplicateDismissal = await scoringService.appendEvent(
+      organizer,
+      seed.match.id,
+      { ...dismissal, clientAtMs: Number.MAX_SAFE_INTEGER }
+    );
+
+    const eventCount = (dto: typeof afterDismissal, eventId: string) =>
+      dto.events.filter((event) => event.eventId === eventId).length;
+    const totalAfterOne = afterDismissal.scoreboard.teams.reduce(
+      (sum, team) => sum + team.totalPoints,
+      0
+    );
+    const totalAfterDuplicate = duplicateDismissal.scoreboard.teams.reduce(
+      (sum, team) => sum + team.totalPoints,
+      0
+    );
+    const lastEvent = afterDismissal.events[afterDismissal.events.length - 1];
+
+    const passed =
+      afterToss.version === 1 &&
+      afterTurnStart.version === 2 &&
+      afterTurnStart.events[1].atMs === afterToss.events[0].atMs &&
+      duplicateTurnStart.version === 2 &&
+      eventCount(duplicateTurnStart, turnStart.eventId) === 1 &&
+      afterDismissal.version === 3 &&
+      duplicateDismissal.version === 3 &&
+      eventCount(duplicateDismissal, dismissal.eventId) === 1 &&
+      totalAfterDuplicate === totalAfterOne &&
+      totalAfterOne === 1 &&
+      typeof afterDismissal.serverNowMs === 'number' &&
+      lastEvent.atMs <= afterDismissal.serverNowMs;
+
+    await cleanupScoreableMatch(seed);
+
+    results.push({
+      id: 'TEST_SCORING_IDEMPOTENT_CLOCK',
+      name: 'Scoring Idempotency: duplicate events do not double count; client timestamps are clamped to server time',
+      category: 'LIVE SCORER Access Control',
+      passed,
+      message: passed
+        ? 'Duplicate events kept version 3 and one point; out-of-order time clamped to the last event and future time to server-now.'
+        : `Idempotency/clock clamp failed (versions ${afterToss.version}/${afterTurnStart.version}/${duplicateTurnStart.version}/${afterDismissal.version}/${duplicateDismissal.version}, totals ${totalAfterOne}/${totalAfterDuplicate}).`,
+      durationMs: Date.now() - t6Start,
+    });
+  } catch (err: any) {
+    results.push({
+      id: 'TEST_SCORING_IDEMPOTENT_CLOCK',
+      name: 'Scoring Idempotency: duplicate events do not double count; client timestamps are clamped to server time',
+      category: 'LIVE SCORER Access Control',
+      passed: false,
+      message: `Error: ${err.message}`,
+      durationMs: Date.now() - t6Start,
+    });
+  }
+
   const durationMs = Date.now() - startAll;
   const passedCount = results.filter((r) => r.passed).length;
 

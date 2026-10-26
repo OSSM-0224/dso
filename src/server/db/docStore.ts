@@ -28,14 +28,14 @@ function getModel(collection: string): Model<any> {
   const cached = modelCache.get(collection);
   if (cached) return cached;
 
-  const existing = mongoose.models[collection] as Model<any> | undefined;
-  const model =
-    existing ??
-    mongoose.model(
+  let model = mongoose.models[collection] as unknown as Model<any> | undefined;
+  if (!model) {
+    model = mongoose.model(
       collection,
       new Schema({ _id: { type: String } }, { strict: false, versionKey: false, timestamps: false }),
       collection
-    );
+    ) as unknown as Model<any>;
+  }
 
   modelCache.set(collection, model);
   return model;

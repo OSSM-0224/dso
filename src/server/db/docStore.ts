@@ -46,6 +46,28 @@ function fromMongo<T extends BaseDoc>(raw: Record<string, unknown>): T {
   return { ...rest, id: (rest.id as string | undefined) ?? (String(_id) as string) } as T;
 }
 
+function valueAtPath(value: unknown, path: string): unknown {
+  return path.split('.').reduce<unknown>((current, key) => {
+    if (!current || typeof current !== 'object') return undefined;
+    return (current as Record<string, unknown>)[key];
+  }, value);
+}
+
+function matchesFilter<T>(doc: T, filter: Record<string, unknown>): boolean {
+  return Object.entries(filter).every(
+    ([path, expected]) => valueAtPath(doc, path) === expected
+  );
+}
+
+export interface DocIndexSpec {
+  keys: Record<string, 1 | -1>;
+  options?: {
+    unique?: boolean;
+    name?: string;
+    sparse?: boolean;
+  };
+}
+
 /**
  * Collection gateway used by every repository.
  *
@@ -80,6 +102,22 @@ export class DocCollection<T extends BaseDoc> {
     return doc ? fromMongo<T>(doc as Record<string, unknown>) : null;
   }
 
+  async findWhere(filter: Record<string, unknown>): Promise<T[]> {
+    if (!(await this.useMongo())) {
+      return Array.from(this.memory().values()).filter((doc) => matchesFilter(doc, filter));
+    }
+    const docs = await getModel(this.collectionName).find(filter).lean();
+    return docs.map((doc) => fromMongo<T>(doc as Record<string, unknown>));
+  }
+
+  async findOneWhere(filter: Record<string, unknown>): Promise<T | null> {
+    if (!(await this.useMongo())) {
+      return Array.from(this.memory().values()).find((doc) => matchesFilter(doc, filter)) ?? null;
+    }
+    const doc = await getModel(this.collectionName).findOne(filter).lean();
+    return doc ? fromMongo<T>(doc as Record<string, unknown>) : null;
+  }
+
   async set(doc: T): Promise<T> {
     if (!(await this.useMongo())) {
       this.memory().set(doc.id, doc);
@@ -91,6 +129,36 @@ export class DocCollection<T extends BaseDoc> {
       { upsert: true }
     );
     return doc;
+  }
+
+  /** Insert without overwriting an existing document with the same id. */
+  async insertIfAbsent(doc: T): Promise<boolean> {
+    if (!(await this.useMongo())) {
+      if (this.memory().has(doc.id)) return false;
+      this.memory().set(doc.id, doc);
+      return true;
+    }
+    const result = await getModel(this.collectionName).updateOne(
+      { _id: doc.id },
+      { $setOnInsert: { ...doc, _id: doc.id } },
+      { upsert: true }
+    );
+    return (result.upsertedCount ?? 0) > 0;
+  }
+
+  async ensureIndexes(specs: DocIndexSpec[]): Promise<void> {
+    if (!(await this.useMongo())) return;
+    const model = getModel(this.collectionName);
+    for (const spec of specs) {
+      try {
+        await model.collection.createIndex(spec.keys, spec.options ?? {});
+      } catch (err) {
+        console.warn(
+          `[Database]: Could not create index on ${this.collectionName}:`,
+          err instanceof Error ? err.message : String(err)
+        );
+      }
+    }
   }
 
   async delete(id: string): Promise<boolean> {

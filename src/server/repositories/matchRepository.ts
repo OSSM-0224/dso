@@ -4,12 +4,10 @@ import { MatchDoc } from '../../shared/types.ts';
 
 export class MatchRepository {
   async findByTournamentId(tournamentId: string): Promise<MatchDoc[]> {
-    return (await collections.matches.all())
-      .filter((m) => m.tournamentId === tournamentId)
-      .sort((a, b) => {
-        if (a.round !== b.round) return a.round - b.round;
-        return a.matchNumber - b.matchNumber;
-      });
+    return (await collections.matches.findWhere({ tournamentId })).sort((a, b) => {
+      if (a.round !== b.round) return a.round - b.round;
+      return a.matchNumber - b.matchNumber;
+    });
   }
 
   async findById(id: string): Promise<MatchDoc | null> {

@@ -129,11 +129,20 @@ class ScoringService {
     return created;
   }
 
-  private sanitizeIncomingEvent(raw: Record<string, unknown>, user: UserSession): KhoKhoScoreEvent {
+  private sanitizeIncomingEvent(
+    raw: Record<string, unknown>
+  ): { event: KhoKhoScoreEvent; clientAtMs: number | null } {
     const clone = { ...raw } as Record<string, unknown>;
-    // recordedBy is always the authenticated session — never client input.
+    // recordedBy is always the authenticated session - never client input.
     delete clone['recordedBy'];
-    return clone as unknown as KhoKhoScoreEvent;
+    delete clone['atMs'];
+    const rawClientAt = clone['clientAtMs'];
+    delete clone['clientAtMs'];
+    const clientAtMs =
+      typeof rawClientAt === 'number' && Number.isFinite(rawClientAt) && rawClientAt >= 0
+        ? Math.round(rawClientAt)
+        : null;
+    return { event: clone as unknown as KhoKhoScoreEvent, clientAtMs };
   }
 
   private async appendValidatedEvent(
@@ -141,23 +150,21 @@ class ScoringService {
     event: KhoKhoScoreEvent,
     user: UserSession,
     auditWhat: 'score_event' | 'score_undo',
-    match: MatchDoc
-  ): Promise<ScoreEventDoc[]> {
+    match: MatchDoc,
+    clientAtMs: number | null = null
+  ): Promise<{ scoreDoc: MatchScoreDoc; events: ScoreEventDoc[]; inserted: boolean }> {
     const events = await matchScoreRepository.findEventsByMatchId(scoreDoc.matchId);
     const state = this.buildEngineState(scoreDoc, events);
 
-    // Server-authoritative clock: the event timeline is anchored to the score
-    // doc creation epoch, and every event is stamped with server wall time
-    // (client-supplied atMs is ignored). This makes turn durations and
-    // pause/resume windows tamper-proof while preserving inter-event deltas.
+    // Server-authoritative clock: the timeline is anchored to the score doc
+    // creation epoch. A client may request its action time, but the server
+    // clamps it between the previous accepted event and server-now so a slow
+    // network or skewed client clock can never reorder or backdate the match.
     const epoch = Date.parse(scoreDoc.createdAt) || 0;
-    event.atMs = Math.max(0, Date.now() - epoch);
-
+    const serverNowMs = Math.max(0, Date.now() - epoch);
     const last = events.length > 0 ? events[events.length - 1].event : null;
-    if (last && event.atMs < last.atMs) {
-      // Monotonic timeline: clamp out-of-order arrivals to the last stamp.
-      event.atMs = last.atMs;
-    }
+    const requestedAtMs = clientAtMs ?? serverNowMs;
+    event.atMs = Math.max(last?.atMs ?? 0, Math.min(requestedAtMs, serverNowMs));
 
     try {
       engine.validateEvent(state, event);
@@ -165,14 +172,25 @@ class ScoringService {
       throw toApiError(err);
     }
 
-    await matchScoreRepository.appendEvent({
+    const appended = await matchScoreRepository.appendEvent({
       matchId: scoreDoc.matchId,
       event,
       recordedBy: user.name,
       recordedByRole: user.role,
     });
 
-    await matchScoreRepository.update(scoreDoc.matchId, {});
+    if (!appended.inserted) {
+      // Idempotent re-delivery: return the current truth without counting the
+      // same action twice or writing another audit entry.
+      return {
+        scoreDoc: (await matchScoreRepository.findByMatchId(scoreDoc.matchId)) ?? scoreDoc,
+        events: await matchScoreRepository.findEventsByMatchId(scoreDoc.matchId),
+        inserted: false,
+      };
+    }
+
+    const updatedScoreDoc =
+      (await matchScoreRepository.update(scoreDoc.matchId, {})) ?? scoreDoc;
 
     await auditLogRepository.create({
       tournamentId: scoreDoc.tournamentId,
@@ -188,7 +206,11 @@ class ScoringService {
       await matchRepository.update(match.id, { status: 'live' });
     }
 
-    return matchScoreRepository.findEventsByMatchId(scoreDoc.matchId);
+    return {
+      scoreDoc: updatedScoreDoc,
+      events: [...events, appended.doc],
+      inserted: true,
+    };
   }
 
   private async buildViewDto(
@@ -199,8 +221,9 @@ class ScoringService {
     // `nowMs` must live on the same timeline axis as the (server-stamped,
     // creation-epoch-anchored) events — see appendValidatedEvent.
     const epoch = Date.parse(scoreDoc.createdAt) || 0;
-    const scoreboard = engine.getScoreboard(state, Math.max(0, Date.now() - epoch));
-    return sanitizeMatchScoreDto(scoreDoc, scoreboard, events);
+    const serverNowMs = Math.max(0, Date.now() - epoch);
+    const scoreboard = engine.getScoreboard(state, serverNowMs);
+    return sanitizeMatchScoreDto(scoreDoc, scoreboard, events, serverNowMs);
   }
 
   // ------------------------------------------------------------------
@@ -222,7 +245,13 @@ class ScoringService {
     const items: ScoringMatchListItem[] = [];
 
     for (const tournament of scoreableTournaments) {
-      const matches = await matchRepository.findByTournamentId(tournament.id);
+      const [matches, tournamentScores] = await Promise.all([
+        matchRepository.findByTournamentId(tournament.id),
+        matchScoreRepository.findByTournamentId(tournament.id),
+      ]);
+      const scoreByMatchId = new Map(
+        tournamentScores.map((scoreDoc) => [scoreDoc.matchId, scoreDoc])
+      );
       for (const match of matches) {
         if (match.isBye) continue;
         if (!match.teamA || !match.teamB) continue;
@@ -230,7 +259,7 @@ class ScoringService {
 
         if (user.role === 'scorer' && !match.scorerIds?.includes(user.id)) continue;
 
-        const scoreDoc = await matchScoreRepository.findByMatchId(match.id);
+        const scoreDoc = scoreByMatchId.get(match.id);
         const scorerIds = match.scorerIds || [];
         items.push({
           matchId: match.id,
@@ -329,13 +358,28 @@ class ScoringService {
       throw new ApiError(409, 'Scoring for this match is already completed.');
     }
 
-    const event = this.sanitizeIncomingEvent(rawEvent, user);
-    await this.appendValidatedEvent(scoreDoc, event, user, 'score_event', match);
+    const eventId = typeof rawEvent.eventId === 'string' ? rawEvent.eventId : '';
+    if (eventId) {
+      const duplicate = await matchScoreRepository.findEventByEventId(matchId, eventId);
+      if (duplicate) {
+        return this.buildViewDto(
+          scoreDoc,
+          await matchScoreRepository.findEventsByMatchId(matchId)
+        );
+      }
+    }
 
-    return this.buildViewDto(
-      (await matchScoreRepository.findByMatchId(matchId))!,
-      await matchScoreRepository.findEventsByMatchId(matchId)
+    const { event, clientAtMs } = this.sanitizeIncomingEvent(rawEvent);
+    const appended = await this.appendValidatedEvent(
+      scoreDoc,
+      event,
+      user,
+      'score_event',
+      match,
+      clientAtMs
     );
+
+    return this.buildViewDto(appended.scoreDoc, appended.events);
   }
 
   async undoLastEvent(user: UserSession, matchId: string): Promise<MatchScoreViewDto> {
@@ -362,19 +406,24 @@ class ScoringService {
     }
 
     const lastEvent = events.length > 0 ? events[events.length - 1].event : null;
+    const voidAtMs = lastEvent ? Math.max(target.atMs, lastEvent.atMs) : target.atMs;
     const voidEvent = {
-      eventId: `void-${target.eventId}-${Math.random().toString(36).substring(2, 8)}`,
-      atMs: lastEvent ? Math.max(target.atMs, lastEvent.atMs) : target.atMs,
+      eventId: `void-${matchId}-${target.eventId}`,
+      atMs: voidAtMs,
       type: 'VOID',
       targetEventId: target.eventId,
     } as unknown as KhoKhoScoreEvent;
 
-    await this.appendValidatedEvent(scoreDoc, voidEvent, user, 'score_undo', match);
-
-    return this.buildViewDto(
-      (await matchScoreRepository.findByMatchId(matchId))!,
-      await matchScoreRepository.findEventsByMatchId(matchId)
+    const appended = await this.appendValidatedEvent(
+      scoreDoc,
+      voidEvent,
+      user,
+      'score_undo',
+      match,
+      voidAtMs
     );
+
+    return this.buildViewDto(appended.scoreDoc, appended.events);
   }
 
   async completeMatch(user: UserSession, matchId: string) {
@@ -466,14 +515,22 @@ class ScoringService {
       const events = await matchScoreRepository.findEventsByMatchId(matchId);
       const state = this.buildEngineState(scoreDoc, events);
       const lastEvent = events.length > 0 ? events[events.length - 1].event : null;
+      const manualAtMs = lastEvent ? lastEvent.atMs : 0;
       const manualEvent = {
-        eventId: `manual-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
-        atMs: lastEvent ? lastEvent.atMs : 0,
+        eventId: `manual-${matchId}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+        atMs: manualAtMs,
         type: 'MANUAL_DECISION',
         winnerTeamId: criteria.winnerTeamId,
         reason: criteria.reason,
       } as unknown as KhoKhoScoreEvent;
-      await this.appendValidatedEvent(scoreDoc, manualEvent, user, 'score_event', match);
+      await this.appendValidatedEvent(
+        scoreDoc,
+        manualEvent,
+        user,
+        'score_event',
+        match,
+        manualAtMs
+      );
     }
 
     const result = await matchService.recordResult(

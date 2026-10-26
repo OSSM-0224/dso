@@ -208,8 +208,15 @@ export interface MatchScoreViewDto {
   status: MatchScoreStatus;
   winnerTeamIds: string[] | null;
   teams: Array<{ id: string; name: string; schoolName?: string }>;
+  /** Scoring rules needed to replay optimistic events on the client. */
+  config: KhoKhoScoringConfig;
   scoreboard: KhoKhoScoreboard;
   events: SanitizedScoreEvent[];
+  /**
+   * Server "now" on the same creation-epoch timeline as `event.atMs`.
+   * Clients anchor optimistic/accepted action times to this value.
+   */
+  serverNowMs: number;
   createdAt: string;
   updatedAt: string;
 }

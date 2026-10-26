@@ -80,11 +80,13 @@ export function sanitizeTournamentDto(tournament: TournamentDoc): any {
 export function sanitizeMatchScoreDto(
   score: MatchScoreDoc,
   scoreboard: KhoKhoScoreboard,
-  events: ScoreEventDoc[]
+  events: ScoreEventDoc[],
+  serverNowMs = Math.max(0, Date.now() - (Date.parse(score.createdAt) || 0))
 ): MatchScoreViewDto {
   const safeEvents = events.map((ev) => {
     const clone = { ...(ev.event as unknown as Record<string, unknown>) };
     delete clone['recordedBy'];
+    delete clone['clientAtMs'];
     return clone as unknown as MatchScoreViewDto['events'][number];
   });
 
@@ -101,8 +103,10 @@ export function sanitizeMatchScoreDto(
       name: t.name,
       schoolName: t.schoolName || undefined,
     })),
+    config: score.config,
     scoreboard,
     events: safeEvents,
+    serverNowMs,
     createdAt: score.createdAt,
     updatedAt: score.updatedAt,
   };

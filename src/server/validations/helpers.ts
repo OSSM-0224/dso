@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import type { ZodType } from 'zod';
 
 import { ApiError, toWebResponse } from '../apiError.ts';
+import type { ServerTiming } from '../http/serverTiming.ts';
 
 export type RouteJson = NextResponse;
 
@@ -50,8 +51,14 @@ export async function handler(fn: () => Promise<Response> | Response): Promise<R
   }
 }
 
-export function ok(data: unknown, status: number = 200): NextResponse {
-  return NextResponse.json({ success: true, data }, { status });
+export function ok(
+  data: unknown,
+  status: number = 200,
+  timing?: ServerTiming
+): NextResponse {
+  const response = NextResponse.json({ success: true, data }, { status });
+  if (timing) response.headers.set('Server-Timing', timing.header());
+  return response;
 }
 
 export function okMessage(message: string, data: unknown): NextResponse {

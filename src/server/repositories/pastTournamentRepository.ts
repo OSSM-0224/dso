@@ -1,10 +1,11 @@
 ﻿import 'server-only';
-import { dbStore } from '../db/memoryStore.ts';
+import { collections } from '../db/docStore.ts';
 import { PastTournamentDoc } from '../../shared/types.ts';
 
 export class PastTournamentRepository {
   async findAll(): Promise<PastTournamentDoc[]> {
-    return Array.from(dbStore.pastTournaments.values()).sort((a, b) => b.year - a.year);
+    const list = await collections.pastTournaments.all();
+    return list.sort((a, b) => b.year - a.year);
   }
 
   async findByFilter(
@@ -13,7 +14,7 @@ export class PastTournamentRepository {
     gender: 'boys' | 'girls',
     minYear: number
   ): Promise<PastTournamentDoc[]> {
-    return Array.from(dbStore.pastTournaments.values()).filter(
+    return (await collections.pastTournaments.all()).filter(
       (p) =>
         p.sport.toLowerCase() === sport.toLowerCase() &&
         p.ageGroup === ageGroup &&
@@ -45,12 +46,12 @@ export class PastTournamentRepository {
       schoolName: data.schoolName.trim(),
       createdAt: new Date().toISOString(),
     };
-    dbStore.pastTournaments.set(id, doc);
+    await collections.pastTournaments.set(doc);
     return doc;
   }
 
   async delete(id: string): Promise<boolean> {
-    return dbStore.pastTournaments.delete(id);
+    return collections.pastTournaments.delete(id);
   }
 }
 

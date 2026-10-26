@@ -1,63 +1,45 @@
 ﻿import 'server-only';
-import { dbStore } from '../db/memoryStore.ts';
+import { collections } from '../db/docStore.ts';
 import { UserDoc } from '../../shared/types.ts';
 
 export class UserRepository {
   async findAll(): Promise<UserDoc[]> {
-    return Array.from(dbStore.users.values()).sort((a, b) => a.name.localeCompare(b.name));
+    const list = await collections.users.all();
+    return list.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   async findById(id: string): Promise<UserDoc | null> {
-    return dbStore.users.get(id) || null;
+    return collections.users.get(id);
   }
 
   async findByEmail(email: string): Promise<UserDoc | null> {
     const cleanEmail = email.trim().toLowerCase();
-    for (const u of dbStore.users.values()) {
-      if (u.email && u.email.toLowerCase() === cleanEmail) {
-        return u;
-      }
-    }
-    return null;
+    const list = await collections.users.all();
+    return list.find((u) => !!u.email && u.email.toLowerCase() === cleanEmail) || null;
   }
 
   async findBySchoolCode(schoolCode: string): Promise<UserDoc | null> {
     const cleanCode = schoolCode.trim().toUpperCase();
-    for (const u of dbStore.users.values()) {
-      if (u.schoolCode && u.schoolCode.toUpperCase() === cleanCode) {
-        return u;
-      }
-    }
-    return null;
+    const list = await collections.users.all();
+    return list.find((u) => !!u.schoolCode && u.schoolCode.toUpperCase() === cleanCode) || null;
   }
 
   async findBySchoolId(schoolId: string): Promise<UserDoc | null> {
-    for (const u of dbStore.users.values()) {
-      if (u.schoolId === schoolId) {
-        return u;
-      }
-    }
-    return null;
+    const list = await collections.users.all();
+    return list.find((u) => u.schoolId === schoolId) || null;
   }
 
   async findByIdentifier(identifier: string): Promise<UserDoc | null> {
     const clean = identifier.trim();
-    // Try email first
+
     const byEmail = await this.findByEmail(clean);
     if (byEmail) return byEmail;
 
-    // Try schoolCode
     const byCode = await this.findBySchoolCode(clean);
     if (byCode) return byCode;
 
-    // Try phone
-    for (const u of dbStore.users.values()) {
-      if (u.phone && u.phone.trim() === clean) {
-        return u;
-      }
-    }
-
-    return null;
+    const list = await collections.users.all();
+    return list.find((u) => !!u.phone && u.phone.trim() === clean) || null;
   }
 
   async create(user: Omit<UserDoc, 'id' | 'createdAt' | 'updatedAt'>): Promise<UserDoc> {
@@ -69,12 +51,12 @@ export class UserRepository {
       createdAt: now,
       updatedAt: now,
     };
-    dbStore.users.set(id, doc);
+    await collections.users.set(doc);
     return doc;
   }
 
   async update(id: string, data: Partial<UserDoc>): Promise<UserDoc | null> {
-    const existing = dbStore.users.get(id);
+    const existing = await collections.users.get(id);
     if (!existing) return null;
 
     const updated: UserDoc = {
@@ -82,12 +64,12 @@ export class UserRepository {
       ...data,
       updatedAt: new Date().toISOString(),
     };
-    dbStore.users.set(id, updated);
+    await collections.users.set(updated);
     return updated;
   }
 
   async delete(id: string): Promise<boolean> {
-    return dbStore.users.delete(id);
+    return collections.users.delete(id);
   }
 }
 

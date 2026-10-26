@@ -1,11 +1,11 @@
 ﻿import 'server-only';
-import { dbStore } from '../db/memoryStore.ts';
+import { collections } from '../db/docStore.ts';
 import { EnrollmentDoc, EnrollmentStatus } from '../../shared/types.ts';
 import { teamRepository } from './teamRepository.ts';
 
 export class EnrollmentRepository {
   async findByTournamentId(tournamentId: string): Promise<EnrollmentDoc[]> {
-    const list = Array.from(dbStore.enrollments.values()).filter(
+    const list = (await collections.enrollments.all()).filter(
       (e) => e.tournamentId === tournamentId
     );
 
@@ -24,7 +24,7 @@ export class EnrollmentRepository {
     tournamentId: string,
     teamId: string
   ): Promise<EnrollmentDoc | null> {
-    const list = Array.from(dbStore.enrollments.values());
+    const list = await collections.enrollments.all();
     const found = list.find((e) => e.tournamentId === tournamentId && e.teamId === teamId);
     if (!found) return null;
 
@@ -56,34 +56,33 @@ export class EnrollmentRepository {
       withdrawnAt: null,
     };
 
-    dbStore.enrollments.set(id, doc);
+    await collections.enrollments.set(doc);
     return doc;
   }
 
   async updateStatus(id: string, status: EnrollmentStatus): Promise<EnrollmentDoc | null> {
-    const existing = dbStore.enrollments.get(id);
+    const existing = await collections.enrollments.get(id);
     if (!existing) return null;
 
     existing.status = status;
     if (status === 'withdrawn') {
       existing.withdrawnAt = new Date().toISOString();
     }
-    dbStore.enrollments.set(id, existing);
+    await collections.enrollments.set(existing);
     return existing;
   }
 
   async delete(id: string): Promise<boolean> {
-    return dbStore.enrollments.delete(id);
+    return collections.enrollments.delete(id);
   }
 
   async deleteByTournamentAndTeam(tournamentId: string, teamId: string): Promise<boolean> {
-    for (const [id, e] of dbStore.enrollments.entries()) {
-      if (e.tournamentId === tournamentId && e.teamId === teamId) {
-        dbStore.enrollments.delete(id);
-        return true;
-      }
-    }
-    return false;
+    const list = await collections.enrollments.all();
+    const found = list.find(
+      (e) => e.tournamentId === tournamentId && e.teamId === teamId
+    );
+    if (!found) return false;
+    return collections.enrollments.delete(found.id);
   }
 }
 

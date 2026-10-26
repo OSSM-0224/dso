@@ -1,10 +1,10 @@
 ﻿import 'server-only';
-import { dbStore } from '../db/memoryStore.ts';
+import { collections } from '../db/docStore.ts';
 import { AuditLogDoc } from '../../shared/types.ts';
 
 export class AuditLogRepository {
   async findByTournamentId(tournamentId: string): Promise<AuditLogDoc[]> {
-    return dbStore.auditLogs
+    return (await collections.auditLogs.all())
       .filter((l) => l.tournamentId === tournamentId)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
@@ -29,7 +29,7 @@ export class AuditLogRepository {
       details: data.details,
       timestamp: new Date().toISOString(),
     };
-    dbStore.auditLogs.unshift(doc);
+    await collections.auditLogs.set(doc);
     return doc;
   }
 }

@@ -1,19 +1,22 @@
 ﻿import 'server-only';
-import { dbStore } from '../db/memoryStore.ts';
+import { collections } from '../db/docStore.ts';
 import { FixtureSnapshotDoc } from '../../shared/types.ts';
 
 export class FixtureSnapshotRepository {
   async findByTournamentId(tournamentId: string): Promise<FixtureSnapshotDoc | null> {
-    return dbStore.fixtureSnapshots.get(tournamentId) || null;
+    const list = await collections.fixtureSnapshots.all();
+    return list.find((s) => s.tournamentId === tournamentId) || null;
   }
 
   async save(snapshot: FixtureSnapshotDoc): Promise<FixtureSnapshotDoc> {
-    dbStore.fixtureSnapshots.set(snapshot.tournamentId, snapshot);
+    await collections.fixtureSnapshots.set(snapshot);
     return snapshot;
   }
 
   async delete(tournamentId: string): Promise<boolean> {
-    return dbStore.fixtureSnapshots.delete(tournamentId);
+    const snapshot = await this.findByTournamentId(tournamentId);
+    if (!snapshot) return false;
+    return collections.fixtureSnapshots.delete(snapshot.id);
   }
 }
 

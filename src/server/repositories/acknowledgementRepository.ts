@@ -1,23 +1,19 @@
 ﻿import 'server-only';
-import { dbStore } from '../db/memoryStore.ts';
+import { collections } from '../db/docStore.ts';
 import { AcknowledgementDoc } from '../../shared/types.ts';
 
 export class AcknowledgementRepository {
   async findByMatchAndSchool(matchId: string, schoolId: string): Promise<AcknowledgementDoc | null> {
-    for (const ack of dbStore.acknowledgements.values()) {
-      if (ack.matchId === matchId && ack.schoolId === schoolId) {
-        return ack;
-      }
-    }
-    return null;
+    const list = await collections.acknowledgements.all();
+    return list.find((a) => a.matchId === matchId && a.schoolId === schoolId) || null;
   }
 
   async findByMatchId(matchId: string): Promise<AcknowledgementDoc[]> {
-    return Array.from(dbStore.acknowledgements.values()).filter((a) => a.matchId === matchId);
+    return (await collections.acknowledgements.all()).filter((a) => a.matchId === matchId);
   }
 
   async findBySchoolId(schoolId: string): Promise<AcknowledgementDoc[]> {
-    return Array.from(dbStore.acknowledgements.values()).filter((a) => a.schoolId === schoolId);
+    return (await collections.acknowledgements.all()).filter((a) => a.schoolId === schoolId);
   }
 
   async upsert(data: {
@@ -32,7 +28,7 @@ export class AcknowledgementRepository {
         acknowledgedBy: data.acknowledgedBy,
         acknowledgedAt: new Date().toISOString(),
       };
-      dbStore.acknowledgements.set(existing.id, updated);
+      await collections.acknowledgements.set(updated);
       return updated;
     }
 
@@ -44,7 +40,7 @@ export class AcknowledgementRepository {
       acknowledgedBy: data.acknowledgedBy,
       acknowledgedAt: new Date().toISOString(),
     };
-    dbStore.acknowledgements.set(id, doc);
+    await collections.acknowledgements.set(doc);
     return doc;
   }
 }

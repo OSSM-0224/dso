@@ -6,6 +6,9 @@ import { runParticipantAccessTestSuite } from './participantAccessTestSuite.ts';
 import { runScoringAccessTestSuite } from './scoringAccessTestSuite.ts';
 
 async function main() {
+  // Tests must run against the isolated in-memory store, never a real cluster.
+  process.env.MONGODB_URI = '';
+
   const engineSummary = runFixtureEngineTestSuite();
   const scoringSummary = runScoringEngineTestSuite();
   const participantSummary = await runParticipantAccessTestSuite();

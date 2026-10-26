@@ -1,22 +1,17 @@
 ﻿import 'server-only';
-import { dbStore } from '../db/memoryStore.ts';
+import { collections } from '../db/docStore.ts';
 import { NotificationDoc, NotificationType } from '../../shared/types.ts';
 
 export class NotificationRepository {
   async findBySchoolId(schoolId: string): Promise<NotificationDoc[]> {
-    return Array.from(dbStore.notifications.values())
+    return (await collections.notifications.all())
       .filter((n) => n.schoolId === schoolId)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   async countUnread(schoolId: string): Promise<number> {
-    let count = 0;
-    for (const n of dbStore.notifications.values()) {
-      if (n.schoolId === schoolId && !n.isRead) {
-        count++;
-      }
-    }
-    return count;
+    const list = await collections.notifications.all();
+    return list.filter((n) => n.schoolId === schoolId && !n.isRead).length;
   }
 
   async create(data: {
@@ -45,25 +40,26 @@ export class NotificationRepository {
       isRead: false,
       createdAt: new Date().toISOString(),
     };
-    dbStore.notifications.set(id, doc);
+    await collections.notifications.set(doc);
     return doc;
   }
 
   async markAsRead(id: string, schoolId: string): Promise<NotificationDoc | null> {
-    const notif = dbStore.notifications.get(id);
+    const notif = await collections.notifications.get(id);
     if (!notif || notif.schoolId !== schoolId) {
       return null;
     }
     const updated = { ...notif, isRead: true };
-    dbStore.notifications.set(id, updated);
+    await collections.notifications.set(updated);
     return updated;
   }
 
   async markAllAsRead(schoolId: string): Promise<number> {
+    const list = await collections.notifications.all();
     let count = 0;
-    for (const [id, notif] of dbStore.notifications.entries()) {
+    for (const notif of list) {
       if (notif.schoolId === schoolId && !notif.isRead) {
-        dbStore.notifications.set(id, { ...notif, isRead: true });
+        await collections.notifications.set({ ...notif, isRead: true });
         count++;
       }
     }

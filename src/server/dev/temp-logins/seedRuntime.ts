@@ -1,7 +1,6 @@
 ﻿import 'server-only';
 // TEMP-LOGIN: remove later
-import mongoose from 'mongoose';
-import { dbStore } from '../../db/memoryStore.ts';
+import { connectDatabase } from '../../config/db.ts';
 import { userRepository } from '../../repositories/userRepository.ts';
 import { schoolRepository } from '../../repositories/schoolRepository.ts';
 import { passwordService } from '../../services/passwordService.ts';
@@ -17,18 +16,16 @@ export async function runTempLoginSeed(options?: { remove?: boolean; tempPasswor
   const pwd = options?.tempPassword || TEMP_PASSWORD;
 
   // Connect to MongoDB if MONGODB_URI is provided
-  let connectedMongo = false;
   if (process.env.MONGODB_URI) {
-    try {
-      await mongoose.connect(process.env.MONGODB_URI);
-      connectedMongo = true;
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.warn('[TEMP-LOGIN]: MongoDB connect failed, using memory store fallback:', message);
+    const connected = await connectDatabase();
+    if (!connected) {
+      throw new Error(
+        '[TEMP-LOGIN]: MongoDB connection failed. Check MONGODB_URI and the Atlas IP allowlist.'
+      );
     }
   }
 
-  try {
+  {
     if (remove) {
       console.log('[TEMP-LOGIN]: Removing all temporary seeded accounts...');
       let removedCount = 0;
@@ -202,9 +199,5 @@ export async function runTempLoginSeed(options?: { remove?: boolean; tempPasswor
       schoolAccountsCount,
       password: pwd,
     };
-  } finally {
-    if (connectedMongo) {
-      await mongoose.disconnect();
-    }
   }
 }

@@ -1,16 +1,17 @@
 ﻿import 'server-only';
-import { dbStore } from '../db/memoryStore.ts';
-import { TournamentDoc, TournamentStatus } from '../../shared/types.ts';
+import { collections } from '../db/docStore.ts';
+import { TournamentDoc } from '../../shared/types.ts';
 
 export class TournamentRepository {
   async findAll(): Promise<TournamentDoc[]> {
-    return Array.from(dbStore.tournaments.values()).sort(
+    const list = await collections.tournaments.all();
+    return list.sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }
 
   async findById(id: string): Promise<TournamentDoc | null> {
-    return dbStore.tournaments.get(id) || null;
+    return collections.tournaments.get(id);
   }
 
   async findCompletedBySportCategory(
@@ -19,7 +20,8 @@ export class TournamentRepository {
     gender: 'boys' | 'girls',
     minYear: number
   ): Promise<TournamentDoc[]> {
-    return Array.from(dbStore.tournaments.values()).filter(
+    const list = await collections.tournaments.all();
+    return list.filter(
       (t) =>
         t.status === 'completed' &&
         t.sport.toLowerCase() === sport.toLowerCase() &&
@@ -62,12 +64,12 @@ export class TournamentRepository {
       createdAt: now,
       updatedAt: now,
     };
-    dbStore.tournaments.set(id, doc);
+    await collections.tournaments.set(doc);
     return doc;
   }
 
   async update(id: string, data: Partial<TournamentDoc>): Promise<TournamentDoc | null> {
-    const existing = dbStore.tournaments.get(id);
+    const existing = await collections.tournaments.get(id);
     if (!existing) return null;
 
     const updated: TournamentDoc = {
@@ -75,12 +77,12 @@ export class TournamentRepository {
       ...data,
       updatedAt: new Date().toISOString(),
     };
-    dbStore.tournaments.set(id, updated);
+    await collections.tournaments.set(updated);
     return updated;
   }
 
   async delete(id: string): Promise<boolean> {
-    return dbStore.tournaments.delete(id);
+    return collections.tournaments.delete(id);
   }
 }
 

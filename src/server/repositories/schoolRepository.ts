@@ -1,18 +1,19 @@
 ﻿import 'server-only';
-import { dbStore } from '../db/memoryStore.ts';
+import { collections } from '../db/docStore.ts';
 import { SchoolDoc } from '../../shared/types.ts';
 
 export class SchoolRepository {
   async findAll(): Promise<SchoolDoc[]> {
-    return Array.from(dbStore.schools.values()).sort((a, b) => a.name.localeCompare(b.name));
+    const list = await collections.schools.all();
+    return list.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   async findById(id: string): Promise<SchoolDoc | null> {
-    return dbStore.schools.get(id) || null;
+    return collections.schools.get(id);
   }
 
   async findByName(name: string): Promise<SchoolDoc | null> {
-    const list = Array.from(dbStore.schools.values());
+    const list = await collections.schools.all();
     return list.find((s) => s.name.toLowerCase() === name.trim().toLowerCase()) || null;
   }
 
@@ -26,12 +27,12 @@ export class SchoolRepository {
       createdAt: now,
       updatedAt: now,
     };
-    dbStore.schools.set(id, doc);
+    await collections.schools.set(doc);
     return doc;
   }
 
   async update(id: string, data: Partial<{ name: string; mediums: string[] }>): Promise<SchoolDoc | null> {
-    const existing = dbStore.schools.get(id);
+    const existing = await collections.schools.get(id);
     if (!existing) return null;
 
     const updated: SchoolDoc = {
@@ -40,12 +41,12 @@ export class SchoolRepository {
       mediums: data.mediums !== undefined ? data.mediums : existing.mediums,
       updatedAt: new Date().toISOString(),
     };
-    dbStore.schools.set(id, updated);
+    await collections.schools.set(updated);
     return updated;
   }
 
   async delete(id: string): Promise<boolean> {
-    return dbStore.schools.delete(id);
+    return collections.schools.delete(id);
   }
 }
 

@@ -1,11 +1,11 @@
 ﻿import 'server-only';
-import { dbStore } from '../db/memoryStore.ts';
+import { collections } from '../db/docStore.ts';
 import { TeamDoc } from '../../shared/types.ts';
 import { schoolRepository } from './schoolRepository.ts';
 
 export class TeamRepository {
   async findAll(filter?: { ageGroup?: string; gender?: string; schoolId?: string }): Promise<TeamDoc[]> {
-    let list = Array.from(dbStore.teams.values());
+    let list = await collections.teams.all();
 
     if (filter) {
       if (filter.ageGroup) {
@@ -31,7 +31,7 @@ export class TeamRepository {
   }
 
   async findById(id: string): Promise<TeamDoc | null> {
-    const t = dbStore.teams.get(id);
+    const t = await collections.teams.get(id);
     if (!t) return null;
     if (!t.schoolName) {
       const school = await schoolRepository.findById(t.schoolId);
@@ -75,12 +75,12 @@ export class TeamRepository {
       isActive: data.isActive !== undefined ? data.isActive : true,
       createdAt: new Date().toISOString(),
     };
-    dbStore.teams.set(id, doc);
+    await collections.teams.set(doc);
     return doc;
   }
 
   async update(id: string, data: Partial<TeamDoc>): Promise<TeamDoc | null> {
-    const existing = dbStore.teams.get(id);
+    const existing = await collections.teams.get(id);
     if (!existing) return null;
 
     let schoolName = existing.schoolName;
@@ -94,7 +94,7 @@ export class TeamRepository {
       ...data,
       schoolName,
     };
-    dbStore.teams.set(id, updated);
+    await collections.teams.set(updated);
     return updated;
   }
 
@@ -104,7 +104,7 @@ export class TeamRepository {
     ageGroup: string,
     gender: 'boys' | 'girls'
   ): Promise<TeamDoc | null> {
-    const list = Array.from(dbStore.teams.values());
+    const list = await collections.teams.all();
     const match = list.find(
       (t) =>
         t.schoolId === schoolId &&
@@ -139,7 +139,7 @@ export class TeamRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-    return dbStore.teams.delete(id);
+    return collections.teams.delete(id);
   }
 }
 

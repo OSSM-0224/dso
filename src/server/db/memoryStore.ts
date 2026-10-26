@@ -27,7 +27,7 @@ class MemoryStore {
   fixtureSnapshots = new Map<string, FixtureSnapshotDoc>();
   pastTournaments = new Map<string, PastTournamentDoc>();
   enrollments = new Map<string, EnrollmentDoc>();
-  auditLogs: AuditLogDoc[] = [];
+  auditLogs = new Map<string, AuditLogDoc>();
   users = new Map<string, UserDoc>();
   notifications = new Map<string, NotificationDoc>();
   acknowledgements = new Map<string, AcknowledgementDoc>();
@@ -43,7 +43,7 @@ class MemoryStore {
     this.fixtureSnapshots.clear();
     this.pastTournaments.clear();
     this.enrollments.clear();
-    this.auditLogs = [];
+    this.auditLogs.clear();
     this.users.clear();
     this.notifications.clear();
     this.acknowledgements.clear();

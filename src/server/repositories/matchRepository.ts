@@ -1,10 +1,10 @@
 ﻿import 'server-only';
-import { dbStore } from '../db/memoryStore.ts';
+import { collections } from '../db/docStore.ts';
 import { MatchDoc } from '../../shared/types.ts';
 
 export class MatchRepository {
   async findByTournamentId(tournamentId: string): Promise<MatchDoc[]> {
-    return Array.from(dbStore.matches.values())
+    return (await collections.matches.all())
       .filter((m) => m.tournamentId === tournamentId)
       .sort((a, b) => {
         if (a.round !== b.round) return a.round - b.round;
@@ -13,34 +13,34 @@ export class MatchRepository {
   }
 
   async findById(id: string): Promise<MatchDoc | null> {
-    return dbStore.matches.get(id) || null;
+    return collections.matches.get(id);
   }
 
   async saveBatch(matches: MatchDoc[]): Promise<MatchDoc[]> {
     for (const m of matches) {
-      dbStore.matches.set(m.id, m);
+      await collections.matches.set(m);
     }
     return matches;
   }
 
   async update(id: string, data: Partial<MatchDoc>): Promise<MatchDoc | null> {
-    const existing = dbStore.matches.get(id);
+    const existing = await collections.matches.get(id);
     if (!existing) return null;
 
     const updated: MatchDoc = {
       ...existing,
       ...data,
     };
-    dbStore.matches.set(id, updated);
+    await collections.matches.set(updated);
     return updated;
   }
 
   async deleteByTournamentId(tournamentId: string): Promise<number> {
+    const list = await collections.matches.all();
     let deletedCount = 0;
-    for (const [id, m] of dbStore.matches.entries()) {
+    for (const m of list) {
       if (m.tournamentId === tournamentId) {
-        dbStore.matches.delete(id);
-        deletedCount++;
+        if (await collections.matches.delete(m.id)) deletedCount++;
       }
     }
     return deletedCount;

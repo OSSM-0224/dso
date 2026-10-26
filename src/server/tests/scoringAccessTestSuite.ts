@@ -1,6 +1,5 @@
 import 'server-only';
 import { TestResult, TestSuiteSummary } from '../../shared/tests/testSuite.ts';
-import { dbStore } from '../db/memoryStore.ts';
 import { schoolRepository } from '../repositories/schoolRepository.ts';
 import { teamRepository } from '../repositories/teamRepository.ts';
 import { tournamentRepository } from '../repositories/tournamentRepository.ts';
@@ -420,9 +419,6 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
       durationMs: Date.now() - t5Start,
     });
   }
-
-  // Silence unused import warning path guard (dbStore kept for future resets)
-  void dbStore;
 
   const durationMs = Date.now() - startAll;
   const passedCount = results.filter((r) => r.passed).length;

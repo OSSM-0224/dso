@@ -1,17 +1,17 @@
-import React from 'react';
-import Link from 'next/link';
+import React from "react";
+import Link from "next/link";
 
-import { Icon } from '@/components/ui/Icon.tsx';
-import { Badge } from '@/components/ui/Card.tsx';
-import { BracketDiagram } from './BracketDiagram.tsx';
-import { LandingNav } from './LandingNav.tsx';
+import { Icon } from "@/components/ui/Icon.tsx";
+import { Badge } from "@/components/ui/Card.tsx";
+import { BracketDiagram } from "./BracketDiagram.tsx";
+import { LandingNav } from "./LandingNav.tsx";
 
 export interface LandingTournament {
   id: string;
   name: string;
   sport: string;
   ageGroup: string;
-  gender: 'boys' | 'girls';
+  gender: "boys" | "girls";
   year: number;
   status: string;
   teamCount: number;
@@ -23,7 +23,7 @@ export interface LandingChampion {
   year: number;
   sport: string;
   ageGroup: string;
-  gender: 'boys' | 'girls';
+  gender: "boys" | "girls";
   winnerTeamName: string;
   schoolName: string;
 }
@@ -38,51 +38,51 @@ interface LandingPageProps {
 }
 
 const facts = [
-  { label: 'Format', value: 'Play-in single elimination' },
-  { label: 'Categories', value: 'U-14 · U-17 · U-19' },
-  { label: 'Draw rules', value: 'Champion-aware seeding' },
-  { label: 'Access', value: 'Schools · scorers · public' },
+  { label: "Format", value: "Play-in single elimination" },
+  { label: "Categories", value: "U-14 · U-17 · U-19" },
+  { label: "Draw rules", value: "Champion-aware seeding" },
+  { label: "Access", value: "Schools · scorers · public" },
 ];
 
 const roles = [
   {
-    icon: 'clipboardList' as const,
-    title: 'Organizers',
-    body: 'Create tournaments, enroll teams, generate the draw, and publish it.',
-    href: '/dashboard',
+    icon: "clipboardList" as const,
+    title: "Organizers",
+    body: "Create tournaments, enroll teams, generate the draw, and publish it.",
+    href: "/dashboard",
   },
   {
-    icon: 'school' as const,
-    title: 'Schools',
-    body: 'Follow your school’s matches, schedules, and path through the bracket.',
-    href: '/school/login',
+    icon: "school" as const,
+    title: "Schools",
+    body: "Follow your school’s matches, schedules, and path through the bracket.",
+    href: "/school/login",
   },
   {
-    icon: 'bolt' as const,
-    title: 'Scorers',
-    body: 'Run the live scoring console on the court, with undo and a full audit trail.',
-    href: '/score',
+    icon: "bolt" as const,
+    title: "Scorers",
+    body: "Run the live scoring console on the court, with undo and a full audit trail.",
+    href: "/score",
   },
   {
-    icon: 'users' as const,
-    title: 'Spectators',
-    body: 'Open any published bracket. No account, no app, no fixture sheet.',
-    href: '#tournaments',
+    icon: "users" as const,
+    title: "Spectators",
+    body: "Open any published bracket. No account, no app, no fixture sheet.",
+    href: "#tournaments",
   },
 ];
 
 const steps = [
   {
-    title: 'Enroll',
-    body: 'Add schools and teams with age group, gender, and medium recorded up front.',
+    title: "Enroll",
+    body: "Add schools and teams with age group, gender, and medium recorded up front.",
   },
   {
-    title: 'Draw',
-    body: 'The engine balances play-in rounds, separates champions, and keeps school-mates apart.',
+    title: "Draw",
+    body: "The engine balances play-in rounds, separates champions, and keeps school-mates apart.",
   },
   {
-    title: 'Publish',
-    body: 'Fixtures go live on a public page. Scorers take over and results advance the bracket.',
+    title: "Publish",
+    body: "Fixtures go live on a public page. Scorers take over and results advance the bracket.",
   },
 ];
 
@@ -93,7 +93,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   const hasPublicDraws = tournaments.length > 0;
   const boardMeta = [
-    `${tournaments.length} public ${tournaments.length === 1 ? 'draw' : 'draws'}`,
+    `${tournaments.length} public ${tournaments.length === 1 ? "draw" : "draws"}`,
     counts.teams > 0 ? `${counts.teams} teams` : null,
     counts.schools > 0 ? `${counts.schools} schools` : null,
   ].filter(Boolean) as string[];
@@ -110,8 +110,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <LandingNav />
 
       <main id="main-content">
-        <section className="relative overflow-hidden">
-          <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-14 pt-12 sm:px-6 sm:pt-16 lg:px-8 lg:pb-20 lg:pt-20 xl:grid-cols-2 xl:gap-14">
+        <section className="relative flex min-h-[calc(100svh-60px)] flex-col overflow-hidden">
+          <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-12 px-4 py-10 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8">
             <div className="max-w-xl">
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent">
                 District Sports Office · Navi Mumbai
@@ -199,10 +199,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                 <ul className="mt-7 grid gap-2.5 sm:grid-cols-2">
                   {[
-                    'Play-in balancing',
-                    'Champion-aware seeding',
-                    'Cross-medium conflict checks',
-                    'Deterministic, repeatable draws',
+                    "Play-in balancing",
+                    "Champion-aware seeding",
+                    "Cross-medium conflict checks",
+                    "Deterministic, repeatable draws",
                   ].map((rule) => (
                     <li
                       key={rule}
@@ -216,7 +216,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                 <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-hairline pt-5 text-[11px] text-muted">
                   <span className="inline-flex items-center gap-1.5">
-                    <Icon name="shieldCheck" size="xs" className="text-accent" />
+                    <Icon
+                      name="shieldCheck"
+                      size="xs"
+                      className="text-accent"
+                    />
                     Rule set recorded with every draw
                   </span>
                   <span className="inline-flex items-center gap-1.5">
@@ -279,8 +283,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 One desk for every role.
               </h2>
               <p className="mt-4 max-w-[58ch] text-[15px] leading-relaxed text-muted">
-                Everyone sees only what they need. Every change is attributed
-                to the person who made it.
+                Everyone sees only what they need. Every change is attributed to
+                the person who made it.
               </p>
             </div>
 
@@ -328,7 +332,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               {steps.map((step, index) => (
                 <li key={step.title} className="border-t border-hairline pt-5">
                   <span className="font-serif text-[2.6rem] font-semibold leading-none tracking-[-0.04em] text-accent/80">
-                    {String(index + 1).padStart(2, '0')}
+                    {String(index + 1).padStart(2, "0")}
                   </span>
                   <h3 className="mt-4 text-sm font-semibold text-ink">
                     {step.title}
@@ -359,7 +363,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               {boardMeta.length > 0 && (
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-                  {boardMeta.join(' · ')}
+                  {boardMeta.join(" · ")}
                 </p>
               )}
             </div>
@@ -374,23 +378,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
-                        {tournament.sport} · {tournament.ageGroup}{' '}
+                        {tournament.sport} · {tournament.ageGroup}{" "}
                         {tournament.gender}
                       </span>
                       <Badge
                         tone={
-                          tournament.status === 'ongoing'
-                            ? 'live'
-                            : tournament.status === 'completed'
-                              ? 'won'
-                              : 'upcoming'
+                          tournament.status === "ongoing"
+                            ? "live"
+                            : tournament.status === "completed"
+                              ? "won"
+                              : "upcoming"
                         }
                       >
-                        {tournament.status === 'ongoing'
-                          ? 'Live'
-                          : tournament.status === 'completed'
-                            ? 'Completed'
-                            : 'Published'}
+                        {tournament.status === "ongoing"
+                          ? "Live"
+                          : tournament.status === "completed"
+                            ? "Completed"
+                            : "Published"}
                       </Badge>
                     </div>
                     <h3 className="mt-4 font-serif text-xl font-semibold leading-snug tracking-[-0.01em] text-ink">
@@ -418,8 +422,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     The board is clear for now.
                   </p>
                   <p className="mt-1 max-w-[52ch] text-sm leading-relaxed text-muted">
-                    Public draws appear here the moment an organizer publishes
-                    a bracket.
+                    Public draws appear here the moment an organizer publishes a
+                    bracket.
                   </p>
                 </div>
                 <Link
@@ -445,8 +449,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   The record book.
                 </h2>
                 <p className="mt-4 max-w-[42ch] text-[15px] leading-relaxed text-muted">
-                  Recent winners the draw engine uses to keep strong sides
-                  apart in the early rounds.
+                  Recent winners the draw engine uses to keep strong sides apart
+                  in the early rounds.
                 </p>
               </div>
 
@@ -534,10 +538,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </p>
             <ul className="mt-3 space-y-2 text-sm">
               {[
-                ['#platform', 'Platform'],
-                ['#roles', 'Roles'],
-                ['#tournaments', 'Public fixtures'],
-                ['#process', 'How it works'],
+                ["#platform", "Platform"],
+                ["#roles", "Roles"],
+                ["#tournaments", "Public fixtures"],
+                ["#process", "How it works"],
               ].map(([href, label]) => (
                 <li key={href}>
                   <a

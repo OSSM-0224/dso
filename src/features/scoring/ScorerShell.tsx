@@ -33,7 +33,7 @@ export const ScorerShell: React.FC<{ children: React.ReactNode }> = ({ children 
               </span>
             </span>
             <Link
-              href="/"
+              href="/dashboard"
               className="flex items-center gap-1.5 rounded-[6px] border border-hairline bg-surface px-2.5 py-1.5 text-xs font-medium text-ink transition-colors duration-200 hover:border-faint"
             >
               <Icon name="rightFromBracket" size="sm" className="text-muted" />

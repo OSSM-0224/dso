@@ -16,7 +16,7 @@ export default function TournamentDetailPage() {
   return (
     <TournamentDetailScreen
       tournamentId={params.id}
-      onBack={() => router.push('/')}
+      onBack={() => router.push('/dashboard')}
       canWrite={canWrite}
       onOpenPublicView={(publicId) => openPublicView(publicId)}
     />

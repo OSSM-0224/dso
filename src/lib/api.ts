@@ -38,6 +38,11 @@ export function getStoredRole(): UserRole {
   return 'organizer';
 }
 
+export function clearStoredSession() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(ROLE_KEY);
+}
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -75,6 +80,10 @@ export const api = {
       request<{ user: UserSession; token: string }>('/auth/change-password', {
         method: 'POST',
         body: JSON.stringify({ newPassword, currentPassword }),
+      }),
+    logout: () =>
+      request<{ signedOut: boolean }>('/auth/logout', {
+        method: 'POST',
       }),
     getMe: () => request<UserSession>('/auth/me'),
   },

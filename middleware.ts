@@ -49,6 +49,7 @@ export function middleware(req: NextRequest) {
   if (
     school &&
     (pathname === '/' ||
+      pathname.startsWith('/dashboard') ||
       pathname.startsWith('/tournaments') ||
       pathname.startsWith('/teams') ||
       pathname.startsWith('/school-accounts') ||
@@ -67,6 +68,7 @@ export const config = {
     '/api/my/:path*',
     '/school/:path*',
     '/',
+    '/dashboard',
     '/teams',
     '/tournaments/:path*',
     '/school-accounts',

@@ -17,7 +17,7 @@ export const Header: React.FC = () => {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isParticipant = role === 'participant';
-  const isOnTournaments = pathname === '/' || pathname.startsWith('/tournaments');
+  const isOnTournaments = pathname === '/dashboard' || pathname.startsWith('/tournaments');
   const isOnTeams = pathname.startsWith('/teams');
   const isOnSchoolAccounts = pathname.startsWith('/school-accounts');
   const isOnHistory = pathname.startsWith('/past-champions');
@@ -53,7 +53,7 @@ export const Header: React.FC = () => {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         {/* Brand */}
         <Link
-          href={isParticipant ? '/school/dashboard' : '/'}
+          href={isParticipant ? '/school/dashboard' : '/dashboard'}
           className="flex shrink-0 items-baseline gap-2 rounded-[6px]"
         >
           <span className="font-serif text-[17px] font-semibold tracking-[-0.01em] text-ink">DSO Navi Mumbai</span>
@@ -71,7 +71,7 @@ export const Header: React.FC = () => {
               <Link href="/school/dashboard" className={linkCls(isOnPortal)}>
                 My school matches
               </Link>
-              <Link href="/" className={linkCls(isOnTournaments)}>
+              <Link href="/#tournaments" className={linkCls(pathname === '/')}>
                 Public brackets
               </Link>
               <Link href="/past-champions" className={linkCls(isOnHistory)}>
@@ -80,7 +80,7 @@ export const Header: React.FC = () => {
             </>
           ) : (
             <>
-              <Link href="/" className={linkCls(isOnTournaments)}>
+              <Link href="/dashboard" className={linkCls(isOnTournaments)}>
                 Tournaments
               </Link>
               <Link href="/teams" className={linkCls(isOnTeams)}>

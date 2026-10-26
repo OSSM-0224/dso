@@ -13,7 +13,7 @@ export const BottomNav: React.FC = () => {
   const pathname = usePathname() || '/';
   const isParticipant = role === 'participant';
 
-  const isOnTournaments = pathname === '/' || pathname.startsWith('/tournaments');
+  const isOnTournaments = pathname === '/dashboard' || pathname.startsWith('/tournaments');
   const isOnTeams = pathname.startsWith('/teams');
   const isOnSchoolAccounts = pathname.startsWith('/school-accounts');
   const isOnHistory = pathname.startsWith('/past-champions');
@@ -38,7 +38,10 @@ export const BottomNav: React.FC = () => {
               <Icon name="calendar" size="md" />
               Matches
             </Link>
-            <Link href="/" className={item(isOnTournaments)}>
+            <Link
+              href="/#tournaments"
+              className={item(pathname === '/')}
+            >
               <Icon name="trophy" size="md" />
               Brackets
             </Link>
@@ -53,7 +56,7 @@ export const BottomNav: React.FC = () => {
           </>
         ) : (
           <>
-            <Link href="/" className={item(isOnTournaments)}>
+            <Link href="/dashboard" className={item(isOnTournaments)}>
               <Icon name="trophy" size="md" />
               Tournaments
             </Link>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { api, getStoredRole, setStoredSession } from '@/lib/api.ts';
+import { api, clearStoredSession, getStoredRole, setStoredSession } from '@/lib/api.ts';
 import { UserRole, UserSession } from '@/shared/types.ts';
 
 interface AuthContextType {
@@ -129,7 +129,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await initSession('viewer');
+    const redirectTo = role === 'participant' ? '/school/login' : '/';
+    try {
+      await api.auth.logout();
+    } finally {
+      clearStoredSession();
+      setUser(null);
+      setRole('organizer');
+      if (typeof window !== 'undefined') {
+        window.location.replace(redirectTo);
+      }
+    }
   };
 
   const canWrite = role === 'admin' || role === 'organizer';

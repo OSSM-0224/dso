@@ -80,6 +80,18 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
     }
   };
 
+  const handleDeleteTournament = async (e: React.MouseEvent, id: string, name: string) => {
+    e.stopPropagation();
+    if (!window.confirm(`Delete tournament "${name}"? This action cannot be undone.`)) return;
+    try {
+      setError(null);
+      await api.tournaments.delete(id);
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete tournament');
+    }
+  };
+
   // Filter available teams matching current form ageGroup and gender
   const availableTeamsForForm = allTeams.filter(
     (t) => t.ageGroup === ageGroup && t.gender === gender
@@ -188,7 +200,19 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
 
               <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
                 <span>{t.teams.length} Teams Enrolled</span>
-                <span className="text-indigo-600 font-semibold">Open Draw →</span>
+                <div className="flex items-center gap-2">
+                  {canWrite && (
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteTournament(e, t.id, t.name)}
+                      className="text-red-600 hover:text-red-800 font-semibold"
+                      title="Delete tournament"
+                    >
+                      Delete
+                    </button>
+                  )}
+                  <span className="text-indigo-600 font-semibold">Open Draw →</span>
+                </div>
               </div>
             </div>
           ))}

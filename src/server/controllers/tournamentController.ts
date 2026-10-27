@@ -60,6 +60,10 @@ export const tournamentController = {
     return tournamentService.updateStrongTeams(id, parsed.strongTeams, user);
   },
 
+  async delete(user: UserSession, id: string) {
+    return tournamentService.delete(id, user);
+  },
+
   async getRecentChampions(id: string) {
     return tournamentService.getRecentChampions(id);
   },

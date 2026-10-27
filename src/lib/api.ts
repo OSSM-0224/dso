@@ -107,6 +107,10 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(data),
       }),
+    delete: (id: string) =>
+      request<{ success: boolean }>(`/tournaments/${id}`, {
+        method: 'DELETE',
+      }),
     updateTeams: (id: string, teams: string[]) =>
       request<TournamentDoc>(`/tournaments/${id}/teams`, {
         method: 'POST',

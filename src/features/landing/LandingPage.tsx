@@ -110,7 +110,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <LandingNav />
 
       <main id="main-content">
-        <section className="relative flex min-h-[calc(100svh-60px)] flex-col overflow-hidden">
+        <section className="relative flex min-h-[calc(100dvh-4rem)] flex-col overflow-hidden">
           <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-12 px-4 py-10 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8">
             <div className="max-w-xl">
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent">
@@ -146,8 +146,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <dl className="grid grid-cols-2 border-y border-hairline sm:grid-cols-4">
+          <div className="mx-auto w-full max-w-6xl px-4 pb-8 sm:px-6 sm:pb-10 lg:px-8 lg:pb-14">
+            <dl className="grid grid-cols-2 overflow-hidden rounded-[12px] border border-hairline bg-surface/85 shadow-rest backdrop-blur-sm sm:grid-cols-4">
               {facts.map((fact) => (
                 <div
                   key={fact.label}

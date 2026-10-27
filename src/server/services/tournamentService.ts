@@ -110,6 +110,26 @@ export class TournamentService {
    * (N = championLookbackYears, default 3, configurable to 4) of the same
    * sport + ageGroup + gender from the database.
    */
+  async delete(id: string, user: UserSession): Promise<boolean> {
+    const tournament = await tournamentRepository.findById(id);
+    if (!tournament) throw new Error('Tournament not found');
+
+    const ok = await tournamentRepository.delete(id);
+    if (ok) {
+      await auditLogRepository.create({
+        tournamentId: id,
+        who: user.name,
+        role: user.role,
+        what: 'delete_tournament',
+        before: { id: tournament.id, name: tournament.name, year: tournament.year },
+        after: null,
+        details: `Deleted tournament "${tournament.name}" (${tournament.ageGroup} ${tournament.gender}, ${tournament.year})`,
+      });
+    }
+
+    return ok;
+  }
+
   async getRecentChampions(tournamentId: string): Promise<
     Array<{
       teamId: string;

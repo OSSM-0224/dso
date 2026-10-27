@@ -302,6 +302,7 @@ export interface AuditLogDoc {
     | 'result_entry'
     | 'schedule_update'
     | 'create_tournament'
+    | 'delete_tournament'
     | 'update_strong_teams'
     | 'bulk_enroll_teams'
     | 'withdraw_team'

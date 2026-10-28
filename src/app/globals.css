@@ -10,6 +10,9 @@
   --color-canvas: #faf9f7;
   --color-surface: #ffffff;
   --color-hairline: #e8e6e1;
+  
+  /* Breakpoints (for consistent mobile-first usage) */
+  --breakpoint-xs: 375px;
 
   /* Ink */
   --color-ink: #171613;

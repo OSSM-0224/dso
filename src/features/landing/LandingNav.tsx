@@ -35,7 +35,7 @@ export const LandingNav: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 border-b border-hairline bg-canvas/90 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-[6px]">
           <span className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-accent text-white shadow-rest">
             <Icon name="trophy" size="sm" />

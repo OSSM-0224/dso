@@ -111,12 +111,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       <main id="main-content">
         <section className="relative flex min-h-[calc(100dvh-4rem)] flex-col overflow-hidden">
-          <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-12 px-4 py-10 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8">
-            <div className="max-w-xl">
+          <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-8 px-2 py-10 sm:gap-12 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8">
+            <div className="max-w-xl w-full">
               <p className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-accent">
                 District Sports Office • Navi Mumbai
               </p>
-              <h1 className="mt-5 font-serif text-[2.3rem] font-semibold leading-[1.02] tracking-[-0.03em] text-ink sm:text-5xl lg:text-[3.5rem]">
+              <h1 className="mt-5 font-serif text-[2.2rem] font-semibold leading-[1.02] tracking-[-0.03em] text-ink xs:text-[2.4rem] sm:text-5xl lg:text-[3.5rem]">
                 A <span className="text-accent">fair draw</span>,
                 <br className="hidden sm:block" /> kept on the record.
               </h1>
@@ -124,17 +124,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 Balanced single-elimination fixtures, public brackets, and live
                 scoring for Navi Mumbai’s school tournaments.
               </p>
-              <div className="mt-8 flex flex-col gap-2.5 sm:flex-row w-full sm:w-auto">
+              <div className="mt-8 flex flex-col gap-2.5 w-full sm:flex-row sm:w-auto">
                 <Link
                   href="/dashboard"
-                  className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[6px] bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-rest transition-all duration-200 hover:bg-accent-strong active:scale-[0.98] w-full sm:w-auto"
+                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[6px] bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-rest transition-all duration-200 hover:bg-accent-strong active:scale-[0.98] sm:w-auto sm:px-5"
                 >
                   Organizer console
                   <Icon name="arrowRight" size="sm" />
                 </Link>
                 <Link
                   href="/school/login"
-                  className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[6px] border border-hairline bg-surface px-5 py-2.5 text-sm font-semibold text-ink shadow-rest transition-all duration-200 hover:border-faint hover:bg-canvas active:scale-[0.98] w-full sm:w-auto"
+                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[6px] border border-hairline bg-surface px-4 py-2.5 text-sm font-semibold text-ink shadow-rest transition-all duration-200 hover:border-faint hover:bg-canvas active:scale-[0.98] sm:w-auto sm:px-5"
                 >
                   School sign in
                 </Link>
@@ -146,12 +146,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-6xl px-4 pb-8 sm:px-6 sm:pb-10 lg:px-8 lg:pb-14">
-            <dl className="grid grid-cols-2 overflow-hidden rounded-[12px] border border-hairline bg-surface/85 shadow-rest backdrop-blur-sm sm:grid-cols-4">
+          <div className="mx-auto w-full max-w-6xl px-2 pb-8 sm:px-6 sm:pb-10 lg:px-8 lg:pb-14">
+            <dl className="grid grid-cols-1 overflow-hidden rounded-[12px] border border-hairline bg-surface/85 shadow-rest backdrop-blur-sm xs:grid-cols-2 sm:grid-cols-4">
               {facts.map((fact) => (
                 <div
                   key={fact.label}
-                  className="border-hairline px-4 py-4 [&:nth-child(even)]:border-l [&:nth-child(n+3)]:border-t sm:[&:not(:first-child)]:border-l sm:[&:nth-child(n+3)]:border-t-0"
+                  className="border-hairline px-4 py-4 [&:not(:first-child)]:border-t xs:[&:nth-child(even)]:border-l xs:[&:nth-child(odd)]:border-l-0 xs:[&:nth-child(n+3)]:border-t sm:[&:not(:first-child)]:border-l sm:[&:nth-child(n+3)]:border-t-0"
                 >
                   <dt className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
                     {fact.label}
@@ -169,7 +169,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           id="platform"
           className="scroll-mt-20 border-t border-hairline py-20 sm:py-24"
         >
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-6xl px-3 sm:px-6 lg:px-8">
             <div className="max-w-2xl">
               <h2 className="font-serif text-3xl font-semibold leading-[1.08] tracking-[-0.02em] text-ink sm:text-[2.35rem]">
                 The draw, without the notebook.
@@ -277,7 +277,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           id="roles"
           className="scroll-mt-20 border-t border-hairline py-20 sm:py-24"
         >
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-6xl px-3 sm:px-6 lg:px-8">
             <div className="max-w-2xl">
               <h2 className="font-serif text-3xl font-semibold leading-[1.08] tracking-[-0.02em] text-ink sm:text-[2.35rem]">
                 One desk for every role.
@@ -323,7 +323,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           id="process"
           className="scroll-mt-20 border-t border-hairline py-20 sm:py-24"
         >
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-6xl px-3 sm:px-6 lg:px-8">
             <h2 className="max-w-xl font-serif text-3xl font-semibold leading-[1.08] tracking-[-0.02em] text-ink sm:text-[2.35rem]">
               From enrollment to final whistle.
             </h2>
@@ -350,7 +350,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           id="tournaments"
           className="scroll-mt-20 border-t border-hairline py-20 sm:py-24"
         >
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-6xl px-3 sm:px-6 lg:px-8">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div className="max-w-2xl">
                 <h2 className="font-serif text-3xl font-semibold leading-[1.08] tracking-[-0.02em] text-ink sm:text-[2.35rem]">
@@ -443,7 +443,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             id="champions"
             className="scroll-mt-20 border-t border-hairline py-20 sm:py-24"
           >
-            <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16 lg:px-8">
+            <div className="mx-auto grid max-w-6xl gap-10 px-3 sm:px-6 grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16 lg:px-8">
               <div>
                 <h2 className="font-serif text-3xl font-semibold leading-[1.08] tracking-[-0.02em] text-ink sm:text-[2.35rem]">
                   The record book.
@@ -482,8 +482,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         )}
 
         <section className="py-20 sm:py-24">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="rounded-[14px] border border-accent/15 bg-accent-soft px-6 py-10 sm:px-10 sm:py-12">
+          <div className="mx-auto max-w-6xl px-3 sm:px-6 lg:px-8">
+            <div className="rounded-[14px] border border-accent/15 bg-accent-soft px-4 py-10 sm:px-10 sm:py-12">
               <div className="grid gap-8 grid-cols-1 md:grid-cols-[1fr_auto] md:items-end">
                 <div>
                   <h2 className="max-w-xl font-serif text-3xl font-semibold leading-[1.08] tracking-[-0.02em] text-accent-strong sm:text-[2.35rem]">
@@ -494,17 +494,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     season’s first bracket.
                   </p>
                 </div>
-                <div className="flex flex-col gap-2.5 sm:flex-row w-full sm:w-auto">
+                <div className="flex flex-col gap-2.5 w-full sm:flex-row sm:w-auto">
                   <Link
                     href="/dashboard"
-                    className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[6px] bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-rest transition-all duration-200 hover:bg-accent-strong active:scale-[0.98] w-full sm:w-auto"
+                    className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[6px] bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-rest transition-all duration-200 hover:bg-accent-strong active:scale-[0.98] sm:w-auto sm:px-5"
                   >
                     Organizer console
                     <Icon name="arrowRight" size="sm" />
                   </Link>
                   <Link
                     href="/school/login"
-                    className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[6px] border border-accent/15 bg-surface px-5 py-2.5 text-sm font-semibold text-ink shadow-rest transition-all duration-200 hover:border-accent/30 active:scale-[0.98] w-full sm:w-auto"
+                    className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[6px] border border-accent/15 bg-surface px-4 py-2.5 text-sm font-semibold text-ink shadow-rest transition-all duration-200 hover:border-accent/30 active:scale-[0.98] sm:w-auto sm:px-5"
                   >
                     School sign in
                   </Link>
@@ -516,7 +516,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </main>
 
       <footer className="border-t border-hairline bg-surface">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
+        <div className="mx-auto grid max-w-6xl gap-10 px-3 py-12 sm:px-6 grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
           <div>
             <div className="flex items-center gap-2.5">
               <span className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-accent text-white">
@@ -588,7 +588,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </div>
 
-        <div className="border-t border-hairline px-4 py-5 text-center text-xs text-muted">
+        <div className="border-t border-hairline px-3 py-5 text-center text-xs text-muted sm:px-4">
           © {new Date().getFullYear()} District Sports Office, Navi Mumbai.
           Built for the district’s schools.
         </div>

@@ -125,7 +125,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <div className="min-h-[100dvh] flex flex-col bg-canvas font-sans">
         <Header />
 
-        <main id="main-content" className="flex-1 mx-auto w-full max-w-6xl px-4 py-6 pb-[calc(72px+env(safe-area-inset-bottom))] sm:px-6 md:pb-8 lg:px-8">
+        <main id="main-content" className="flex-1 mx-auto w-full max-w-6xl px-3 sm:px-4 py-6 pb-[calc(88px+env(safe-area-inset-bottom))] sm:pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-8 lg:px-8">
           {children}
         </main>
 

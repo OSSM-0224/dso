@@ -169,7 +169,7 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
       )}
 
       {/* Read-Only Bracket */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-4 md:p-5 shadow-sm">
         <div className="text-xs text-slate-500 mb-2">
           Public Read-Only Bracket · Live match results and progression
         </div>

@@ -65,7 +65,7 @@ export const Header: React.FC = () => {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1" aria-label="Primary">
+        <nav className="hidden lg:flex items-center gap-1" aria-label="Primary">
           {isParticipant ? (
             <>
               <Link href="/school/dashboard" className={linkCls(isOnPortal)}>

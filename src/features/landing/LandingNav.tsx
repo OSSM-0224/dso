@@ -50,7 +50,7 @@ export const LandingNav: React.FC = () => {
           </span>
         </Link>
 
-        <nav aria-label="Primary" className="hidden items-center gap-6 lg:flex">
+        <nav aria-label="Primary" className="hidden items-center gap-6 md:flex">
           {links.map((link) => (
             <a
               key={link.href}
@@ -62,7 +62,7 @@ export const LandingNav: React.FC = () => {
           ))}
         </nav>
 
-        <div className="hidden shrink-0 items-center gap-3 sm:flex">
+        <div className="hidden shrink-0 items-center gap-3 md:flex">
           <Link
             href="/school/login"
             className="rounded-[6px] px-2.5 py-2 text-[13px] font-medium text-muted transition-colors duration-200 hover:bg-surface hover:text-ink"
@@ -78,7 +78,7 @@ export const LandingNav: React.FC = () => {
           </Link>
         </div>
 
-        <div ref={menuRef} className="relative lg:hidden">
+        <div ref={menuRef} className="relative md:hidden">
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}

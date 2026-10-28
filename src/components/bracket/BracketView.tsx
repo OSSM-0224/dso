@@ -83,8 +83,8 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
           Swipe to view later rounds <Icon name="arrowRight" size="xs" />
         </span>
       </div>
-      <div className="w-full overflow-x-auto pb-6 pt-2 touch-pan-y">
-        <div className="flex gap-8 min-w-[640px] lg:min-w-[800px] px-2 items-stretch">
+      <div className="w-full overflow-x-auto pb-6 pt-2 touch-pan-x touch-pan-y -mx-2 sm:mx-0 px-2 sm:px-0">
+        <div className="flex gap-4 sm:gap-6 lg:gap-8 min-w-[520px] sm:min-w-[640px] lg:min-w-[800px] items-stretch">
         {rounds.map((round) => {
           const allRoundMatches = matches
             .filter((m) => m.round === round)
@@ -100,7 +100,7 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
             : [];
 
           return (
-            <div key={round} className="flex-1 flex flex-col min-w-[280px]">
+            <div key={round} className="flex-1 flex flex-col min-w-[240px] sm:min-w-[280px]">
               {/* Round Column Header */}
               <div className="mb-4 pb-2 border-b border-slate-200 text-center">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-800">

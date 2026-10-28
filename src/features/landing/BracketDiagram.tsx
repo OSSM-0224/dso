@@ -46,8 +46,8 @@ export const BracketDiagram: React.FC = () => (
         </span>
       </div>
 
-      <div className="mt-5 overflow-x-auto pb-1">
-        <div className="min-w-[500px]">
+      <div className="mt-5 overflow-x-auto pb-1 -mx-2 sm:mx-0 px-2 sm:px-0">
+        <div className="min-w-[450px] sm:min-w-[500px]">
           <div className="grid grid-cols-[1.2fr_0.95fr_0.8fr_0.7fr] gap-2 border-b border-hairline pb-2">
             {['Quarter-final', 'Semi-final', 'Final', 'Champion'].map((round) => (
               <p

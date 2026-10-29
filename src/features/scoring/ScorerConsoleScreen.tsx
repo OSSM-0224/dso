@@ -749,14 +749,14 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
         <div className="rounded-[12px] border border-hairline bg-surface p-4">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.06em] text-faint">{t("Completed turns")}</p>
           <ul className="space-y-1.5">
-            {sb.completedTurns.map((t, i) => (
-              <li key={`${t.slot}-${i}`} className="flex items-center justify-between gap-2 text-xs text-ink">
-                <span className="shrink-0 text-muted">{t.turnLabel}</span>
-                <span className="truncate">{teamsById.get(t.chaserTeamId)?.name ?? t.chaserTeamName}</span>
+            {sb.completedTurns.map((turn, i) => (
+              <li key={`${turn.slot}-${i}`} className="flex items-center justify-between gap-2 text-xs text-ink">
+                <span className="shrink-0 text-muted">{turn.turnLabel}</span>
+                <span className="truncate">{teamsById.get(turn.chaserTeamId)?.name ?? turn.chaserTeamName}</span>
                 <span className="flex items-center gap-2 font-mono tabular-nums">
-                  <span>+{t.points}</span>
-                  {t.allOut && <span className="text-[10px] font-bold text-accent-strong">{t("ALL OUT")}</span>}
-                  <span className="text-faint">{t.status === 'ended' ? fmtClock(t.runningElapsedMs || 0) : ''}</span>
+                  <span>+{turn.points}</span>
+                  {turn.allOut && <span className="text-[10px] font-bold text-accent-strong">{t("ALL OUT")}</span>}
+                  <span className="text-faint">{turn.status === 'ended' ? fmtClock(turn.runningElapsedMs || 0) : ''}</span>
                 </span>
               </li>
             ))}

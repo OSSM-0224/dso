@@ -370,7 +370,7 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
                       if (selectedTeams.length === availableTeamsForForm.length) {
                         setSelectedTeams([]);
                       } else {
-                        setSelectedTeams(availableTeamsForForm.map((t) => t.id));
+                        setSelectedTeams(availableTeamsForForm.map((team) => team.id));
                       }
                     }}
                     className="text-[11px] text-indigo-600 hover:text-indigo-800 font-medium"

@@ -262,7 +262,7 @@ export const LiveScoreCard: React.FC<LiveScoreCardProps> = ({
         <div className="flex items-center gap-2 border-t border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-900">
           <Icon name="trophy" size="sm" />
           {sb.winner.resolved
-            ? `${sb.winner.winnerTeamId ? sb.teams.find((t) => t.id === sb.winner.winnerTeamId)?.name ?? t("Winner") : t("Winner")} · ${sb.winner.label}`
+            ? `${sb.winner.winnerTeamId ? sb.teams.find((team) => team.id === sb.winner.winnerTeamId)?.name ?? t("Winner") : t("Winner")} · ${sb.winner.label}`
             : sb.winner.label || t("Result decided")}
         </div>
       )}

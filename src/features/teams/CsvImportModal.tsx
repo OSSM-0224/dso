@@ -122,7 +122,7 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
       setError(null);
       const validRows = report.items.filter((i) => i.status === 'valid').map((i) => i.data);
       const res = await api.teams.importCsv(validRows, true);
-      setSuccessMsg(t('Successfully imported {count} team(s)!', { count: res.createdCount }));
+      setSuccessMsg(t('Successfully imported {count} team(s)!', { count: res.createdCount ?? 0 }));
       setTimeout(() => {
         onSuccess();
         onClose();
@@ -272,7 +272,7 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
                         {item.status === 'duplicate' && (
                           <div className="space-y-0.5">
                             <span className="text-[10px] font-semibold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">
-                              {t("Duplicate ({name})", { name: item.duplicateOf })}
+                              {t("Duplicate ({name})", { name: item.duplicateOf ?? '' })}
                             </span>
                             <div className="text-[10px] text-amber-700">{item.errors[0]}</div>
                           </div>

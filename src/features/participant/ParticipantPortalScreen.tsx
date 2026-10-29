@@ -479,17 +479,17 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
 
               {dashboardData?.tournaments && dashboardData.tournaments.length > 0 ? (
                 <div className="divide-y divide-slate-100">
-                  {dashboardData.tournaments.map((t: any) => (
-                <div key={t.id} className="py-2.5 flex items-center justify-between gap-2">
+                  {dashboardData.tournaments.map((tourn: any) => (
+                <div key={tourn.id} className="py-2.5 flex items-center justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-800 truncate">{t.name}</p>
+                        <p className="text-xs font-bold text-slate-800 truncate">{tourn.name}</p>
                         <p className="text-[11px] text-slate-500">
-                          {t.ageGroup} ({t.gender}) · {t.sport}
+                          {tourn.ageGroup} ({tourn.gender}) · {tourn.sport}
                         </p>
                       </div>
                       <button
                         onClick={() => {
-                          setSelectedTournamentFilter(t.id);
+                          setSelectedTournamentFilter(tourn.id);
                           setActiveTab('schedule');
                         }}
                         className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5 shrink-0 whitespace-nowrap"
@@ -599,9 +599,9 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                   className="text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
                   <option value="all">{t("All Tournaments")}</option>
-                  {dashboardData?.tournaments?.map((t: any) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
+                  {dashboardData?.tournaments?.map((tourn: any) => (
+                    <option key={tourn.id} value={tourn.id}>
+                      {tourn.name}
                     </option>
                   ))}
                 </select>
@@ -781,9 +781,9 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                 }}
                 className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5"
               >
-                {dashboardData?.tournaments?.map((t: any) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
+                {dashboardData?.tournaments?.map((tourn: any) => (
+                  <option key={tourn.id} value={tourn.id}>
+                    {tourn.name}
                   </option>
                 ))}
               </select>

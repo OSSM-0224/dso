@@ -35,13 +35,13 @@ export const LandingNav: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 border-b border-hairline bg-canvas/90 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-3 sm:px-6 lg:px-8">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-[6px]">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 sm:gap-4 px-2 sm:px-6 lg:px-8">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-[6px] min-w-0">
           <span className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-accent text-white shadow-rest">
             <Icon name="trophy" size="sm" />
           </span>
-          <span className="leading-tight">
-            <span className="block font-serif text-[17px] font-semibold tracking-[-0.01em] text-ink">
+          <span className="leading-tight min-w-0">
+            <span className="block font-serif text-[16px] sm:text-[17px] font-semibold tracking-[-0.01em] text-ink truncate">
               DSO Navi Mumbai
             </span>
             <span className="hidden font-mono text-[9px] uppercase tracking-[0.16em] text-muted sm:block">

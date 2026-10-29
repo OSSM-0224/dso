@@ -110,9 +110,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <LandingNav />
 
       <main id="main-content">
-        <section className="relative flex min-h-[calc(100dvh-4rem)] flex-col overflow-hidden">
-          <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-8 px-2 py-10 sm:gap-12 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8">
-            <div className="max-w-xl w-full">
+        <section className="relative flex min-h-[calc(100dvh-4rem)] flex-col overflow-x-hidden">
+          <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-8 px-3 py-10 sm:gap-12 sm:px-4 lg:grid-cols-2 lg:gap-14 lg:px-8">
+            <div className="max-w-xl w-full min-w-0">
               <p className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-accent">
                 District Sports Office • Navi Mumbai
               </p>
@@ -120,21 +120,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 A <span className="text-accent">fair draw</span>,
                 <br className="hidden sm:block" /> kept on the record.
               </h1>
-              <p className="mt-6 max-w-[46ch] text-[15px] leading-relaxed text-muted sm:text-base">
+              <p className="mt-6 max-w-full text-[15px] leading-relaxed text-muted sm:max-w-[46ch] sm:text-base">
                 Balanced single-elimination fixtures, public brackets, and live
                 scoring for Navi Mumbai’s school tournaments.
               </p>
-              <div className="mt-8 flex flex-col gap-2.5 w-full sm:flex-row sm:w-auto">
+              <div className="mt-8 flex flex-col gap-2.5 w-full max-w-full sm:flex-row sm:w-auto sm:max-w-none">
                 <Link
                   href="/dashboard"
-                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[6px] bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-rest transition-all duration-200 hover:bg-accent-strong active:scale-[0.98] sm:w-auto sm:px-5"
+                  className="inline-flex min-h-[44px] w-full max-w-full items-center justify-center gap-2 rounded-[6px] bg-accent px-3 py-2.5 text-sm font-semibold text-white shadow-rest transition-all duration-200 hover:bg-accent-strong active:scale-[0.98] sm:w-auto sm:px-5 whitespace-nowrap"
                 >
                   Organizer console
                   <Icon name="arrowRight" size="sm" />
                 </Link>
                 <Link
                   href="/school/login"
-                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[6px] border border-hairline bg-surface px-4 py-2.5 text-sm font-semibold text-ink shadow-rest transition-all duration-200 hover:border-faint hover:bg-canvas active:scale-[0.98] sm:w-auto sm:px-5"
+                  className="inline-flex min-h-[44px] w-full max-w-full items-center justify-center gap-2 rounded-[6px] border border-hairline bg-surface px-3 py-2.5 text-sm font-semibold text-ink shadow-rest transition-all duration-200 hover:border-faint hover:bg-canvas active:scale-[0.98] sm:w-auto sm:px-5 whitespace-nowrap"
                 >
                   School sign in
                 </Link>
@@ -146,7 +146,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-6xl px-2 pb-8 sm:px-6 sm:pb-10 lg:px-8 lg:pb-14">
+          <div className="mx-auto w-full max-w-6xl px-3 pb-8 sm:px-6 sm:pb-10 lg:px-8 lg:pb-14">
             <dl className="grid grid-cols-1 overflow-hidden rounded-[12px] border border-hairline bg-surface/85 shadow-rest backdrop-blur-sm xs:grid-cols-2 sm:grid-cols-4">
               {facts.map((fact) => (
                 <div
@@ -494,17 +494,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     season’s first bracket.
                   </p>
                 </div>
-                <div className="flex flex-col gap-2.5 w-full sm:flex-row sm:w-auto">
+                <div className="flex flex-col gap-2.5 w-full max-w-full sm:flex-row sm:w-auto sm:max-w-none">
                   <Link
                     href="/dashboard"
-                    className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[6px] bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-rest transition-all duration-200 hover:bg-accent-strong active:scale-[0.98] sm:w-auto sm:px-5"
+                    className="inline-flex min-h-[44px] w-full max-w-full items-center justify-center gap-2 rounded-[6px] bg-accent px-3 py-2.5 text-sm font-semibold text-white shadow-rest transition-all duration-200 hover:bg-accent-strong active:scale-[0.98] sm:w-auto sm:px-5 whitespace-nowrap"
                   >
                     Organizer console
                     <Icon name="arrowRight" size="sm" />
                   </Link>
                   <Link
                     href="/school/login"
-                    className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[6px] border border-accent/15 bg-surface px-4 py-2.5 text-sm font-semibold text-ink shadow-rest transition-all duration-200 hover:border-accent/30 active:scale-[0.98] sm:w-auto sm:px-5"
+                    className="inline-flex min-h-[44px] w-full max-w-full items-center justify-center gap-2 rounded-[6px] border border-accent/15 bg-surface px-3 py-2.5 text-sm font-semibold text-ink shadow-rest transition-all duration-200 hover:border-accent/30 active:scale-[0.98] sm:w-auto sm:px-5 whitespace-nowrap"
                   >
                     School sign in
                   </Link>

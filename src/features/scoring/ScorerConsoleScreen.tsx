@@ -21,6 +21,7 @@ import { PAUSE_REMINDER_MS } from '@/shared/scoring/types.ts';
 import { getScoringEngine } from '@/shared/scoring/engine.ts';
 import { useAuth } from '@/context/AuthContext.tsx';
 import { Icon } from '@/components/ui/Icon.tsx';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { ScorerLoginCard } from './ScorerLoginCard.tsx';
 
 type ScoringDetail = Awaited<ReturnType<typeof api.scoring.getMatch>>;
@@ -63,6 +64,7 @@ const btnAccent =
   'flex items-center justify-center gap-1.5 rounded-[6px] border border-accent-soft bg-accent-soft px-3 py-2 text-xs font-semibold text-accent-strong transition-colors duration-200 disabled:opacity-45';
 
 export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) => {
+  const { t } = useI18n();
   const { isLoading: authLoading, canScore, user } = useAuth();
 
   const [detail, setDetail] = useState<ScoringDetail | null>(null);
@@ -398,7 +400,7 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
     return (
       <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted">
         <Icon name="spinner" size="md" spin />
-        Loading console…
+        {t("Loading console…")}
       </div>
     );
   }
@@ -411,11 +413,11 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
     return (
       <div className="rounded-[12px] border border-hairline bg-surface p-6 text-center">
         <Icon name="circleAlert" size="xl" className="mx-auto mb-2 text-red-600" />
-        <p className="text-sm font-semibold text-ink">Could not load this match</p>
+        <p className="text-sm font-semibold text-ink">{t("Could not load this match")}</p>
         <p className="mt-1 text-xs text-muted">{loadError}</p>
         <Link href="/score" className={`mt-4 inline-flex ${btnGhost}`}>
           <Icon name="arrowLeft" size="sm" />
-          Back to my matches
+          {t("Back to my matches")}
         </Link>
       </div>
     );
@@ -425,14 +427,14 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
     return (
       <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted">
         <Icon name="spinner" size="md" spin />
-        Loading match…
+        {t("Loading match…")}
       </div>
     );
   }
 
   const { match, tournament, scorerNames } = detail;
-  const teamAName = teamsById.get(match.teamA?.id ?? '')?.name ?? match.teamA?.name ?? 'TBD';
-  const teamBName = teamsById.get(match.teamB?.id ?? '')?.name ?? match.teamB?.name ?? 'TBD';
+  const teamAName = teamsById.get(match.teamA?.id ?? '')?.name ?? match.teamA?.name ?? t("TBD");
+  const teamBName = teamsById.get(match.teamB?.id ?? '')?.name ?? match.teamB?.name ?? t("TBD");
 
   const banner = toast ? (
     <div
@@ -445,7 +447,7 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
       }`}
     >
       <Icon name={toast.tone === 'error' ? 'circleAlert' : toast.tone === 'success' ? 'circleCheck' : 'circleInfo'} size="sm" className="mt-0.5 shrink-0" />
-      <span>{toast.text}</span>
+      <span>{t(toast.text)}</span>
     </div>
   ) : null;
 
@@ -459,7 +461,7 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
         <p className="truncate text-xs font-semibold text-ink">{teamAName}</p>
         <p className="font-mono text-4xl font-bold tabular-nums text-ink">{totalA}</p>
       </div>
-      <span className="font-serif text-sm text-faint">vs</span>
+      <span className="font-serif text-sm text-faint">{t("vs")}</span>
       <div className="text-center">
         <p className="truncate text-xs font-semibold text-ink">{teamBName}</p>
         <p className="font-mono text-4xl font-bold tabular-nums text-ink">{totalB}</p>
@@ -478,20 +480,20 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
         {banner}
         <div className="rounded-[12px] border border-hairline bg-surface p-6 text-center">
           <Icon name="flag" size="xl" className="mx-auto mb-3 text-accent-strong" />
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-faint">Match completed</p>
-          <h1 className="mt-1 font-serif text-2xl font-semibold text-ink">{winnerName || 'Result recorded'}</h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-faint">{t("Match completed")}</p>
+          <h1 className="mt-1 font-serif text-2xl font-semibold text-ink">{winnerName || t("Result recorded")}</h1>
           {winnerLabel && <p className="mt-1 text-xs font-semibold text-accent-strong">{winnerLabel}</p>}
           <div className="mx-auto mt-4 grid max-w-xs grid-cols-3 items-center gap-2">
             <p className="text-center font-mono text-xl font-bold tabular-nums text-ink">{totalA}</p>
-            <p className="text-center text-[10px] uppercase tracking-wider text-faint">Final</p>
+            <p className="text-center text-[10px] uppercase tracking-wider text-faint">{t("Final")}</p>
             <p className="text-center font-mono text-xl font-bold tabular-nums text-ink">{totalB}</p>
           </div>
           <p className="mt-4 text-[11px] text-muted">
-            Winner recorded to the official bracket (advancement, audit log and school notifications done).
+            {t("Winner recorded to the official bracket (advancement, audit log and school notifications done).")}
           </p>
           <Link href="/score" className={`mt-4 inline-flex ${btnGhost}`}>
             <Icon name="arrowLeft" size="sm" />
-            Back to my matches
+            {t("Back to my matches")}
           </Link>
         </div>
       </div>
@@ -506,11 +508,11 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
         {banner}
         <div className="rounded-[12px] border border-hairline bg-surface p-5 text-center">
         <p className="rounded-full bg-canvas px-2 py-0.5 text-center text-[10px] font-semibold uppercase tracking-[0.05em] text-muted">
-            {tournament.name} · {match.roundName} · Match #{match.matchNumber}
+            {tournament.name} · {match.roundName} · {t("Match #{number}", { number: match.matchNumber })}
           </p>
           <h1 className="mt-3 text-center font-serif text-xl font-semibold text-ink">
             {teamAName}
-            <span className="mx-2 text-faint">vs</span>
+            <span className="mx-2 text-faint">{t("vs")}</span>
             {teamBName}
           </h1>
           <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-muted">
@@ -533,13 +535,13 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
 
           <button onClick={startScoring} disabled={pending} className={`mt-5 w-full ${btnPrimary}`}>
             {pending ? <Icon name="spinner" size="sm" spin /> : <Icon name="play" size="sm" />}
-            Start scoring session
+            {t("Start scoring session")}
           </button>
-          <p className="mt-2 text-center text-[10px] text-faint">First step: the toss</p>
+          <p className="mt-2 text-center text-[10px] text-faint">{t("First step: the toss")}</p>
         </div>
         <Link href="/score" className={`w-full ${btnGhost}`}>
           <Icon name="arrowLeft" size="sm" />
-          Back to my matches
+          {t("Back to my matches")}
         </Link>
       </div>
     );
@@ -556,9 +558,9 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
     promptBody = (
       <div className="rounded-[12px] border border-hairline bg-surface p-5 text-center">
         <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-faint">
-          {action.stage} · Turn {action.turn}
+          {action.stage} · {t("Turn {turn}", { turn: action.turn })}
         </p>
-        <p className="mt-1 text-sm text-muted">To chase:</p>
+        <p className="mt-1 text-sm text-muted">{t("To chase:")}</p>
         <p className="font-serif text-xl font-semibold text-ink">{action.chaserTeamName}</p>
         <button
           onClick={() =>
@@ -573,7 +575,7 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
           className={`mt-4 w-full ${btnPrimary}`}
         >
           {pending ? <Icon name="spinner" size="sm" spin /> : <Icon name="play" size="sm" />}
-          Start turn ({action.turnLabel})
+          {t("Start turn ({turnLabel})", { turnLabel: action.turnLabel })}
         </button>
       </div>
     );
@@ -599,12 +601,12 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
     promptBody = (
       <div className="rounded-[12px] border border-amber-200 bg-amber-50/60 p-5">
         <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700">
-          <Icon name="swap" size="xs" /> Follow-on decision
+          <Icon name="swap" size="xs" /> {t("Follow-on decision")}
         </p>
         <p className="mt-2 text-sm text-ink">
-          <span className="font-semibold">{action.leaderTeamName}</span> leads by{' '}
-          <span className="font-mono font-bold">{action.leadPoints}</span> pts (threshold {action.threshold}).
-          They may enforce a follow-on — the trailing team then chases first in the second innings.
+          <span className="font-semibold">{action.leaderTeamName}</span> {t("leads by")}{' '}
+          <span className="font-mono font-bold">{action.leadPoints}</span> {t("pts (threshold {threshold}).", { threshold: action.threshold })}{' '}
+          {t("They may enforce a follow-on — the trailing team then chases first in the second innings.")}
         </p>
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button
@@ -612,14 +614,14 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
             disabled={pending}
             className={btnPrimary}
           >
-            <Icon name="check" size="sm" /> Enforce follow-on
+            <Icon name="check" size="sm" /> {t("Enforce follow-on")}
           </button>
           <button
             onClick={() => postEvent({ type: 'FOLLOW_ON_DECISION', optedByTeamId: action.leaderTeamId, opted: false })}
             disabled={pending}
             className={btnGhost}
           >
-            Decline — default order
+            {t("Decline — default order")}
           </button>
         </div>
       </div>
@@ -629,11 +631,10 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
       <div className="space-y-3">
         <div className="rounded-[12px] border border-hairline bg-surface p-5">
           <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.06em] text-faint">
-            <Icon name="stopwatch" size="xs" /> Sudden death attempts
+            <Icon name="stopwatch" size="xs" /> {t("Sudden death attempts")}
           </p>
           <p className="mt-1 text-xs text-muted">
-            Tie unresolved — record each team&apos;s attempt. A score beats a failed attempt; two
-            similar results are separated by the smaller elapsed time.
+            {t("Tie unresolved — record each team's attempt. A score beats a failed attempt; two similar results are separated by the smaller elapsed time.")}
           </p>
         </div>
         {action.pendingTeamIds.map((teamId) => {
@@ -646,13 +647,13 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
               <p className="text-sm font-semibold text-ink">{name}</p>
               <label className="mt-2 block">
                 <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">
-                  Attempt time (seconds)
+                  {t("Attempt time (seconds)")}
                 </span>
                 <input
                   value={raw}
                   onChange={(e) => setSuddenElapsed((m) => ({ ...m, [teamId]: e.target.value }))}
                   inputMode="decimal"
-                  placeholder="e.g. 7.4"
+                  placeholder={t("e.g. 7.4")}
                   className="w-32 rounded-[6px] border border-hairline bg-canvas px-3 py-2 font-mono text-sm tabular-nums text-ink focus:border-accent-strong focus:outline-none"
                 />
               </label>
@@ -666,14 +667,14 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
                   disabled={pending}
                   className={btnAccent}
                 >
-                  <Icon name="circleCheck" size="sm" /> Scored
+                  <Icon name="circleCheck" size="sm" /> {t("Scored")}
                 </button>
                 <button
                   onClick={() => postEvent({ type: 'MIN_TIME_RESULT', teamId, scored: false })}
                   disabled={pending}
                   className={btnGhost}
                 >
-                  <Icon name="xmark" size="sm" /> Failed
+                  <Icon name="xmark" size="sm" /> {t("Failed")}
                 </button>
               </div>
             </div>
@@ -684,11 +685,10 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
   } else if (action?.action === 'prompt_manual_decision') {    promptBody = (
       <div className="rounded-[12px] border border-hairline bg-surface p-5">
         <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.06em] text-faint">
-          <Icon name="gavel" size="xs" /> Manual decision required
+          <Icon name="gavel" size="xs" /> {t("Manual decision required")}
         </p>
         <p className="mt-1 text-xs text-muted">
-          The engine cannot resolve this match (e.g. both sudden-death attempts failed or equal).
-          Pick the winner and provide the official reason — this is audited.
+          {t("The engine cannot resolve this match (e.g. both sudden-death attempts failed or equal). Pick the winner and provide the official reason — this is audited.")}
         </p>
         <div className="mt-3 grid grid-cols-2 gap-2">
           {([match.teamA?.id || '', match.teamB?.id || ''] as string[]).map((id, idx) => (
@@ -709,7 +709,7 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
           value={manualReason}
           onChange={(e) => setManualReason(e.target.value)}
           rows={3}
-          placeholder="Reason for the manual decision (required)"
+          placeholder={t("Reason for the manual decision (required)")}
           className="mt-3 w-full rounded-[6px] border border-hairline bg-canvas px-3 py-2 text-sm text-ink focus:border-accent-strong focus:outline-none"
         />
         <button
@@ -720,7 +720,7 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
           className={`mt-3 w-full ${btnPrimary}`}
         >
           {pending ? <Icon name="spinner" size="sm" spin /> : <Icon name="gavel" size="sm" />}
-          Record manual decision
+          {t("Record manual decision")}
         </button>
       </div>
     );
@@ -732,13 +732,13 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
 
       <div className="rounded-[12px] border border-hairline bg-surface p-4">
         <p className="rounded-full bg-canvas px-2 py-0.5 text-center text-[10px] font-semibold uppercase tracking-[0.05em] text-muted">
-          {tournament.name} · {match.roundName} · Match #{match.matchNumber}
+          {tournament.name} · {match.roundName} · {t("Match #{number}", { number: match.matchNumber })}
         </p>
         <div className="mt-2 text-center font-serif text-[17px] font-semibold text-ink">
-          {teamAName} <span className="text-faint">vs</span> {teamBName}
+          {teamAName} <span className="text-faint">{t("vs")}</span> {teamBName}
         </div>
         <p className="mt-1 text-center text-[11px] text-muted">
-          {sb.phase.replace(/_/g, ' ')} · v{score.version} {scorerNames.length > 0 ? `· scorers: ${scorerNames.join(', ')}` : ''}
+          {sb.phase.replace(/_/g, ' ')} · v{score.version} {scorerNames.length > 0 ? `· ${t("scorers: {names}", { names: scorerNames.join(', ') })}` : ''}
         </p>
       </div>
 
@@ -747,7 +747,7 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
 
       {sb.completedTurns.length > 0 && (
         <div className="rounded-[12px] border border-hairline bg-surface p-4">
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.06em] text-faint">Completed turns</p>
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.06em] text-faint">{t("Completed turns")}</p>
           <ul className="space-y-1.5">
             {sb.completedTurns.map((t, i) => (
               <li key={`${t.slot}-${i}`} className="flex items-center justify-between gap-2 text-xs text-ink">
@@ -755,7 +755,7 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
                 <span className="truncate">{teamsById.get(t.chaserTeamId)?.name ?? t.chaserTeamName}</span>
                 <span className="flex items-center gap-2 font-mono tabular-nums">
                   <span>+{t.points}</span>
-                  {t.allOut && <span className="text-[10px] font-bold text-accent-strong">ALL OUT</span>}
+                  {t.allOut && <span className="text-[10px] font-bold text-accent-strong">{t("ALL OUT")}</span>}
                   <span className="text-faint">{t.status === 'ended' ? fmtClock(t.runningElapsedMs || 0) : ''}</span>
                 </span>
               </li>
@@ -767,10 +767,10 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
       {showOverride && (
         <div className="rounded-[12px] border border-amber-300 bg-amber-50/70 p-5">
           <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700">
-            <Icon name="gavel" size="xs" /> Override winner (emergency)
+            <Icon name="gavel" size="xs" /> {t("Override winner (emergency)")}
           </p>
           <p className="mt-1 text-xs text-amber-900">
-            Bypasses the event flow and records the result immediately. Reason is mandatory and audited.
+            {t("Bypasses the event flow and records the result immediately. Reason is mandatory and audited.")}
           </p>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {([match.teamA?.id || '', match.teamB?.id || ''] as string[]).map((id, idx) => (
@@ -791,15 +791,15 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
             value={overrideReason}
             onChange={(e) => setOverrideReason(e.target.value)}
             rows={2}
-            placeholder="Reason (required, min 5 characters)"
+            placeholder={t("Reason (required, min 5 characters)")}
             className="mt-2 w-full rounded-[6px] border border-amber-200 bg-white px-3 py-2 text-sm text-ink"
           />
           <button onClick={doOverride} disabled={pending || !overrideWinner || overrideReason.trim().length < 5} className={`mt-2 w-full ${btnPrimary}`}>
             {pending ? <Icon name="spinner" size="sm" spin /> : <Icon name="gavel" size="sm" />}
-            Declare winner & finish
+            {t("Declare winner & finish")}
           </button>
           <button onClick={() => setShowOverride(false)} className={`mt-2 w-full ${btnGhost}`}>
-            Cancel
+            {t("Cancel")}
           </button>
         </div>
       )}
@@ -808,29 +808,29 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
         <div className="grid grid-cols-2 gap-2">
           <button onClick={doUndo} disabled={pending} className={btnGhost}>
             {pending ? <Icon name="spinner" size="sm" spin /> : <Icon name="rotate" size="sm" />}
-            Undo last event
+            {t("Undo last event")}
           </button>
           {score.status === 'active' && !showOverride && sb.winner.resolved ? (
             <button onClick={doComplete} disabled={pending} className={btnPrimary}>
               {pending ? <Icon name="spinner" size="sm" spin /> : <Icon name="flag" size="sm" />}
-              Complete match
+              {t("Complete match")}
             </button>
           ) : !showOverride ? (
             <button onClick={() => setShowOverride(true)} disabled={pending} className={btnGhost}>
               <Icon name="gavel" size="sm" />
-              Override winner
+              {t("Override winner")}
             </button>
           ) : (
             <button disabled className={btnGhost}>
               <Icon name="gavel" size="sm" />
-              Override open…
+              {t("Override open…")}
             </button>
           )}
         </div>
         <p className="mt-2 text-center text-[10px] text-faint">
           {queuedEvents.length > 0
-            ? `Syncing ${queuedEvents.length} event${queuedEvents.length === 1 ? '' : 's'}\u2026`
-            : `Signed in as ${user?.name || 'scorer'} \u00b7 server-validated events only`}
+            ? t("Syncing {count} event(s)…", { count: queuedEvents.length })
+            : t("Signed in as {name} · server-validated events only", { name: user?.name || t("scorer") })}
         </p>
       </div>
     </div>
@@ -850,12 +850,13 @@ const TossPanel: React.FC<{
   pending: boolean;
   onEvent: (payload: Record<string, unknown>) => Promise<boolean>;
 }> = ({ stage, round, teams, teamAId, teamBId, pending, onEvent }) => {
+  const { t } = useI18n();
   const [winnerTeamId, setWinnerTeamId] = useState<string>('');
 
   return (
     <div className="rounded-[12px] border border-hairline bg-surface p-5">
       <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.06em] text-faint">
-        <Icon name="trophy" size="xs" /> {stage === 'extra_innings' ? `Extra innings toss (round ${round ?? ''})`.trim() : 'First-innings toss'}
+        <Icon name="trophy" size="xs" /> {stage === 'extra_innings' ? t("Extra innings toss (round {round})", { round: round ?? '' }).trim() : t("First-innings toss")}
       </p>
       <div className="mt-3 grid grid-cols-2 gap-2">
         {([teamAId, teamBId] as string[]).map((id, idx) => (
@@ -874,7 +875,7 @@ const TossPanel: React.FC<{
       </div>
       {winnerTeamId && (
         <div className="mt-3">
-          <p className="mb-2 text-center text-[11px] text-muted">Toss won — what do they elect?</p>
+          <p className="mb-2 text-center text-[11px] text-muted">{t("Toss won — what do they elect?")}</p>
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => onEvent({ type: 'TOSS', stage, winnerTeamId, decision: 'DEFEND' })}
@@ -882,7 +883,7 @@ const TossPanel: React.FC<{
               className={btnPrimary}
             >
               {pending ? <Icon name="spinner" size="sm" spin /> : <Icon name="shield" size="sm" />}
-              Defend first
+              {t("Defend first")}
             </button>
             <button
               onClick={() => onEvent({ type: 'TOSS', stage, winnerTeamId, decision: 'CHASE' })}
@@ -890,7 +891,7 @@ const TossPanel: React.FC<{
               className={btnGhost}
             >
               <Icon name="bolt" size="sm" />
-              Chase first
+              {t("Chase first")}
             </button>
           </div>
         </div>
@@ -914,6 +915,7 @@ const TurnPanel: React.FC<{
   setEarlyEndReason: (v: string) => void;
   turnEndHint: { reason: 'all_out' | 'timer_expired'; label: string } | null;
 }> = ({ action, turn, clockRemaining, pausedForMs, remind, chaserName, onEvent, pending, showEarlyEnd, setShowEarlyEnd, earlyEndReason, setEarlyEndReason, turnEndHint }) => {
+  const { t } = useI18n();
   const paused = action.action === 'turn_paused';
 
   return (
@@ -922,12 +924,12 @@ const TurnPanel: React.FC<{
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-faint">{turn?.turnLabel}</p>
           <p className="text-sm font-semibold text-ink">
-            {chaserName ? `${chaserName} chasing` : 'In progress'}
+            {chaserName ? t("{name} chasing", { name: chaserName }) : t("In progress")}
             {turn?.batchDisplay ? ` · ${turn.batchDisplay}` : ''}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] uppercase tracking-wider text-faint">Turn score</p>
+          <p className="text-[10px] uppercase tracking-wider text-faint">{t("Turn score")}</p>
           <p className="font-mono text-2xl font-bold tabular-nums text-ink">{turn?.points ?? 0}</p>
         </div>
       </div>
@@ -936,14 +938,14 @@ const TurnPanel: React.FC<{
       {paused ? (
         <div className="mt-4 rounded-[10px] border border-amber-400 bg-amber-100 p-4 text-center">
           <p className="flex items-center justify-center gap-2 font-mono text-2xl font-black uppercase tracking-[0.15em] text-amber-700">
-            <Icon name="pause" size="md" spin={false} /> Clock stopped
+            <Icon name="pause" size="md" spin={false} /> {t("Clock stopped")}
           </p>
           <p className="mt-1 text-xs font-semibold text-amber-800">
-            Stopped for {fmtClock(pausedForMs ?? 0)} — the turn timer is NOT running.
+            {t("Stopped for {time} — the turn timer is NOT running.", { time: fmtClock(pausedForMs ?? 0) })}
           </p>
           {remind && (
             <p className="mt-2 animate-pulse rounded-[6px] bg-amber-200 px-2 py-1 text-[11px] font-bold text-amber-900">
-              2 minutes on pause — resume the clock so the turn stays within its scheduled window!
+              {t("2 minutes on pause — resume the clock so the turn stays within its scheduled window!")}
             </p>
           )}
           <button
@@ -952,19 +954,19 @@ const TurnPanel: React.FC<{
             className={`mt-3 w-full ${btnPrimary}`}
           >
             {pending ? <Icon name="spinner" size="sm" spin /> : <Icon name="play" size="sm" />}
-            Resume clock
+            {t("Resume clock")}
           </button>
         </div>
       ) : (
         <div className="mt-4 rounded-[10px] border border-hairline bg-canvas p-4 text-center">
-          <p className="text-[10px] uppercase tracking-[0.1em] text-faint">Turn timer</p>
+          <p className="text-[10px] uppercase tracking-[0.1em] text-faint">{t("Turn timer")}</p>
           <p
             className={`font-mono text-5xl font-black tabular-nums ${clockRemaining !== null && clockRemaining <= 10000 ? 'text-red-600' : 'text-ink'}`}
           >
             {clockRemaining === null ? '--:--' : fmtClock(clockRemaining)}
           </p>
           {action.action === 'end_turn_available' && action.reasonHint === 'timer_expired' && (
-            <p className="mt-1 text-xs font-semibold text-red-600">Time expired — close the turn</p>
+            <p className="mt-1 text-xs font-semibold text-red-600">{t("Time expired — close the turn")}</p>
           )}
         </div>
       )}
@@ -979,17 +981,17 @@ const TurnPanel: React.FC<{
               disabled={pending}
               className={btnAccent}
             >
-              <Icon name="bolt" size="sm" /> {d.label} (+1)
+              <Icon name="bolt" size="sm" /> {t(d.label)} (+1)
             </button>
           ))}
         {!paused && (
           <button onClick={() => onEvent({ type: 'FOUL_LOG' })} disabled={pending} className={btnGhost}>
-            <Icon name="pen" size="sm" /> Log foul
+            <Icon name="pen" size="sm" /> {t("Log foul")}
           </button>
         )}
         {!paused && (
           <button onClick={() => onEvent({ type: 'TURN_PAUSE' })} disabled={pending} className={`${btnGhost} text-amber-700`}>
-            <Icon name="pause" size="sm" /> Pause clock
+            <Icon name="pause" size="sm" /> {t("Pause clock")}
           </button>
         )}
       </div>
@@ -1003,12 +1005,12 @@ const TurnPanel: React.FC<{
             className={`w-full ${btnPrimary}`}
           >
             {pending ? <Icon name="spinner" size="sm" spin /> : <Icon name="flag" size="sm" />}
-            {turnEndHint.label}
+            {t(turnEndHint.label)}
           </button>
         )}
         {!paused && !showEarlyEnd && !turnEndHint && (
           <button onClick={() => setShowEarlyEnd(true)} disabled={pending} className={`w-full ${btnGhost}`}>
-            <Icon name="flag" size="sm" /> End turn early (manual)
+            <Icon name="flag" size="sm" /> {t("End turn early (manual)")}
           </button>
         )}
         {!paused && showEarlyEnd && (
@@ -1017,7 +1019,7 @@ const TurnPanel: React.FC<{
               value={earlyEndReason}
               onChange={(e) => setEarlyEndReason(e.target.value)}
               rows={2}
-              placeholder="Reason for ending the turn early (required)"
+              placeholder={t("Reason for ending the turn early (required)")}
               className="w-full rounded-[6px] border border-hairline bg-canvas px-3 py-2 text-sm text-ink"
             />
             <div className="grid grid-cols-2 gap-2">
@@ -1029,10 +1031,10 @@ const TurnPanel: React.FC<{
                 disabled={pending || earlyEndReason.trim().length < 5}
                 className={btnPrimary}
               >
-                {pending ? <Icon name="spinner" size="sm" spin /> : <Icon name="flag" size="sm" />} End turn
+                {pending ? <Icon name="spinner" size="sm" spin /> : <Icon name="flag" size="sm" />} {t("End turn")}
               </button>
               <button onClick={() => setShowEarlyEnd(false)} className={btnGhost}>
-                Cancel
+                {t("Cancel")}
               </button>
             </div>
           </div>

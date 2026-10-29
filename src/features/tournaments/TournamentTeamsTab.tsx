@@ -1,6 +1,9 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { api } from '@/lib/api.ts';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { EnrollmentDoc, SchoolDoc, TeamDoc, TournamentDoc } from '@/shared/types.ts';
 
 interface TournamentTeamsTabProps {
@@ -14,6 +17,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
   onTournamentUpdated,
   canWrite,
 }) => {
+  const { t } = useI18n();
   const [enrollments, setEnrollments] = useState<EnrollmentDoc[]>([]);
   const [allTeams, setAllTeams] = useState<TeamDoc[]>([]);
   const [schools, setSchools] = useState<SchoolDoc[]>([]);
@@ -123,7 +127,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
       setError(null);
       await api.tournaments.enrollTeams(tournament.id, selectedToEnroll);
       setSelectedToEnroll([]);
-      setSuccessMsg(`Enrolled ${selectedToEnroll.length} team(s) successfully.`);
+      setSuccessMsg(t("Enrolled {count} team(s) successfully.", { count: selectedToEnroll.length }));
       await loadData();
       onTournamentUpdated();
     } catch (err: any) {
@@ -139,7 +143,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
     try {
       setError(null);
       await api.tournaments.withdrawTeam(tournament.id, teamId);
-      setSuccessMsg(`Withdrew team "${teamName || teamId}" from tournament.`);
+      setSuccessMsg(t('Withdrew team "{name}" from tournament.', { name: teamName || teamId }));
       await loadData();
       onTournamentUpdated();
     } catch (err: any) {
@@ -151,7 +155,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
   const handleLockEnrollment = async () => {
     if (!canWrite) return;
     if (N < 4) {
-      setError(`Minimum 4 teams required to lock enrollment. Currently enrolled: ${N}.`);
+      setError(t("Minimum 4 teams required to lock enrollment. Currently enrolled: {count}.", { count: N }));
       return;
     }
 
@@ -159,7 +163,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
       setIsLocking(true);
       setError(null);
       await api.tournaments.lockEnrollment(tournament.id);
-      setSuccessMsg('Team enrollment locked successfully! Fixture generation is now ready.');
+      setSuccessMsg(t("Team enrollment locked successfully! Fixture generation is now ready."));
       await loadData();
       onTournamentUpdated();
     } catch (err: any) {
@@ -179,8 +183,8 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
       setShowUnlockModal(false);
       setSuccessMsg(
         res.warning
-          ? `Enrollment unlocked. Notice: ${res.warning}`
-          : 'Enrollment unlocked.'
+          ? t("Enrollment unlocked. Notice: {warning}", { warning: res.warning })
+          : t("Enrollment unlocked.")
       );
       await loadData();
       onTournamentUpdated();
@@ -215,7 +219,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
 
       setShowAddTeamShortcut(false);
       setNewTeamName('');
-      setSuccessMsg(`Team "${team.name}" created and enrolled in ${tournament.name}!`);
+      setSuccessMsg(t('Team "{name}" created and enrolled in {tournament}!', { name: team.name, tournament: tournament.name }));
       await loadData();
       onTournamentUpdated();
     } catch (err: any) {
@@ -230,13 +234,13 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
       {/* Alert Notices */}
       {error && (
         <div className="p-4 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200">
-          {error}
+          {t(error)}
         </div>
       )}
       {successMsg && (
         <div className="p-4 bg-emerald-50 text-emerald-800 text-xs rounded-lg border border-emerald-200 flex items-center justify-between">
-          <span>{successMsg}</span>
-          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4" aria-label="Dismiss message"><Icon name="xmark" size="sm" /></button>
+          <span>{t(successMsg)}</span>
+          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4" aria-label={t("Dismiss message")}><Icon name="xmark" size="sm" /></button>
         </div>
       )}
 
@@ -246,7 +250,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold text-slate-900">
-                Enrollment Status & Bracket Geometry
+                {t("Enrollment Status & Bracket Geometry")}
               </h3>
               <span
                 className={`text-[10px] font-bold px-2 py-0.5 rounded ${
@@ -255,11 +259,11 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                     : 'bg-amber-100 text-amber-900 border border-amber-300'
                 }`}
               >
-                {tournament.isEnrollmentLocked ? '🔒 Enrollment Locked' : '🔓 Enrollment Open'}
+                {tournament.isEnrollmentLocked ? t("🔒 Enrollment Locked") : t("🔓 Enrollment Open")}
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Category: <span className="font-semibold text-slate-700">{tournament.ageGroup} ({tournament.gender})</span> · Minimum 4 teams required to lock and generate fixtures.
+              {t("Category:")} <span className="font-semibold text-slate-700">{tournament.ageGroup} ({tournament.gender})</span> · {t("Minimum 4 teams required to lock and generate fixtures.")}
             </p>
           </div>
 
@@ -270,9 +274,9 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                   onClick={handleLockEnrollment}
                   disabled={isLocking || N < 4}
                   className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm disabled:opacity-50 transition-colors whitespace-nowrap"
-                  title={N < 4 ? 'At least 4 teams required to lock' : 'Lock enrollment to enable fixture generation'}
+                  title={N < 4 ? t("At least 4 teams required to lock") : t("Lock enrollment to enable fixture generation")}
                 >
-                  {isLocking ? 'Locking...' : '🔒 Lock Enrollment'}
+                  {isLocking ? t("Locking...") : t("🔒 Lock Enrollment")}
                 </button>
               ) : (
                 <button
@@ -286,7 +290,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                   disabled={isLocking}
                   className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg shadow-sm transition-colors whitespace-nowrap"
                 >
-                  {isLocking ? 'Unlocking...' : '🔓 Unlock Enrollment'}
+                  {isLocking ? t("Unlocking...") : t("🔓 Unlock Enrollment")}
                 </button>
               )}
             </div>
@@ -296,45 +300,45 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
         {/* Counters */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           <div className="p-3 bg-slate-50 rounded-lg">
-            <span className="text-[11px] text-slate-500 block">Enrolled Teams</span>
+            <span className="text-[11px] text-slate-500 block">{t("Enrolled Teams")}</span>
             <div className={`text-xl font-bold font-mono tabular-nums ${N < 4 ? 'text-amber-600' : 'text-slate-900'}`}>
               {N}
             </div>
             <span className="text-[10px] text-slate-400">
-              {N < 4 ? `Need ${4 - N} more (min 4)` : 'Eligible for draw'}
+              {N < 4 ? t("Need {count} more (min 4)", { count: 4 - N }) : t("Eligible for draw")}
             </span>
           </div>
 
           <div className="p-3 bg-slate-50 rounded-lg">
-            <span className="text-[11px] text-slate-500 block">Bracket Size (P)</span>
+            <span className="text-[11px] text-slate-500 block">{t("Bracket Size (P)")}</span>
             <div className="text-xl font-bold font-mono text-indigo-600 tabular-nums">
               {P}
             </div>
-            <span className="text-[10px] text-slate-400">Next Power-of-2</span>
+            <span className="text-[10px] text-slate-400">{t("Next Power-of-2")}</span>
           </div>
 
           <div className="p-3 bg-slate-50 rounded-lg">
-            <span className="text-[11px] text-slate-500 block">Round 1 Byes</span>
+            <span className="text-[11px] text-slate-500 block">{t("Round 1 Byes")}</span>
             <div className="text-xl font-bold font-mono text-emerald-600 tabular-nums">
               {byes}
             </div>
-            <span className="text-[10px] text-slate-400">P - N Byes</span>
+            <span className="text-[10px] text-slate-400">{t("P - N Byes")}</span>
           </div>
 
           <div className="p-3 bg-slate-50 rounded-lg">
-            <span className="text-[11px] text-slate-500 block">Play-In Matches</span>
+            <span className="text-[11px] text-slate-500 block">{t("Play-In Matches")}</span>
             <div className="text-xl font-bold font-mono text-slate-900 tabular-nums">
               {playInMatches}
             </div>
-            <span className="text-[10px] text-slate-400">Round 1 Games</span>
+            <span className="text-[10px] text-slate-400">{t("Round 1 Games")}</span>
           </div>
 
           <div className="p-3 bg-slate-50 rounded-lg col-span-2 sm:col-span-1">
-            <span className="text-[11px] text-slate-500 block">Round 2 Teams</span>
+            <span className="text-[11px] text-slate-500 block">{t("Round 2 Teams")}</span>
             <div className="text-xl font-bold font-mono text-slate-900 tabular-nums">
               {r2Teams}
             </div>
-            <span className="text-[10px] text-slate-400">Exact P/2 Teams</span>
+            <span className="text-[10px] text-slate-400">{t("Exact P/2 Teams")}</span>
           </div>
         </div>
       </div>
@@ -346,23 +350,23 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-sm font-bold text-slate-900">
-                  Enrolled Teams ({activeEnrollments.length})
+                  {t("Enrolled Teams ({count})", { count: activeEnrollments.length })}
                 </h3>
                 <span className="text-xs text-slate-500">
-                  Teams participating in this draw
+                  {t("Teams participating in this draw")}
                 </span>
               </div>
 
               {tournament.isEnrollmentLocked && (
                 <span className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-medium">
-                  Roster Locked
+                  {t("Roster Locked")}
                 </span>
               )}
             </div>
 
             {activeEnrollments.length === 0 ? (
               <div className="py-12 text-center text-xs text-slate-400">
-                No teams enrolled yet. Select available teams in the list alongside, or use &quot;+ Add Team&quot; shortcut.
+                {t('No teams enrolled yet. Select available teams in the list alongside, or use "+ Add Team" shortcut.')}
               </div>
             ) : (
               <div className="divide-y divide-slate-100 max-h-[380px] overflow-y-auto pr-1">
@@ -379,7 +383,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                         </span>
                       </div>
                       <div className="text-[11px] text-slate-500">
-                        {enr.team?.schoolName} · <span className="font-medium text-slate-700">{enr.team?.medium} Medium</span>
+                        {enr.team?.schoolName} · <span className="font-medium text-slate-700">{enr.team?.medium} {t("Medium")}</span>
                       </div>
                     </div>
 
@@ -387,9 +391,9 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                       <button
                         onClick={() => handleWithdrawTeam(enr.teamId, enr.team?.name)}
                         className="text-red-600 hover:text-red-800 text-[11px] font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors"
-                        title="Withdraw team from tournament"
+                        title={t("Withdraw team from tournament")}
                       >
-                        Remove
+                        {t("Remove")}
                       </button>
                     )}
                   </div>
@@ -405,10 +409,10 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-sm font-bold text-slate-900">
-                  Available Registered Teams ({availableTeams.length})
+                  {t("Available Registered Teams ({count})", { count: availableTeams.length })}
                 </h3>
                 <span className="text-xs text-slate-500">
-                  Auto-filtered to {tournament.ageGroup} ({tournament.gender})
+                  {t("Auto-filtered to {ageGroup} ({gender})", { ageGroup: tournament.ageGroup, gender: tournament.gender })}
                 </span>
               </div>
 
@@ -417,14 +421,14 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                   onClick={() => setShowAddTeamShortcut(true)}
                   className="px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold rounded-md transition-colors"
                 >
-                  <Icon name="bolt" size="sm" className="mr-1" />One-Click Add Team
+                  <Icon name="bolt" size="sm" className="mr-1" />{t("One-Click Add Team")}
                 </button>
               )}
             </div>
 
             {tournament.isEnrollmentLocked ? (
               <div className="py-12 text-center text-xs text-slate-500 bg-slate-50 rounded-lg p-6">
-                🔒 Team enrollment is currently locked. To add or remove teams, click <strong>Unlock Enrollment</strong> above.
+                {t("🔒 Team enrollment is currently locked. To add or remove teams, click")} <strong>{t("Unlock Enrollment")}</strong> {t("above.")}
               </div>
             ) : (
               <div className="space-y-3 pt-2">
@@ -432,7 +436,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                 <div className="flex items-center justify-between gap-2">
                   <input
                     type="text"
-                    placeholder="Search by team, school, or medium..."
+                    placeholder={t("Search by team, school, or medium...")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="flex-1 text-xs px-2.5 py-1.5 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -444,8 +448,8 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                       className="text-xs text-indigo-600 hover:text-indigo-800 font-medium whitespace-nowrap"
                     >
                       {selectedToEnroll.length === filteredAvailableTeams.length
-                        ? 'Deselect All'
-                        : 'Select All'}
+                        ? t("Deselect All")
+                        : t("Select All")}
                     </button>
                   )}
                 </div>
@@ -454,8 +458,8 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                 {filteredAvailableTeams.length === 0 ? (
                   <div className="py-8 text-center text-xs text-slate-400">
                     {availableTeams.length === 0
-                      ? `All registered ${tournament.ageGroup} (${tournament.gender}) teams are already enrolled!`
-                      : 'No available teams match your search.'}
+                      ? t("All registered {ageGroup} ({gender}) teams are already enrolled!", { ageGroup: tournament.ageGroup, gender: tournament.gender })
+                      : t("No available teams match your search.")}
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
@@ -474,7 +478,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                           <div>
                             <div className="font-semibold">{team.name}</div>
                             <div className="text-[11px] text-slate-500">
-                              {team.schoolName} · <span className="text-slate-700 font-medium">{team.medium} Medium</span>
+                              {team.schoolName} · <span className="text-slate-700 font-medium">{team.medium} {t("Medium")}</span>
                             </div>
                           </div>
                           <input
@@ -496,14 +500,14 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
           {!tournament.isEnrollmentLocked && availableTeams.length > 0 && (
             <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs text-slate-500">
-                {selectedToEnroll.length} team(s) selected
+                {t("{count} team(s) selected", { count: selectedToEnroll.length })}
               </span>
               <button
                 onClick={handleEnrollSelected}
                 disabled={isEnrolling || selectedToEnroll.length === 0}
                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-md shadow-sm disabled:opacity-50 transition-colors"
               >
-                {isEnrolling ? 'Enrolling...' : `Enroll Selected (${selectedToEnroll.length})`}
+                {isEnrolling ? t("Enrolling...") : t("Enroll Selected ({count})", { count: selectedToEnroll.length })}
               </button>
             </div>
           )}
@@ -527,13 +531,13 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
-                  Quick Add & Enroll Team
+                  {t("Quick Add & Enroll Team")}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Creates squad and immediately enrolls into {tournament.name}
+                  {t("Creates squad and immediately enrolls into {tournament}", { tournament: tournament.name })}
                 </p>
               </div>
-              <button aria-label="Close"
+              <button aria-label={t("Close")}
   type="button"
                 onClick={() => setShowAddTeamShortcut(false)}
                 className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
@@ -544,7 +548,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Parent School
+                {t("Parent School")}
               </label>
               <select
                 value={newTeamSchoolId}
@@ -567,7 +571,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Medium (Available for {selectedSchoolForShortcut?.name || 'this school'})
+                {t("Medium (Available for {school})", { school: selectedSchoolForShortcut?.name || t("this school") })}
               </label>
               <select
                 value={newTeamMedium}
@@ -576,7 +580,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
               >
                 {selectedSchoolForShortcut?.mediums.map((m) => (
                   <option key={m} value={m}>
-                    {m} Medium
+                    {m} {t("Medium")}
                   </option>
                 )) || <option value="Marathi">Marathi</option>}
               </select>
@@ -584,20 +588,20 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Team Name
+                {t("Team Name")}
               </label>
               <input
                 type="text"
                 required
                 value={newTeamName}
                 onChange={(e) => setNewTeamName(e.target.value)}
-                placeholder="e.g. NHPS Boys English"
+                placeholder={t("e.g. NHPS Boys English")}
                 className="w-full text-xs border border-slate-200 rounded-md p-2"
               />
             </div>
 
             <div className="p-2.5 bg-slate-50 rounded text-xs text-slate-600 flex items-center justify-between">
-              <span>Category (Locked to tournament):</span>
+              <span>{t("Category (Locked to tournament):")}</span>
               <span className="font-semibold text-slate-900 font-mono">
                 {tournament.ageGroup} · {tournament.gender}
               </span>
@@ -609,13 +613,13 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                 onClick={() => setShowAddTeamShortcut(false)}
                 className="px-3 py-2.5 sm:py-1.5 min-h-[40px] sm:min-h-0 text-xs text-slate-600 hover:text-slate-800 rounded-md"
               >
-                Cancel
+                {t("Cancel")}
               </button>
               <button
                 type="submit"
                 className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-md shadow-sm"
               >
-                Create & Auto-Enroll
+                {t("Create & Auto-Enroll")}
               </button>
             </div>
           </form>
@@ -629,16 +633,16 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
             <div className="flex items-center gap-2 text-amber-700 pb-2 border-b border-slate-100">
               <Icon name="triangleExclamation" size="lg" className="text-red-text" />
               <h3 className="text-base font-bold text-slate-900">
-                Unlock Enrollment Warning
+                {t("Unlock Enrollment Warning")}
               </h3>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Fixtures have already been generated for <strong>{tournament.name}</strong>. If you unlock enrollment and add or remove teams, the current fixtures must be regenerated to preserve bracket integrity and quarter seeding.
+              {t("Fixtures have already been generated for")} <strong>{tournament.name}</strong>{t(". If you unlock enrollment and add or remove teams, the current fixtures must be regenerated to preserve bracket integrity and quarter seeding.")}
             </p>
 
             <p className="text-xs font-semibold text-slate-700">
-              Do you wish to proceed with unlocking team enrollment?
+              {t("Do you wish to proceed with unlocking team enrollment?")}
             </p>
 
             <div className="flex flex-col-reverse items-stretch sm:flex-row sm:items-center sm:justify-end gap-2 pt-3 border-t border-slate-100">
@@ -647,14 +651,14 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
                 onClick={() => setShowUnlockModal(false)}
                 className="px-3 py-2.5 sm:py-1.5 min-h-[40px] sm:min-h-0 text-xs text-slate-600 hover:text-slate-800 rounded-md"
               >
-                Cancel
+                {t("Cancel")}
               </button>
               <button
   type="button"
                 onClick={handleConfirmUnlock}
                 className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-md shadow-sm"
               >
-                Confirm & Unlock
+                {t("Confirm & Unlock")}
               </button>
             </div>
           </div>

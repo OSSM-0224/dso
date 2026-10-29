@@ -1,9 +1,12 @@
+'use client';
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { BracketView } from '../../components/bracket/BracketView.tsx';
 import { api } from '@/lib/api.ts';
 import { MatchDoc, TeamDoc, TournamentDoc } from '@/shared/types.ts';
 import { PublicMatchLiveScore } from '@/features/scoring/LiveScorePanel.tsx';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 
 interface PublicTournamentData {
   tournament: TournamentDoc;

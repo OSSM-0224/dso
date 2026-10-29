@@ -9,6 +9,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { MatchScoreViewDto, SanitizedScoreEvent } from '@/shared/types.ts';
 import { KhoKhoMatchPhase, KhoKhoScoreEvent, PAUSE_REMINDER_MS } from '@/shared/scoring/types.ts';
 
@@ -32,41 +33,44 @@ const PHASE_LABEL: Record<KhoKhoMatchPhase, string> = {
 };
 
 /** Human one-liner for the events ticker (attribution-free). */
-const describeEvent = (ev: SanitizedScoreEvent): string => {
+const describeEvent = (
+  ev: SanitizedScoreEvent,
+  t: (phrase: string, vars?: Record<string, string | number>) => string,
+): string => {
   const e = ev as unknown as KhoKhoScoreEvent;
   switch (e.type) {
     case 'TOSS':
-      return 'Toss registered';
+      return t('Toss registered');
     case 'TURN_START':
-      return e.turn ? `Turn ${e.turn} under way` : 'New turn under way';
+      return e.turn ? t('Turn {turn} under way', { turn: e.turn }) : t('New turn under way');
     case 'TURN_PAUSE':
-      return 'Clock stopped';
+      return t('Clock stopped');
     case 'TURN_RESUME':
-      return 'Clock resumed';
+      return t('Clock resumed');
     case 'TURN_END':
       return e.reason === 'all_out'
-        ? 'Turn ended — line all out'
+        ? t('Turn ended — line all out')
         : e.reason === 'manual'
-          ? 'Turn ended early'
-          : 'Turn timer expired';
+          ? t('Turn ended early')
+          : t('Turn timer expired');
     case 'DISMISSAL':
       return e.dismissalType === 'TAG'
-        ? 'Defender tagged out (+1)'
+        ? t('Defender tagged out (+1)')
         : e.dismissalType === 'OUT_OF_BOUNDS'
-          ? 'Out of bounds (+1)'
-          : 'Late entry (+1)';
+          ? t('Out of bounds (+1)')
+          : t('Late entry (+1)');
     case 'FOUL_LOG':
-      return e.note ? `Foul logged: ${e.note}` : 'Foul logged';
+      return e.note ? t('Foul logged: {note}', { note: e.note }) : t('Foul logged');
     case 'FOLLOW_ON_DECISION':
-      return e.opted ? 'Follow-on enforced' : 'Follow-on declined';
+      return e.opted ? t('Follow-on enforced') : t('Follow-on declined');
     case 'MIN_TIME_RESULT':
-      return 'Sudden-death attempt recorded';
+      return t('Sudden-death attempt recorded');
     case 'MANUAL_DECISION':
-      return 'Manual decision recorded';
+      return t('Manual decision recorded');
     case 'VOID':
-      return 'Earlier event withdrawn';
+      return t('Earlier event withdrawn');
     default:
-      return 'Match event';
+      return t('Match event');
   }
 };
 
@@ -88,6 +92,7 @@ export const LiveScoreCard: React.FC<LiveScoreCardProps> = ({
   stale = false,
   className = "",
 }) => {
+  const { t } = useI18n();
   const [nowTick, setNowTick] = useState<number>(() => Date.now());
 
   useEffect(() => {
@@ -129,15 +134,15 @@ export const LiveScoreCard: React.FC<LiveScoreCardProps> = ({
           )}
           {stale && (
             <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700">
-              <Icon name="circleInfo" size="sm" /> reconnecting…
+              <Icon name="circleInfo" size="sm" /> {t("reconnecting…")}
             </span>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <span className="text-[10px] font-semibold text-slate-400">{PHASE_LABEL[sb.phase]}</span>
+          <span className="text-[10px] font-semibold text-slate-400">{t(PHASE_LABEL[sb.phase])}</span>
           {completed ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-800">
-              <Icon name="flag" size="sm" /> Final
+              <Icon name="flag" size="sm" /> {t("Final")}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-700">
@@ -145,7 +150,7 @@ export const LiveScoreCard: React.FC<LiveScoreCardProps> = ({
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
               </span>
-              Live
+              {t("Live")}
             </span>
           )}
         </div>
@@ -164,12 +169,12 @@ export const LiveScoreCard: React.FC<LiveScoreCardProps> = ({
               </p>
               {winner && (
                 <p className="mt-0.5 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
-                  <Icon name="trophy" size="sm" /> Winner
+                  <Icon name="trophy" size="sm" /> {t("Winner")}
                 </p>
               )}
               {!winner && leader && (
                 <p className="mt-0.5 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-indigo-600">
-                  <Icon name="bolt" size="sm" /> Leading
+                  <Icon name="bolt" size="sm" /> {t("Leading")}
                 </p>
               )}
               <p className={`mt-1 font-mono text-3xl font-black tabular-nums ${winner ? 'text-emerald-800' : 'text-slate-900'}`}>
@@ -190,17 +195,22 @@ export const LiveScoreCard: React.FC<LiveScoreCardProps> = ({
                   {sb.currentTurn.turnLabel}
                 </p>
                 <p className="truncate text-[11px] text-slate-500">
-                  Chasing: {sb.currentTurn.chaserTeamName}
+                  {t("Chasing: {team}", { team: sb.currentTurn.chaserTeamName })}
                   {sb.currentTurn.batchDisplay ? ` · ${sb.currentTurn.batchDisplay}` : ''}
                 </p>
               </div>
               <div className="sm:col-span-1">
                 <p className="font-mono text-xs font-semibold text-slate-700">
-                  {sb.currentTurn.points > 0 ? `${sb.currentTurn.points} pt${sb.currentTurn.points === 1 ? '' : 's'}` : 'No points yet'}
+                  {sb.currentTurn.points > 0
+                    ? sb.currentTurn.points === 1
+                      ? t("{count} pt", { count: sb.currentTurn.points })
+                      : t("{count} pts", { count: sb.currentTurn.points })
+                    : t("No points yet")}
                 </p>
                 <p className="text-[11px] text-slate-400">
-                  {sb.currentTurn.dismissals} out · {sb.currentTurn.fouls} foul
-                  {sb.currentTurn.fouls === 1 ? '' : 's'}
+                  {sb.currentTurn.fouls === 1
+                    ? t("{dismissals} out · {fouls} foul", { dismissals: sb.currentTurn.dismissals, fouls: sb.currentTurn.fouls })
+                    : t("{dismissals} out · {fouls} fouls", { dismissals: sb.currentTurn.dismissals, fouls: sb.currentTurn.fouls })}
                 </p>
               </div>
               <div className="sm:col-span-2 flex items-center justify-start sm:justify-end gap-2">
@@ -211,7 +221,7 @@ export const LiveScoreCard: React.FC<LiveScoreCardProps> = ({
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500">
-                    <Icon name="pause" size="sm" /> {sb.currentTurn.status === 'paused' ? 'Clock stopped' : 'Awaiting kickoff'}
+                    <Icon name="pause" size="sm" /> {sb.currentTurn.status === 'paused' ? t("Clock stopped") : t("Awaiting kickoff")}
                   </span>
                 )}
               </div>
@@ -219,18 +229,18 @@ export const LiveScoreCard: React.FC<LiveScoreCardProps> = ({
           ) : (
             <p className="text-[11px] font-semibold text-slate-500">
               {na.action === 'prompt_toss'
-                ? 'Toss is about to take place — scoring starts shortly.'
+                ? t("Toss is about to take place — scoring starts shortly.")
                 : na.action === 'prompt_extra_toss'
-                  ? `Extra innings round ${na.round} — toss under way.`
+                  ? t("Extra innings round {round} — toss under way.", { round: na.round })
                   : na.action === 'record_min_time'
-                    ? 'Sudden death — teams are being timed.'
+                    ? t("Sudden death — teams are being timed.")
                     : na.action === 'prompt_manual_decision'
-                      ? 'Referee is deciding the winner.'
+                      ? t("Referee is deciding the winner.")
                       : na.action === 'prompt_follow_on'
-                        ? `${na.leaderTeamName} leads by ${na.leadPoints} — follow-on decision pending.`
+                        ? t("{team} leads by {points} — follow-on decision pending.", { team: na.leaderTeamName, points: na.leadPoints })
                         : na.action === 'start_turn'
-                          ? `${na.turnLabel} — ${na.chaserTeamName} to chase.`
-                          : 'Match is being set up.'}
+                          ? t("{turn} — {team} to chase.", { turn: na.turnLabel, team: na.chaserTeamName })
+                          : t("Match is being set up.")}
             </p>
           )}
         </div>
@@ -240,9 +250,9 @@ export const LiveScoreCard: React.FC<LiveScoreCardProps> = ({
       {pausedFor > 0 && (
         <div className="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-4 py-2 text-[11px] font-semibold text-amber-800">
           <Icon name="pause" size="sm" />
-          CLOCK STOPPED — waiting for the scorer to resume
+          {t("CLOCK STOPPED — waiting for the scorer to resume")}
           {pausedFor >= PAUSE_REMINDER_MS && (
-            <span className="text-amber-600">({Math.floor(pausedFor / 60000)} min)</span>
+            <span className="text-amber-600">{t("({min} min)", { min: Math.floor(pausedFor / 60000) })}</span>
           )}
         </div>
       )}
@@ -252,8 +262,8 @@ export const LiveScoreCard: React.FC<LiveScoreCardProps> = ({
         <div className="flex items-center gap-2 border-t border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-900">
           <Icon name="trophy" size="sm" />
           {sb.winner.resolved
-            ? `${sb.winner.winnerTeamId ? sb.teams.find((t) => t.id === sb.winner.winnerTeamId)?.name ?? 'Winner' : 'Winner'} · ${sb.winner.label}`
-            : sb.winner.label || 'Result decided'}
+            ? `${sb.winner.winnerTeamId ? sb.teams.find((t) => t.id === sb.winner.winnerTeamId)?.name ?? t("Winner") : t("Winner")} · ${sb.winner.label}`
+            : sb.winner.label || t("Result decided")}
         </div>
       )}
 
@@ -266,7 +276,7 @@ export const LiveScoreCard: React.FC<LiveScoreCardProps> = ({
             .map((ev) => (
               <li key={ev.eventId} className="flex items-center gap-2 text-[11px] text-slate-500">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
-                <span className="truncate font-medium text-slate-600">{describeEvent(ev)}</span>
+                <span className="truncate font-medium text-slate-600">{describeEvent(ev, t)}</span>
               </li>
             ))}
         </ul>

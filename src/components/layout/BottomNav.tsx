@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext.tsx';
 import { Icon } from '@/components/ui/Icon.tsx';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 
 /**
  * Fixed bottom navigation for small screens (top bar is a slimmer chrome
@@ -10,6 +11,7 @@ import { Icon } from '@/components/ui/Icon.tsx';
  */
 export const BottomNav: React.FC = () => {
   const { role, canScore, signOut } = useAuth();
+  const { t } = useI18n();
   const pathname = usePathname() || '/';
   const isParticipant = role === 'participant';
 
@@ -28,7 +30,7 @@ export const BottomNav: React.FC = () => {
 
   return (
     <nav
-      aria-label="Mobile"
+      aria-label={t("Mobile")}
       className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-surface/95 backdrop-blur-sm lg:hidden"
     >
       <div className="mx-auto flex max-w-6xl gap-1 px-2 py-1 pb-[calc(4px+env(safe-area-inset-bottom))]">
@@ -36,51 +38,51 @@ export const BottomNav: React.FC = () => {
           <>
             <Link href="/school/dashboard" className={item(isOnPortal)}>
               <Icon name="calendar" size="md" />
-              Matches
+              {t("Matches")}
             </Link>
             <Link
               href="/#tournaments"
               className={item(pathname === '/')}
             >
               <Icon name="trophy" size="md" />
-              Brackets
+              {t("Brackets")}
             </Link>
             <Link href="/past-champions" className={item(isOnHistory)}>
               <Icon name="history" size="md" />
-              History
+              {t("History")}
             </Link>
             <button onClick={() => signOut()} className={item(false)}>
               <Icon name="rightFromBracket" size="md" />
-              Sign out
+              {t("Sign out")}
             </button>
           </>
         ) : (
           <>
             <Link href="/dashboard" className={item(isOnTournaments)}>
               <Icon name="trophy" size="md" />
-              Tournaments
+              {t("Tournaments")}
             </Link>
             <Link href="/teams" className={item(isOnTeams)}>
               <Icon name="users" size="md" />
-              Teams
+              {t("Teams")}
             </Link>
             {canScore && (
               <Link href="/score" className={item(isOnScoring)}>
                 <Icon name="bolt" size="md" />
-                Score
+                {t("Score")}
               </Link>
             )}
             <Link href="/school-accounts" className={item(isOnSchoolAccounts)}>
               <Icon name="clipboardList" size="md" />
-              Accounts
+              {t("Accounts")}
             </Link>
             <Link href="/past-champions" className={item(isOnHistory)}>
               <Icon name="history" size="md" />
-              History
+              {t("History")}
             </Link>
             <Link href="/school/login" className={item(isOnPortal)}>
               <Icon name="rightToBracket" size="md" />
-              School login
+              {t("School login")}
             </Link>
           </>
         )}

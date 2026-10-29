@@ -74,6 +74,7 @@ export const ICON_MAP = {
   pause: 'fa-solid fa-pause',
   stopwatch: 'fa-solid fa-stopwatch',
   gavel: 'fa-solid fa-gavel',
+  language: 'fa-solid fa-language',
 } as const;
 
 export type IconName = keyof typeof ICON_MAP;

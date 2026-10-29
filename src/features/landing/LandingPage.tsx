@@ -1,7 +1,10 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 
 import { Icon } from "@/components/ui/Icon.tsx";
+import { useI18n } from "@/i18n/LanguageProvider.tsx";
 import { Badge } from "@/components/ui/Card.tsx";
 import { BracketDiagram } from "./BracketDiagram.tsx";
 import { LandingNav } from "./LandingNav.tsx";
@@ -91,11 +94,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   champions,
   counts,
 }) => {
+  const { t } = useI18n();
   const hasPublicDraws = tournaments.length > 0;
   const boardMeta = [
-    `${tournaments.length} public ${tournaments.length === 1 ? "draw" : "draws"}`,
-    counts.teams > 0 ? `${counts.teams} teams` : null,
-    counts.schools > 0 ? `${counts.schools} schools` : null,
+    t("{count} public draws", { count: tournaments.length }),
+    counts.teams > 0
+      ? t("{count} teams", { count: counts.teams })
+      : null,
+    counts.schools > 0
+      ? t("{count} schools", { count: counts.schools })
+      : null,
   ].filter(Boolean) as string[];
 
   return (
@@ -104,7 +112,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-[6px] focus:bg-ink focus:px-3 focus:py-2 focus:text-xs focus:text-white"
       >
-        Skip to content
+        {t("Skip to content")}
       </a>
 
       <LandingNav />
@@ -114,29 +122,30 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 items-center gap-8 px-3 py-10 sm:gap-12 sm:px-4 lg:grid-cols-2 lg:gap-14 lg:px-8">
             <div className="max-w-xl w-full min-w-0">
               <p className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-accent">
-                District Sports Office • Navi Mumbai
+                {t("District Sports Office • Navi Mumbai")}
               </p>
               <h1 className="mt-5 font-serif text-[1.9rem] font-semibold leading-[1.02] tracking-[-0.03em] text-ink xs:text-[2.2rem] sm:text-5xl lg:text-[3.5rem]">
-                A <span className="text-accent">fair draw</span>,
-                <br className="hidden sm:block" /> kept on the record.
+                {t("A")} <span className="text-accent">{t("fair draw")}</span>,
+                <br className="hidden sm:block" /> {t("kept on the record.")}
               </h1>
               <p className="mt-6 max-w-full text-[15px] leading-relaxed text-muted sm:max-w-[46ch] sm:text-base">
-                Balanced single-elimination fixtures, public brackets, and live
-                scoring for Navi Mumbai’s school tournaments.
+                {t(
+                  "Balanced single-elimination fixtures, public brackets, and live scoring for Navi Mumbai’s school tournaments."
+                )}
               </p>
               <div className="mt-8 flex flex-col gap-2.5 w-full max-w-full sm:flex-row sm:w-auto sm:max-w-none">
                 <Link
                   href="/dashboard"
                   className="inline-flex min-h-[44px] w-full max-w-full items-center justify-center gap-2 rounded-[6px] bg-accent px-3 py-2.5 text-sm font-semibold text-white shadow-rest transition-all duration-200 hover:bg-accent-strong active:scale-[0.98] sm:w-auto sm:px-5 whitespace-nowrap"
                 >
-                  Organizer console
+                  {t("Organizer console")}
                   <Icon name="arrowRight" size="sm" />
                 </Link>
                 <Link
                   href="/school/login"
                   className="inline-flex min-h-[44px] w-full max-w-full items-center justify-center gap-2 rounded-[6px] border border-hairline bg-surface px-3 py-2.5 text-sm font-semibold text-ink shadow-rest transition-all duration-200 hover:border-faint hover:bg-canvas active:scale-[0.98] sm:w-auto sm:px-5 whitespace-nowrap"
                 >
-                  School sign in
+                  {t("School sign in")}
                 </Link>
               </div>
             </div>
@@ -154,10 +163,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   className="border-hairline px-4 py-4 [&:not(:first-child)]:border-t xs:[&:nth-child(even)]:border-l xs:[&:nth-child(odd)]:border-l-0 xs:[&:nth-child(n+3)]:border-t sm:[&:not(:first-child)]:border-l sm:[&:nth-child(n+3)]:border-t-0"
                 >
                   <dt className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
-                    {fact.label}
+                    {t(fact.label)}
                   </dt>
                   <dd className="mt-1.5 text-[13px] font-medium leading-snug text-ink">
-                    {fact.value}
+                    {t(fact.value)}
                   </dd>
                 </div>
               ))}
@@ -172,11 +181,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="mx-auto max-w-6xl px-3 sm:px-6 lg:px-8">
             <div className="max-w-2xl">
               <h2 className="font-serif text-3xl font-semibold leading-[1.08] tracking-[-0.02em] text-ink sm:text-[2.35rem]">
-                The draw, without the notebook.
+                {t("The draw, without the notebook.")}
               </h2>
               <p className="mt-4 max-w-[58ch] text-[15px] leading-relaxed text-muted">
-                Built for district organisers who need a bracket that is
-                balanced, explainable, and published before the first whistle.
+                {t(
+                  "Built for district organisers who need a bracket that is balanced, explainable, and published before the first whistle."
+                )}
               </p>
             </div>
 
@@ -185,11 +195,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <h3 className="font-serif text-xl font-semibold tracking-[-0.01em] text-ink sm:text-2xl">
-                      A bracket that holds up.
+                      {t("A bracket that holds up.")}
                     </h3>
                     <p className="mt-3 max-w-[48ch] text-sm leading-relaxed text-muted">
-                      Every draw balances play-in rounds, separates recent
-                      champions, and keeps teams from the same school apart.
+                      {t(
+                        "Every draw balances play-in rounds, separates recent champions, and keeps teams from the same school apart."
+                      )}
                     </p>
                   </div>
                   <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border border-hairline bg-canvas text-accent sm:flex">
@@ -209,7 +220,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       className="flex items-center gap-2.5 rounded-[7px] border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] font-medium text-ink"
                     >
                       <Icon name="check" size="sm" className="text-accent" />
-                      {rule}
+                      {t(rule)}
                     </li>
                   ))}
                 </ul>
@@ -221,11 +232,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       size="xs"
                       className="text-accent"
                     />
-                    Rule set recorded with every draw
+                    {t("Rule set recorded with every draw")}
                   </span>
                   <span className="inline-flex items-center gap-1.5">
                     <Icon name="history" size="xs" className="text-accent" />
-                    Results stay auditable
+                    {t("Results stay auditable")}
                   </span>
                 </div>
               </article>
@@ -235,17 +246,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <Icon name="external" size="sm" />
                 </span>
                 <h3 className="mt-5 font-serif text-xl font-semibold tracking-[-0.01em] text-ink">
-                  Published, not printed.
+                  {t("Published, not printed.")}
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink/75">
-                  Share one server-rendered bracket link. It updates as results
-                  come in, on any phone.
+                  {t(
+                    "Share one server-rendered bracket link. It updates as results come in, on any phone."
+                  )}
                 </p>
                 <a
                   href="#tournaments"
                   className="mt-5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink transition-colors hover:text-accent"
                 >
-                  See the public board
+                  {t("See the public board")}
                   <Icon name="arrowRight" size="xs" />
                 </a>
               </article>
@@ -255,17 +267,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <Icon name="bolt" size="sm" />
                 </span>
                 <h3 className="mt-5 font-serif text-xl font-semibold tracking-[-0.01em] text-accent-strong">
-                  Field-ready scoring.
+                  {t("Field-ready scoring.")}
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-accent-strong/85">
-                  Scorers record live events from the court. Every point is
-                  validated by the same engine.
+                  {t(
+                    "Scorers record live events from the court. Every point is validated by the same engine."
+                  )}
                 </p>
                 <Link
                   href="/score"
                   className="mt-5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent-strong transition-colors hover:text-ink"
                 >
-                  Open live scoring
+                  {t("Open live scoring")}
                   <Icon name="arrowRight" size="xs" />
                 </Link>
               </article>
@@ -280,11 +293,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="mx-auto max-w-6xl px-3 sm:px-6 lg:px-8">
             <div className="max-w-2xl">
               <h2 className="font-serif text-3xl font-semibold leading-[1.08] tracking-[-0.02em] text-ink sm:text-[2.35rem]">
-                One desk for every role.
+                {t("One desk for every role.")}
               </h2>
               <p className="mt-4 max-w-[58ch] text-[15px] leading-relaxed text-muted">
-                Everyone sees only what they need. Every change is attributed to
-                the person who made it.
+                {t(
+                  "Everyone sees only what they need. Every change is attributed to the person who made it."
+                )}
               </p>
             </div>
 
@@ -301,7 +315,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center justify-between gap-4">
                       <span className="text-sm font-semibold text-ink">
-                        {role.title}
+                        {t(role.title)}
                       </span>
                       <Icon
                         name="arrowRight"
@@ -310,7 +324,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       />
                     </span>
                     <span className="mt-1.5 block max-w-[42ch] text-sm leading-relaxed text-muted">
-                      {role.body}
+                      {t(role.body)}
                     </span>
                   </span>
                 </Link>
@@ -325,7 +339,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         >
           <div className="mx-auto max-w-6xl px-3 sm:px-6 lg:px-8">
             <h2 className="max-w-xl font-serif text-3xl font-semibold leading-[1.08] tracking-[-0.02em] text-ink sm:text-[2.35rem]">
-              From enrollment to final whistle.
+              {t("From enrollment to final whistle.")}
             </h2>
 
             <ol className="mt-10 grid gap-8 grid-cols-1 md:grid-cols-3 md:gap-6">
@@ -335,10 +349,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <h3 className="mt-4 text-sm font-semibold text-ink">
-                    {step.title}
+                    {t(step.title)}
                   </h3>
                   <p className="mt-2 max-w-[36ch] text-sm leading-relaxed text-muted">
-                    {step.body}
+                    {t(step.body)}
                   </p>
                 </li>
               ))}
@@ -354,11 +368,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div className="max-w-2xl">
                 <h2 className="font-serif text-3xl font-semibold leading-[1.08] tracking-[-0.02em] text-ink sm:text-[2.35rem]">
-                  On the public board.
+                  {t("On the public board.")}
                 </h2>
                 <p className="mt-4 max-w-[58ch] text-[15px] leading-relaxed text-muted">
-                  Published fixtures are server-rendered, shareable, and updated
-                  as matches finish.
+                  {t(
+                    "Published fixtures are server-rendered, shareable, and updated as matches finish."
+                  )}
                 </p>
               </div>
               {boardMeta.length > 0 && (
@@ -391,10 +406,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                         }
                       >
                         {tournament.status === "ongoing"
-                          ? "Live"
+                          ? t("Live")
                           : tournament.status === "completed"
-                            ? "Completed"
-                            : "Published"}
+                            ? t("Completed")
+                            : t("Published")}
                       </Badge>
                     </div>
                     <h3 className="mt-4 font-serif text-xl font-semibold leading-snug tracking-[-0.01em] text-ink">
@@ -402,10 +417,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </h3>
                     <div className="mt-6 flex items-center justify-between gap-3 border-t border-hairline pt-4 text-[11px] text-muted">
                       <span>
-                        {tournament.year} · {tournament.teamCount} teams
+                        {tournament.year} ·{" "}
+                        {t("{count} teams", { count: tournament.teamCount })}
                       </span>
                       <span className="inline-flex items-center gap-1.5 font-semibold text-ink transition-colors group-hover:text-accent">
-                        View bracket
+                        {t("View bracket")}
                         <Icon name="arrowRight" size="xs" />
                       </span>
                     </div>
@@ -419,18 +435,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-ink">
-                    The board is clear for now.
+                    {t("The board is clear for now.")}
                   </p>
                   <p className="mt-1 max-w-[52ch] text-sm leading-relaxed text-muted">
-                    Public draws appear here the moment an organizer publishes a
-                    bracket.
+                    {t(
+                      "Public draws appear here the moment an organizer publishes a bracket."
+                    )}
                   </p>
                 </div>
                 <Link
                   href="/dashboard"
                   className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-[6px] border border-hairline bg-canvas px-3.5 py-2 text-[13px] font-semibold text-ink transition-colors hover:bg-surface"
                 >
-                  Organizer console
+                  {t("Organizer console")}
                   <Icon name="arrowRight" size="xs" />
                 </Link>
               </div>
@@ -446,11 +463,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="mx-auto grid max-w-6xl gap-10 px-3 sm:px-6 grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16 lg:px-8">
               <div>
                 <h2 className="font-serif text-3xl font-semibold leading-[1.08] tracking-[-0.02em] text-ink sm:text-[2.35rem]">
-                  The record book.
+                  {t("The record book.")}
                 </h2>
                 <p className="mt-4 max-w-[42ch] text-[15px] leading-relaxed text-muted">
-                  Recent winners the draw engine uses to keep strong sides apart
-                  in the early rounds.
+                  {t(
+                    "Recent winners the draw engine uses to keep strong sides apart in the early rounds."
+                  )}
                 </p>
               </div>
 
@@ -487,11 +505,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="grid gap-8 grid-cols-1 md:grid-cols-[1fr_auto] md:items-end">
                 <div>
                   <h2 className="max-w-xl font-serif text-3xl font-semibold leading-[1.08] tracking-[-0.02em] text-accent-strong sm:text-[2.35rem]">
-                    The next draw starts here.
+                    {t("The next draw starts here.")}
                   </h2>
                   <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-accent-strong/85">
-                    Open the organizer console to enroll teams and publish the
-                    season’s first bracket.
+                    {t(
+                      "Open the organizer console to enroll teams and publish the season’s first bracket."
+                    )}
                   </p>
                 </div>
                 <div className="flex flex-col gap-2.5 w-full max-w-full sm:flex-row sm:w-auto sm:max-w-none">
@@ -499,14 +518,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     href="/dashboard"
                     className="inline-flex min-h-[44px] w-full max-w-full items-center justify-center gap-2 rounded-[6px] bg-accent px-3 py-2.5 text-sm font-semibold text-white shadow-rest transition-all duration-200 hover:bg-accent-strong active:scale-[0.98] sm:w-auto sm:px-5 whitespace-nowrap"
                   >
-                    Organizer console
+                    {t("Organizer console")}
                     <Icon name="arrowRight" size="sm" />
                   </Link>
                   <Link
                     href="/school/login"
                     className="inline-flex min-h-[44px] w-full max-w-full items-center justify-center gap-2 rounded-[6px] border border-accent/15 bg-surface px-3 py-2.5 text-sm font-semibold text-ink shadow-rest transition-all duration-200 hover:border-accent/30 active:scale-[0.98] sm:w-auto sm:px-5 whitespace-nowrap"
                   >
-                    School sign in
+                    {t("School sign in")}
                   </Link>
                 </div>
               </div>
@@ -527,14 +546,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </span>
             </div>
             <p className="mt-4 max-w-[42ch] text-sm leading-relaxed text-muted">
-              The official fixture and bracket desk for school sports in Navi
-              Mumbai.
+              {t(
+                "The official fixture and bracket desk for school sports in Navi Mumbai."
+              )}
             </p>
           </div>
 
           <div>
             <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
-              Explore
+              {t("Explore")}
             </p>
             <ul className="mt-3 space-y-2 text-sm">
               {[
@@ -548,7 +568,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     href={href}
                     className="text-muted transition-colors hover:text-ink"
                   >
-                    {label}
+                    {t(label)}
                   </a>
                 </li>
               ))}
@@ -557,7 +577,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           <div>
             <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
-              Access
+              {t("Access")}
             </p>
             <ul className="mt-3 space-y-2 text-sm">
               <li>
@@ -565,7 +585,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   href="/dashboard"
                   className="text-muted transition-colors hover:text-ink"
                 >
-                  Organizer console
+                  {t("Organizer console")}
                 </Link>
               </li>
               <li>
@@ -573,7 +593,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   href="/school/login"
                   className="text-muted transition-colors hover:text-ink"
                 >
-                  School sign in
+                  {t("School sign in")}
                 </Link>
               </li>
               <li>
@@ -581,7 +601,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   href="/score"
                   className="text-muted transition-colors hover:text-ink"
                 >
-                  Live scoring
+                  {t("Live scoring")}
                 </Link>
               </li>
             </ul>
@@ -589,8 +609,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
 
         <div className="border-t border-hairline px-3 py-5 text-center text-xs text-muted sm:px-4">
-          © {new Date().getFullYear()} District Sports Office, Navi Mumbai.
-          Built for the district’s schools.
+          {t(
+            "© {year} District Sports Office, Navi Mumbai. Built for the district’s schools.",
+            { year: new Date().getFullYear() }
+          )}
         </div>
       </footer>
     </div>

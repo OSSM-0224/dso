@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 
 const MatchCard: React.FC<{
   label: string;
@@ -24,25 +27,27 @@ const MatchCard: React.FC<{
   </div>
 );
 
-export const BracketDiagram: React.FC = () => (
+export const BracketDiagram: React.FC = () => {
+  const { t } = useI18n();
+  return (
   <div className="relative w-full min-w-0">
     <div
       role="img"
-      aria-label="Illustrative eight-team single-elimination bracket from quarter-finals to a champion."
+      aria-label={t("Illustrative eight-team single-elimination bracket from quarter-finals to a champion.")}
       className="w-full rounded-[14px] border border-hairline bg-surface p-4 shadow-raise sm:p-5"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
-            Draw structure
+            {t("Draw structure")}
           </p>
           <p className="mt-1 text-[13px] font-semibold text-ink">
-            Play-in single elimination
+            {t("Play-in single elimination")}
           </p>
         </div>
         <span className="inline-flex items-center gap-1 rounded-full border border-accent-soft bg-accent-soft px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-accent-strong">
           <Icon name="users" size="xs" />
-          8 teams
+          {t("{count} teams", { count: 8 })}
         </span>
       </div>
 
@@ -54,30 +59,54 @@ export const BracketDiagram: React.FC = () => (
                 key={round}
                 className="font-mono text-[8px] uppercase tracking-[0.13em] text-muted"
               >
-                {round}
+                {t(round)}
               </p>
             ))}
           </div>
 
           <div className="mt-2 grid grid-cols-[1.2fr_0.95fr_0.8fr_0.7fr] gap-2">
             <div className="grid grid-rows-4 gap-1.5">
-              <MatchCard label="QF 01" home="Seed 01" away="Seed 08" />
-              <MatchCard label="QF 02" home="Seed 04" away="Seed 05" />
-              <MatchCard label="QF 03" home="Seed 02" away="Seed 07" />
-              <MatchCard label="QF 04" home="Seed 03" away="Seed 06" />
+              <MatchCard
+                label="QF 01"
+                home={t("Seed {n}", { n: "01" })}
+                away={t("Seed {n}", { n: "08" })}
+              />
+              <MatchCard
+                label="QF 02"
+                home={t("Seed {n}", { n: "04" })}
+                away={t("Seed {n}", { n: "05" })}
+              />
+              <MatchCard
+                label="QF 03"
+                home={t("Seed {n}", { n: "02" })}
+                away={t("Seed {n}", { n: "07" })}
+              />
+              <MatchCard
+                label="QF 04"
+                home={t("Seed {n}", { n: "03" })}
+                away={t("Seed {n}", { n: "06" })}
+              />
             </div>
 
             <div className="grid grid-rows-2 gap-1.5 py-5">
-              <MatchCard label="SF 01" home="Winner QF 01" away="Winner QF 02" />
-              <MatchCard label="SF 02" home="Winner QF 03" away="Winner QF 04" />
+              <MatchCard
+                label="SF 01"
+                home={t("Winner {code}", { code: "QF 01" })}
+                away={t("Winner {code}", { code: "QF 02" })}
+              />
+              <MatchCard
+                label="SF 02"
+                home={t("Winner {code}", { code: "QF 03" })}
+                away={t("Winner {code}", { code: "QF 04" })}
+              />
             </div>
 
             <div className="flex items-center">
               <div className="w-full">
                 <MatchCard
-                  label="Final"
-                  home="Winner SF 01"
-                  away="Winner SF 02"
+                  label={t("Final")}
+                  home={t("Winner {code}", { code: "SF 01" })}
+                  away={t("Winner {code}", { code: "SF 02" })}
                 />
               </div>
             </div>
@@ -86,10 +115,10 @@ export const BracketDiagram: React.FC = () => (
               <div className="flex w-full flex-col items-center justify-center rounded-[9px] border border-accent/25 bg-accent-soft px-2.5 py-5 text-center">
                 <Icon name="trophy" size="lg" className="text-accent" />
                 <p className="mt-2 font-serif text-[15px] font-semibold leading-tight text-accent-strong">
-                  Champion
+                  {t("Champion")}
                 </p>
                 <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.12em] text-accent-strong/80">
-                  On the field
+                  {t("On the field")}
                 </p>
               </div>
             </div>
@@ -98,7 +127,7 @@ export const BracketDiagram: React.FC = () => (
       </div>
 
       <p className="mt-2 text-center font-mono text-[9px] uppercase tracking-[0.12em] text-muted sm:hidden">
-        Swipe to follow the draw
+        {t("Swipe to follow the draw")}
       </p>
 
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-hairline pt-3">
@@ -109,7 +138,7 @@ export const BracketDiagram: React.FC = () => (
               className="inline-flex items-center gap-1.5 text-[10px] text-muted"
             >
               <Icon name="check" size="xs" className="text-accent" />
-              {item}
+              {t(item)}
             </span>
           )
         )}
@@ -122,12 +151,13 @@ export const BracketDiagram: React.FC = () => (
       </span>
       <span>
         <span className="block text-[10px] font-semibold text-ink">
-          Fair draw verified
+          {t("Fair draw verified")}
         </span>
         <span className="block font-mono text-[8px] uppercase tracking-[0.1em] text-muted">
-          Rules applied
+          {t("Rules applied")}
         </span>
       </span>
     </div>
   </div>
-);
+  );
+};

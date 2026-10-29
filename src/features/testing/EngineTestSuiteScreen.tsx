@@ -1,9 +1,13 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import type { TestSuiteSummary } from '@/shared/tests/testSuite.ts';
 import { api } from '@/lib/api.ts';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 
 export const EngineTestSuiteScreen: React.FC = () => {
+  const { t } = useI18n();
   const [summary, setSummary] = useState<TestSuiteSummary | null>(null);
   const [isRunning, setIsRunning] = useState(false);
 
@@ -41,10 +45,10 @@ export const EngineTestSuiteScreen: React.FC = () => {
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-slate-900">
-            Fixture Engine Unit Test Verification Suite
+            {t('Fixture Engine Unit Test Verification Suite')}
           </h2>
           <p className="text-xs text-slate-500 max-w-2xl mt-1">
-            Pure framework-free unit test runner verifying all algorithm constraints: odd/even team sizes (N = 3, 5, 6, 7, 8, 9, 11, 13, 15, 16, 17, 21), 3 strong teams in separate quarters, champions exceeding byes, cross-medium same-school separation in Round 1, deterministic seed reproducibility, and graceful handling of impossible constraints.
+            {t('Pure framework-free unit test runner verifying all algorithm constraints: odd/even team sizes (N = 3, 5, 6, 7, 8, 9, 11, 13, 15, 16, 17, 21), 3 strong teams in separate quarters, champions exceeding byes, cross-medium same-school separation in Round 1, deterministic seed reproducibility, and graceful handling of impossible constraints.')}
           </p>
         </div>
 
@@ -53,7 +57,7 @@ export const EngineTestSuiteScreen: React.FC = () => {
           disabled={isRunning}
           className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs rounded-lg transition-colors shadow-sm disabled:opacity-50 shrink-0"
         >
-          {isRunning ? 'Running Test Cases...' : (<><Icon name="play" size="sm" />Run All Engine Tests</>)}
+          {isRunning ? t('Running Test Cases...') : (<><Icon name="play" size="sm" />{t('Run All Engine Tests')}</>)}
         </button>
       </div>
 
@@ -62,19 +66,19 @@ export const EngineTestSuiteScreen: React.FC = () => {
           {/* Summary Strip */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-              <span className="text-[11px] text-slate-500">Total Test Cases</span>
+              <span className="text-[11px] text-slate-500">{t('Total Test Cases')}</span>
               <div className="text-2xl font-bold font-mono text-slate-900 tabular-nums">
                 {summary.total}
               </div>
             </div>
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-              <span className="text-[11px] text-slate-500">Passed</span>
+              <span className="text-[11px] text-slate-500">{t('Passed')}</span>
               <div className="text-2xl font-bold font-mono text-emerald-600 tabular-nums">
                 {summary.passed}
               </div>
             </div>
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-              <span className="text-[11px] text-slate-500">Failed</span>
+              <span className="text-[11px] text-slate-500">{t('Failed')}</span>
               <div
                 className={`text-2xl font-bold font-mono tabular-nums ${
                   summary.failed === 0 ? 'text-slate-400' : 'text-red-600'
@@ -84,7 +88,7 @@ export const EngineTestSuiteScreen: React.FC = () => {
               </div>
             </div>
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-              <span className="text-[11px] text-slate-500">Duration</span>
+              <span className="text-[11px] text-slate-500">{t('Duration')}</span>
               <div className="text-2xl font-bold font-mono text-slate-900 tabular-nums">
                 {summary.durationMs}ms
               </div>
@@ -94,7 +98,7 @@ export const EngineTestSuiteScreen: React.FC = () => {
           {/* Test Results Table */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Detailed Verification Results
+              {t('Detailed Verification Results')}
             </h3>
             <div className="divide-y divide-slate-100">
               {summary.results.map((r) => (
@@ -111,7 +115,7 @@ export const EngineTestSuiteScreen: React.FC = () => {
                             : 'bg-red-50 text-red-800 border border-red-200'
                         }`}
                       >
-                        {r.passed ? 'PASSED' : 'FAILED'}
+                        {r.passed ? t('PASSED') : t('FAILED')}
                       </span>
                       <span className="font-semibold text-slate-900">{r.name}</span>
                       <span className="text-[11px] text-slate-400">· {r.category}</span>

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono, Fraunces } from "next/font/google";
 import Script from "next/script";
 import { AuthProvider } from "../context/AuthContext.tsx";
+import { LanguageProvider } from "../i18n/LanguageProvider.tsx";
 import "./globals.css";
 
 /**
@@ -69,7 +70,9 @@ export default function RootLayout({
         className="bg-canvas text-ink antialiased font-sans"
         suppressHydrationWarning
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <LanguageProvider>{children}</LanguageProvider>
+        </AuthProvider>
         <Script
           src={FONT_AWESOME_KIT_URL}
           crossOrigin="anonymous"

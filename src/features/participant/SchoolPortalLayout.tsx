@@ -1,6 +1,8 @@
 ﻿import React, { useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { useAuth } from '@/context/AuthContext.tsx';
+import { LanguageSwitcher } from '@/i18n/LanguageSwitcher.tsx';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { ParticipantPortalScreen } from './ParticipantPortalScreen.tsx';
 
 interface SchoolPortalLayoutProps {
@@ -22,9 +24,10 @@ export const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({
   children,
 }) => {
   const { user, signOut } = useAuth();
+  const { t } = useI18n();
 
   const isPreview = Boolean(adminPreviewSchool);
-  const activeSchoolName = adminPreviewSchool?.schoolName || user?.schoolName || user?.name || 'School Portal';
+  const activeSchoolName = adminPreviewSchool?.schoolName || user?.schoolName || user?.name || t('School Portal');
   const activeSchoolCode = adminPreviewSchool?.schoolCode || user?.schoolCode || 'DSO-PART';
 
   return (
@@ -35,7 +38,10 @@ export const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({
           <div className="flex items-center gap-2 min-w-0">
             <Icon name="eye" size="md" className="text-slate-950 animate-pulse shrink-0" />
             <span className="min-w-0">
-              ADMIN PREVIEW: Viewing portal strictly as "{activeSchoolName}" (Code: {activeSchoolCode}). All organizer data & other schools are hidden.
+              {t(
+                'ADMIN PREVIEW: Viewing portal strictly as "{name}" (Code: {code}). All organizer data & other schools are hidden.',
+                { name: activeSchoolName, code: activeSchoolCode }
+              )}
             </span>
           </div>
           {onExitAdminPreview && (
@@ -44,7 +50,7 @@ export const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({
               className="shrink-0 px-2.5 py-1 bg-slate-950 text-white rounded-md text-[11px] font-semibold hover:bg-slate-800 transition-colors flex items-center gap-1"
             >
               <Icon name="xmark" size="sm" />
-              <span>Exit Preview & Return to Admin</span>
+              <span>{t("Exit Preview & Return to Admin")}</span>
             </button>
           )}
         </div>
@@ -64,19 +70,20 @@ export const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({
                   DSO Navi Mumbai
                 </span>
                 <span className="hidden sm:block text-[10px] font-semibold text-indigo-700 tracking-wider uppercase leading-tight">
-                  Participating School Portal
+                  {t("Participating School Portal")}
                 </span>
               </div>
             </div>
 
             {/* School Identity Badge */}
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <LanguageSwitcher compact />
               <div className="text-right min-w-0">
                 <p className="text-xs font-bold text-slate-900 truncate max-w-[120px] sm:max-w-[200px]">
                   {activeSchoolName}
                 </p>
                 <span className="inline-block text-[10px] font-mono font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded">
-                  Code: {activeSchoolCode}
+                  {t("Code: {code}", { code: activeSchoolCode })}
                 </span>
               </div>
 
@@ -84,10 +91,10 @@ export const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({
                 <button
                   onClick={signOut}
                   className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
-                  title="Sign Out"
+                  title={t("Sign Out")}
                 >
                   <Icon name="rightFromBracket" size="sm" className="text-slate-500" />
-                  <span className="hidden sm:inline">Sign Out</span>
+                  <span className="hidden sm:inline">{t("Sign Out")}</span>
                 </button>
               )}
             </div>
@@ -104,10 +111,10 @@ export const SchoolPortalLayout: React.FC<SchoolPortalLayoutProps> = ({
       <footer className="bg-white border-t border-slate-200 py-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div>
-            District Sports Office (DSO) Navi Mumbai · School Participant Match Portal
+            {t("District Sports Office (DSO) Navi Mumbai · School Participant Match Portal")}
           </div>
           <div className="text-[11px] text-slate-400">
-            Strict Single-School Isolation Active · Official Match Schedule
+            {t("Strict Single-School Isolation Active · Official Match Schedule")}
           </div>
         </div>
       </footer>

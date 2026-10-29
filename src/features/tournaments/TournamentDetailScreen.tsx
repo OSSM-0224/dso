@@ -1,16 +1,22 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { api } from '@/lib/api.ts';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { FixtureSnapshotDoc, MatchDoc, TeamDoc, TournamentDoc } from '@/shared/types.ts';
 
 // Each status/tab view is a self-contained heavy screen. Splitting them keeps
 // only the loader in the initial bundle; the view streams in on demand.
-const TabLoading = () => (
-  <div className="py-16 text-center">
-    <div className="inline-block animate-spin h-7 w-7 border-3 border-indigo-600 border-t-transparent rounded-full mb-2" />
-    <div className="text-xs text-slate-500">Loading view...</div>
-  </div>
-);
+const TabLoading = () => {
+  const { t } = useI18n();
+  return (
+    <div className="py-16 text-center">
+      <div className="inline-block animate-spin h-7 w-7 border-3 border-indigo-600 border-t-transparent rounded-full mb-2" />
+      <div className="text-xs text-slate-500">{t("Loading view...")}</div>
+    </div>
+  );
+};
 
 const PreFixtureScreen = dynamic(
   () => import('../fixtures/PreFixtureScreen.tsx').then((m) => m.PreFixtureScreen),
@@ -46,6 +52,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
   canWrite,
   onOpenPublicView,
 }) => {
+  const { t } = useI18n();
   const [tournament, setTournament] = useState<TournamentDoc | null>(null);
   const [snapshot, setSnapshot] = useState<FixtureSnapshotDoc | null>(null);
   const [matches, setMatches] = useState<MatchDoc[]>([]);
@@ -87,7 +94,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
     return (
       <div className="py-20 text-center">
         <div className="inline-block animate-spin h-7 w-7 border-3 border-indigo-600 border-t-transparent rounded-full mb-2" />
-        <div className="text-xs text-slate-500">Loading tournament details...</div>
+        <div className="text-xs text-slate-500">{t("Loading tournament details...")}</div>
       </div>
     );
   }
@@ -95,7 +102,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
   if (error || !tournament) {
     return (
       <div className="p-6 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">
-        {error || 'Tournament not found'}
+        {t(error || 'Tournament not found')}
       </div>
     );
   }
@@ -115,10 +122,10 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
               onClick={onBack}
               className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 shrink-0"
             >
-              ← Back to Tournaments
+              {t("← Back to Tournaments")}
             </button>
             <span className="text-slate-300 hidden sm:inline">|</span>
-            <span className="text-xs text-slate-500 font-mono min-w-0 max-w-full truncate">ID: {tournament.id}</span>
+            <span className="text-xs text-slate-500 font-mono min-w-0 max-w-full truncate">{t("ID: {id}", { id: tournament.id })}</span>
           </div>
 
           <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 break-words">
@@ -132,9 +139,9 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
             <span>·</span>
             <span className="capitalize font-medium text-slate-800">{tournament.gender}</span>
             <span>·</span>
-            <span>Year {tournament.year}</span>
+            <span>{t("Year {year}", { year: tournament.year })}</span>
             <span>·</span>
-            <span>Lookback: {tournament.championLookbackYears || 3} Yrs</span>
+            <span>{t("Lookback: {years} Yrs", { years: tournament.championLookbackYears || 3 })}</span>
             <span>·</span>
             <span
               className={`font-semibold capitalize px-2 py-0.5 rounded text-[11px] ${
@@ -147,7 +154,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
                   : 'bg-slate-100 text-slate-700'
               }`}
             >
-              Status: {tournament.status.replace('-', ' ')}
+              {t("Status: {status}", { status: tournament.status.replace('-', ' ') })}
             </span>
           </div>
         </div>
@@ -159,7 +166,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
               className="px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 shadow-sm transition-colors flex items-center gap-1.5"
             >
               <span>🔗</span>
-              <span>Public Share</span>
+              <span>{t("Public Share")}</span>
             </button>
           )}
         </div>
@@ -175,7 +182,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          Fixtures & Bracket
+          {t("Fixtures & Bracket")}
         </button>
         <button
           onClick={() => setActiveTab('teams')}
@@ -185,7 +192,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          Enrolled Teams ({enrolledTeams.length})
+          {t("Enrolled Teams ({count})", { count: enrolledTeams.length })}
         </button>
         <button
           onClick={() => setActiveTab('audit')}
@@ -195,7 +202,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          Audit Log
+          {t("Audit Log")}
         </button>
       </div>
 

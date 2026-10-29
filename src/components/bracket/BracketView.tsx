@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { MatchDoc, TeamDoc } from '@/shared/types.ts';
 
 interface BracketViewProps {
@@ -25,10 +28,11 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
   isInteractive = true,
   canWrite = false,
 }) => {
+  const { t } = useI18n();
   if (matches.length === 0) {
     return (
       <div className="py-12 text-center text-slate-500">
-        No matches generated yet.
+        {t("No matches generated yet.")}
       </div>
     );
   }
@@ -38,28 +42,36 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
   const rounds = Array.from({ length: maxRound }, (_, i) => i + 1);
 
   const getRoundTitle = (round: number, totalRounds: number, matchesInRound: MatchDoc[]) => {
-    if (round === totalRounds) return 'Final';
-    if (round === totalRounds - 1) return 'Semi Finals';
-    if (round === totalRounds - 2) return 'Quarter Finals';
+    if (round === totalRounds) return t('Final');
+    if (round === totalRounds - 1) return t('Semi Finals');
+    if (round === totalRounds - 2) return t('Quarter Finals');
     if (round === 1) {
       const realMatches = matchesInRound.filter((m) => !m.isBye);
       const byeMatches = matchesInRound.filter((m) => m.isBye);
       if (byeMatches.length > 0) {
-        return `Round 1 (Play-In) - ${realMatches.length} ${realMatches.length === 1 ? 'Match' : 'Matches'}, ${byeMatches.length} ${byeMatches.length === 1 ? 'Bye' : 'Byes'}`;
+        return t("Round 1 (Play-In) - {matchCount} {matchLabel}, {byeCount} {byeLabel}", {
+          matchCount: realMatches.length,
+          matchLabel: realMatches.length === 1 ? t('Match') : t('Matches'),
+          byeCount: byeMatches.length,
+          byeLabel: byeMatches.length === 1 ? t('Bye') : t('Byes'),
+        });
       }
-      return `Round 1 (Play-In) - ${realMatches.length} ${realMatches.length === 1 ? 'Match' : 'Matches'}`;
+      return t("Round 1 (Play-In) - {count} {label}", {
+        count: realMatches.length,
+        label: realMatches.length === 1 ? t('Match') : t('Matches'),
+      });
     }
-    return `Round ${round}`;
+    return t("Round {round}", { round });
   };
 
   const getMatchMetaLabel = (match: MatchDoc, round: number, totalRounds: number, indexInRound: number) => {
     // Semi-finals: "Semi Final 1" and "Semi Final 2"
     if (round === totalRounds - 1) {
-      return `Semi Final ${indexInRound + 1}`;
+      return t("Semi Final {number}", { number: indexInRound + 1 });
     }
     // Final: "Final"
     if (round === totalRounds) {
-      return 'Final';
+      return t('Final');
     }
     // Quarter-finals and earlier: Q-labels if available
     if (round === totalRounds - 2) {
@@ -80,7 +92,7 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
       {/* Scroll hint for small screens only */}
       <div className="mb-1.5 flex justify-end lg:hidden px-2">
         <span className="text-[10px] text-slate-400 flex items-center gap-1">
-          Swipe to view later rounds <Icon name="arrowRight" size="xs" />
+          {t("Swipe to view later rounds")} <Icon name="arrowRight" size="xs" />
         </span>
       </div>
       <div className="w-full overflow-x-auto pb-6 pt-2 touch-pan-x touch-pan-y -mx-2 sm:mx-0 px-2 sm:px-0">
@@ -108,8 +120,15 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                 </h4>
                 <span className="text-[11px] text-slate-400">
                   {isRound1 && byeMatchesInR1.length > 0
-                    ? `${realMatches.length} Real ${realMatches.length === 1 ? 'Match' : 'Matches'} · ${byeMatchesInR1.length} Byes`
-                    : `${realMatches.length} ${realMatches.length === 1 ? 'Match' : 'Matches'}`}
+                    ? t("{realCount} Real {realLabel} · {byeCount} Byes", {
+                        realCount: realMatches.length,
+                        realLabel: realMatches.length === 1 ? t('Match') : t('Matches'),
+                        byeCount: byeMatchesInR1.length,
+                      })
+                    : t("{count} {label}", {
+                        count: realMatches.length,
+                        label: realMatches.length === 1 ? t('Match') : t('Matches'),
+                      })}
                 </span>
               </div>
 
@@ -117,7 +136,7 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
               <div className="flex flex-col justify-around flex-grow gap-4">
                 {realMatches.length === 0 && isRound1 ? (
                   <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-center text-xs text-slate-500">
-                    No play-in matches required. All teams advance directly to next round.
+                    {t("No play-in matches required. All teams advance directly to next round.")}
                   </div>
                 ) : (
                   realMatches.map((match, matchIndex) => {
@@ -182,16 +201,16 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                           <div className="flex flex-col min-w-0 pr-2">
                             <div className="flex items-center gap-1.5 truncate">
                               <span className="truncate font-medium">
-                                {match.teamA ? match.teamA.name : <span className="text-slate-400 italic">TBD</span>}
+                                {match.teamA ? match.teamA.name : <span className="text-slate-400 italic">{t("TBD")}</span>}
                               </span>
                               {isStrong(match.teamA?.id) && (
                                 <span className="text-[10px] bg-indigo-50 text-indigo-700 px-1 rounded font-semibold shrink-0">
-                                  Strong
+                                  {t("Strong")}
                                 </span>
                               )}
                               {isChampion(match.teamA?.id) && (
                                 <span className="text-[10px] bg-amber-100 text-amber-800 px-1 rounded font-semibold shrink-0">
-                                  Champ
+                                  {t("Champ")}
                                 </span>
                               )}
                             </div>
@@ -211,8 +230,8 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                         {/* Team B / BYE */}
                         {isBye ? (
                           <div className="flex items-center justify-between p-2 rounded text-xs bg-slate-50 text-slate-400">
-                            <span className="font-medium tracking-wide">BYE: advances to next round</span>
-                            <span className="text-[10px] text-emerald-600 font-medium">Adv.</span>
+                            <span className="font-medium tracking-wide">{t("BYE: advances to next round")}</span>
+                            <span className="text-[10px] text-emerald-600 font-medium">{t("Adv.")}</span>
                           </div>
                         ) : (
                           <div
@@ -230,16 +249,16 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                             <div className="flex flex-col min-w-0 pr-2">
                               <div className="flex items-center gap-1.5 truncate">
                                 <span className="truncate font-medium">
-                                  {match.teamB ? match.teamB.name : <span className="text-slate-400 italic">TBD</span>}
+                                  {match.teamB ? match.teamB.name : <span className="text-slate-400 italic">{t("TBD")}</span>}
                                 </span>
                                 {isStrong(match.teamB?.id) && (
                                   <span className="text-[10px] bg-indigo-50 text-indigo-700 px-1 rounded font-semibold shrink-0">
-                                    Strong
+                                    {t("Strong")}
                                   </span>
                                 )}
                                 {isChampion(match.teamB?.id) && (
                                   <span className="text-[10px] bg-amber-100 text-amber-800 px-1 rounded font-semibold shrink-0">
-                                    Champ
+                                    {t("Champ")}
                                   </span>
                                 )}
                               </div>

@@ -8,9 +8,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext.tsx';
 import { Icon } from '@/components/ui/Icon.tsx';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { QuickLoginDropdown } from '@/dev/temp-logins/QuickLoginDropdown.tsx';
 
 export const ScorerLoginCard: React.FC<{ onSignedIn?: () => void }> = ({ onSignedIn }) => {
+  const { t } = useI18n();
   const { loginStaff } = useAuth();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -36,9 +38,9 @@ export const ScorerLoginCard: React.FC<{ onSignedIn?: () => void }> = ({ onSigne
       <div className="mb-4 flex items-center gap-2">
         <Icon name="bolt" size="md" className="text-accent-strong" />
         <div>
-          <h2 className="font-serif text-[16px] font-semibold text-ink">Scorer sign in</h2>
+          <h2 className="font-serif text-[16px] font-semibold text-ink">{t("Scorer sign in")}</h2>
           <p className="text-[11px] text-muted">
-            Enter your scorer account credentials to record live events.
+            {t("Enter your scorer account credentials to record live events.")}
           </p>
         </div>
       </div>
@@ -46,7 +48,7 @@ export const ScorerLoginCard: React.FC<{ onSignedIn?: () => void }> = ({ onSigne
       <form onSubmit={(e) => submit(e)} className="space-y-3">
         <label className="block">
           <span className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.05em] text-faint">
-            Email or code
+            {t("Email or code")}
           </span>
           <input
             value={identifier}
@@ -58,7 +60,7 @@ export const ScorerLoginCard: React.FC<{ onSignedIn?: () => void }> = ({ onSigne
         </label>
         <label className="block">
           <span className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.05em] text-faint">
-            Password
+            {t("Password")}
           </span>
           <input
             type="password"
@@ -66,7 +68,7 @@ export const ScorerLoginCard: React.FC<{ onSignedIn?: () => void }> = ({ onSigne
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
             className="w-full rounded-[6px] border border-hairline bg-canvas px-3 py-2 text-sm text-ink focus:border-accent-strong focus:outline-none"
-            placeholder="Password"
+            placeholder={t("Password")}
           />
         </label>
 

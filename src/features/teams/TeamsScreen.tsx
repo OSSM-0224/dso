@@ -1,7 +1,9 @@
+'use client';
 import React, { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import dynamic from 'next/dynamic';
 import { api } from '@/lib/api.ts';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { SchoolDoc, TeamDoc } from '@/shared/types.ts';
 
 // Heavy, rarely-mounted surfaces are code-split so the core Teams/Schools
@@ -20,6 +22,7 @@ interface TeamsScreenProps {
 }
 
 export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
+  const { t } = useI18n();
   const [activeSubTab, setActiveSubTab] = useState<'teams' | 'schools' | 'accounts'>('teams');
   const [schools, setSchools] = useState<SchoolDoc[]>([]);
   const [teams, setTeams] = useState<TeamDoc[]>([]);
@@ -118,13 +121,13 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
           name: schoolNameInput.trim(),
           mediums: mediums.length > 0 ? mediums : ['Marathi', 'English'],
         });
-        setSuccessMsg(`School "${schoolNameInput}" updated successfully.`);
+        setSuccessMsg(t('School "{name}" updated successfully.', { name: schoolNameInput }));
       } else {
         await api.schools.create({
           name: schoolNameInput.trim(),
           mediums: mediums.length > 0 ? mediums : ['Marathi', 'English'],
         });
-        setSuccessMsg(`School "${schoolNameInput}" registered successfully.`);
+        setSuccessMsg(t('School "{name}" registered successfully.', { name: schoolNameInput }));
       }
 
       setShowSchoolModal(false);
@@ -185,7 +188,7 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
           ageGroup: teamAgeGroupInput,
           gender: teamGenderInput,
         });
-        setSuccessMsg(`Team "${teamNameInput}" updated successfully.`);
+        setSuccessMsg(t('Team "{name}" updated successfully.', { name: teamNameInput }));
       } else {
         await api.teams.create({
           name: teamNameInput.trim(),
@@ -194,7 +197,7 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
           ageGroup: teamAgeGroupInput,
           gender: teamGenderInput,
         });
-        setSuccessMsg(`Team "${teamNameInput}" created successfully.`);
+        setSuccessMsg(t('Team "{name}" created successfully.', { name: teamNameInput }));
       }
 
       setShowTeamModal(false);
@@ -205,7 +208,7 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
   };
 
   const handleDeleteSchool = async (id: string, name: string) => {
-    if (!window.confirm(`Delete school "${name}"? Teams linked to this school may be affected.`)) return;
+    if (!window.confirm(t('Delete school "{name}"? Teams linked to this school may be affected.', { name }))) return;
     try {
       await api.schools.delete(id);
       loadData();
@@ -215,7 +218,7 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
   };
 
   const handleDeleteTeam = async (id: string, name: string) => {
-    if (!window.confirm(`Delete team "${name}"?`)) return;
+    if (!window.confirm(t('Delete team "{name}"?', { name }))) return;
     try {
       await api.teams.delete(id);
       loadData();
@@ -225,14 +228,14 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
   };
 
   // Filtered lists
-  const filteredTeams = teams.filter((t) => {
-    if (genderFilter !== 'all' && t.gender !== genderFilter) return false;
-    if (ageGroupFilter !== 'all' && t.ageGroup !== ageGroupFilter) return false;
+  const filteredTeams = teams.filter((team) => {
+    if (genderFilter !== 'all' && team.gender !== genderFilter) return false;
+    if (ageGroupFilter !== 'all' && team.ageGroup !== ageGroupFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchName = t.name.toLowerCase().includes(q);
-      const matchSchool = (t.schoolName || '').toLowerCase().includes(q);
-      const matchMedium = t.medium.toLowerCase().includes(q);
+      const matchName = team.name.toLowerCase().includes(q);
+      const matchSchool = (team.schoolName || '').toLowerCase().includes(q);
+      const matchMedium = team.medium.toLowerCase().includes(q);
       if (!matchName && !matchSchool && !matchMedium) return false;
     }
     return true;
@@ -257,10 +260,10 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-slate-900">
-            Schools & Team Management
+            {t("Schools & Team Management")}
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Register schools, manage mediums of instruction (Marathi, English, etc.), and build age-category team squads. Use CSV bulk import for rapid season intake.
+            {t("Register schools, manage mediums of instruction (Marathi, English, etc.), and build age-category team squads. Use CSV bulk import for rapid season intake.")}
           </p>
         </div>
 
@@ -272,20 +275,20 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
                 className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 transition-colors flex items-center gap-1.5 shadow-sm"
               >
                 <Icon name="fileCsv" size="sm" />
-                <span>Bulk Import CSV</span>
+                <span>{t("Bulk Import CSV")}</span>
               </button>
               <button
                 onClick={handleOpenAddSchool}
                 className="px-3.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs font-medium rounded-lg shadow-sm"
               >
-                + Add School
+                {t("+ Add School")}
               </button>
               <button
                 onClick={handleOpenAddTeam}
                 disabled={schools.length === 0}
                 className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg shadow-sm disabled:opacity-50"
               >
-                + Add Team
+                {t("+ Add Team")}
               </button>
             </>
           )}
@@ -294,13 +297,13 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
 
       {error && (
         <div className="p-4 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200">
-          {error}
+          {t(error)}
         </div>
       )}
       {successMsg && (
         <div className="p-4 bg-emerald-50 text-emerald-800 text-xs rounded-lg border border-emerald-200 flex items-center justify-between">
-          <span>{successMsg}</span>
-          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4" aria-label="Dismiss message"><Icon name="xmark" size="sm" /></button>
+          <span>{t(successMsg)}</span>
+          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4" aria-label={t("Dismiss message")}><Icon name="xmark" size="sm" /></button>
         </div>
       )}
 
@@ -316,7 +319,7 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Teams ({teams.length})
+            {t("Teams ({count})", { count: teams.length })}
           </button>
           <button
             onClick={() => setActiveSubTab('schools')}
@@ -326,7 +329,7 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Schools ({schools.length})
+            {t("Schools ({count})", { count: schools.length })}
           </button>
           {canWrite && (
             <button
@@ -337,7 +340,7 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              School Accounts ({participantAccounts.length})
+              {t("School Accounts ({count})", { count: participantAccounts.length })}
             </button>
           )}
         </div>
@@ -346,7 +349,7 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
         <div className="flex-1 max-w-xs">
           <input
             type="text"
-            placeholder={activeSubTab === 'teams' ? 'Search team, school, medium...' : 'Search school or medium...'}
+            placeholder={activeSubTab === 'teams' ? t('Search team, school, medium...') : t('Search school or medium...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full text-xs px-3 py-1.5 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -359,32 +362,32 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Registered Teams ({filteredTeams.length})
+              {t("Registered Teams ({count})", { count: filteredTeams.length })}
             </h3>
 
             {/* Gender and Age filters */}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <div className="flex items-center gap-1.5 text-xs">
-                <span className="text-slate-500">Gender:</span>
+                <span className="text-slate-500">{t("Gender:")}</span>
                 <select
                   value={genderFilter}
                   onChange={(e) => setGenderFilter(e.target.value as any)}
                   className="border border-slate-200 rounded px-2 py-1 text-xs bg-white"
                 >
-                  <option value="all">All</option>
-                  <option value="boys">Boys</option>
-                  <option value="girls">Girls</option>
+                  <option value="all">{t("All")}</option>
+                  <option value="boys">{t("Boys")}</option>
+                  <option value="girls">{t("Girls")}</option>
                 </select>
               </div>
 
               <div className="flex items-center gap-1.5 text-xs">
-                <span className="text-slate-500">Age:</span>
+                <span className="text-slate-500">{t("Age:")}</span>
                 <select
                   value={ageGroupFilter}
                   onChange={(e) => setAgeGroupFilter(e.target.value)}
                   className="border border-slate-200 rounded px-2 py-1 text-xs bg-white"
                 >
-                  <option value="all">All</option>
+                  <option value="all">{t("All")}</option>
                   <option value="U-14">U-14</option>
                   <option value="U-17">U-17</option>
                   <option value="U-19">U-19</option>
@@ -396,8 +399,8 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
           {filteredTeams.length === 0 ? (
             <div className="py-12 text-center text-xs text-slate-400">
               {teams.length === 0
-                ? 'No teams registered yet. Use "+ Add Team" or "Bulk Import CSV" above.'
-                : 'No teams match the search criteria.'}
+                ? t('No teams registered yet. Use "+ Add Team" or "Bulk Import CSV" above.')
+                : t('No teams match the search criteria.')}
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
@@ -410,7 +413,7 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
                     <div className="font-semibold text-slate-900">{team.name}</div>
                     <div className="text-slate-500 text-[11px] mt-0.5">
                       {team.schoolName} ·{' '}
-                      <span className="font-medium text-slate-700">{team.medium} Medium</span> ·{' '}
+                      <span className="font-medium text-slate-700">{team.medium} {t("Medium")}</span> ·{' '}
                       {team.ageGroup} · <span className="capitalize">{team.gender}</span>
                     </div>
                   </div>
@@ -421,13 +424,13 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
                         onClick={() => handleOpenEditTeam(team)}
                         className="text-indigo-600 hover:text-indigo-800 text-[11px] font-medium"
                       >
-                        Edit
+                        {t("Edit")}
                       </button>
                       <button
                         onClick={() => handleDeleteTeam(team.id, team.name)}
                         className="text-red-600 hover:text-red-800 text-[11px] font-medium"
                       >
-                        Delete
+                        {t("Delete")}
                       </button>
                     </div>
                   )}
@@ -443,13 +446,13 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Registered Schools & Mediums ({filteredSchools.length})
+              {t("Registered Schools & Mediums ({count})", { count: filteredSchools.length })}
             </h3>
           </div>
 
           {filteredSchools.length === 0 ? (
             <div className="py-12 text-center text-xs text-slate-400">
-              No schools registered yet.
+              {t("No schools registered yet.")}
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
@@ -466,19 +469,19 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
                         if (acc) {
                           return (
                             <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded">
-                              Code: {acc.schoolCode || 'Active'}
+                              {t("Code: {code}", { code: acc.schoolCode || t("Active") })}
                             </span>
                           );
                         }
                         return (
                           <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                            No Login Issued
+                            {t("No Login Issued")}
                           </span>
                         );
                       })()}
                     </div>
                     <div className="text-slate-500 text-[11px] mt-0.5 flex flex-wrap items-center gap-1.5">
-                      <span>Instruction Mediums:</span>
+                      <span>{t("Instruction Mediums:")}</span>
                       {school.mediums.map((m, idx) => (
                         <span
                           key={idx}
@@ -496,13 +499,13 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
                         onClick={() => handleOpenEditSchool(school)}
                         className="text-indigo-600 hover:text-indigo-800 text-[11px] font-medium"
                       >
-                        Edit
+                        {t("Edit")}
                       </button>
                       <button
                         onClick={() => handleDeleteSchool(school.id, school.name)}
                         className="text-red-600 hover:text-red-800 text-[11px] font-medium"
                       >
-                        Delete
+                        {t("Delete")}
                       </button>
                     </div>
                   )}
@@ -535,9 +538,9 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
           >
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h3 className="text-base font-bold text-slate-900">
-                {editingSchool ? 'Edit School' : 'Add School'}
+                {editingSchool ? t('Edit School') : t('Add School')}
               </h3>
-              <button aria-label="Close"
+              <button aria-label={t("Close")}
   type="button"
                 onClick={() => setShowSchoolModal(false)}
                 className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
@@ -548,32 +551,32 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                School Name
+                {t("School Name")}
               </label>
               <input
                 type="text"
                 required
                 value={schoolNameInput}
                 onChange={(e) => setSchoolNameInput(e.target.value)}
-                placeholder="e.g. New Horizon Public School"
+                placeholder={t("e.g. New Horizon Public School")}
                 className="w-full text-xs border border-slate-200 rounded-md p-2"
               />
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Instruction Mediums (comma-separated)
+                {t("Instruction Mediums (comma-separated)")}
               </label>
               <input
                 type="text"
                 required
                 value={schoolMediumsInput}
                 onChange={(e) => setSchoolMediumsInput(e.target.value)}
-                placeholder="e.g. Marathi, English, Hindi"
+                placeholder={t("e.g. Marathi, English, Hindi")}
                 className="w-full text-xs border border-slate-200 rounded-md p-2"
               />
               <span className="text-[10px] text-slate-400">
-                Rule 4: Teams from the same school with different mediums will never meet in Round 1.
+                {t("Rule 4: Teams from the same school with different mediums will never meet in Round 1.")}
               </span>
             </div>
 
@@ -583,13 +586,13 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
                 onClick={() => setShowSchoolModal(false)}
                 className="px-3 py-2.5 sm:py-1.5 min-h-[40px] sm:min-h-0 text-xs text-slate-600 hover:text-slate-800 rounded-md"
               >
-                Cancel
+                {t("Cancel")}
               </button>
               <button
                 type="submit"
                 className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-md shadow-sm"
               >
-                {editingSchool ? 'Save Changes' : 'Create School'}
+                {editingSchool ? t('Save Changes') : t('Create School')}
               </button>
             </div>
           </form>
@@ -612,9 +615,9 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
           >
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h3 className="text-base font-bold text-slate-900">
-                {editingTeam ? 'Edit Team' : 'Add Team Squad'}
+                {editingTeam ? t('Edit Team') : t('Add Team Squad')}
               </h3>
-              <button aria-label="Close"
+              <button aria-label={t("Close")}
   type="button"
                 onClick={() => setShowTeamModal(false)}
                 className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
@@ -625,7 +628,7 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Parent School
+                {t("Parent School")}
               </label>
               <select
                 value={teamSchoolIdInput}
@@ -643,7 +646,7 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
             {/* Instruction Medium chosen strictly from that school's mediums */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Medium (Available for {selectedSchoolForTeamModal?.name || 'this school'})
+                {t("Medium (Available for {school})", { school: selectedSchoolForTeamModal?.name || t("this school") })}
               </label>
               <select
                 value={teamMediumInput}
@@ -653,25 +656,25 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
                 {selectedSchoolForTeamModal?.mediums && selectedSchoolForTeamModal.mediums.length > 0 ? (
                   selectedSchoolForTeamModal.mediums.map((m) => (
                     <option key={m} value={m}>
-                      {m} Medium
+                      {m} {t("Medium")}
                     </option>
                   ))
                 ) : (
-                  <option value="Marathi">Marathi Medium</option>
+                  <option value="Marathi">{t("Marathi Medium")}</option>
                 )}
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Team Display Name
+                {t("Team Display Name")}
               </label>
               <input
                 type="text"
                 required
                 value={teamNameInput}
                 onChange={(e) => setTeamNameInput(e.target.value)}
-                placeholder="e.g. NHPS Boys Marathi A"
+                placeholder={t("e.g. NHPS Boys Marathi A")}
                 className="w-full text-xs border border-slate-200 rounded-md p-2"
               />
             </div>
@@ -679,7 +682,7 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Age Group
+                  {t("Age Group")}
                 </label>
                 <select
                   value={teamAgeGroupInput}
@@ -694,15 +697,15 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Gender
+                  {t("Gender")}
                 </label>
                 <select
                   value={teamGenderInput}
                   onChange={(e) => setTeamGenderInput(e.target.value as any)}
                   className="w-full text-xs border border-slate-200 rounded-md p-2 bg-white"
                 >
-                  <option value="boys">Boys</option>
-                  <option value="girls">Girls</option>
+                  <option value="boys">{t("Boys")}</option>
+                  <option value="girls">{t("Girls")}</option>
                 </select>
               </div>
             </div>
@@ -713,13 +716,13 @@ export const TeamsScreen: React.FC<TeamsScreenProps> = ({ canWrite }) => {
                 onClick={() => setShowTeamModal(false)}
                 className="px-3 py-2.5 sm:py-1.5 min-h-[40px] sm:min-h-0 text-xs text-slate-600 hover:text-slate-800 rounded-md"
               >
-                Cancel
+                {t("Cancel")}
               </button>
               <button
                 type="submit"
                 className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-md shadow-sm"
               >
-                {editingTeam ? 'Save Changes' : 'Create Team'}
+                {editingTeam ? t('Save Changes') : t('Create Team')}
               </button>
             </div>
           </form>

@@ -19,6 +19,7 @@ import { BottomNav } from '@/components/layout/BottomNav.tsx';
 import { SchoolPortalLayout } from '@/features/participant/SchoolPortalLayout.tsx';
 import { ForcePasswordChangeModal } from '@/features/participant/ForcePasswordChangeModal.tsx';
 import { api } from '@/lib/api.ts';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { SchoolDoc } from '@/shared/types.ts';
 
 interface AdminPreviewSchool {
@@ -49,6 +50,7 @@ export function useAdminPortal() {
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { canWrite, isParticipant } = useAuth();
+  const { t } = useI18n();
 
   const [schools, setSchools] = useState<SchoolDoc[]>([]);
   const [adminPreviewSchool, setAdminPreviewSchool] = useState<AdminPreviewSchool | null>(null);
@@ -119,7 +121,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[70] focus:rounded-[6px] focus:bg-ink focus:px-3 focus:py-1.5 focus:text-xs focus:text-white"
       >
-        Skip to content
+        {t("Skip to content")}
       </a>
 
       <div className="min-h-[100dvh] flex flex-col bg-canvas font-sans">
@@ -134,7 +136,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
         <footer className="hidden border-t border-hairline py-5 text-center text-xs text-faint md:block">
           <div className="mx-auto max-w-6xl px-4">
-            District Sports Office (DSO) Navi Mumbai · Fixture administration platform
+            {t("District Sports Office (DSO) Navi Mumbai · Fixture administration platform")}
           </div>
         </footer>
 

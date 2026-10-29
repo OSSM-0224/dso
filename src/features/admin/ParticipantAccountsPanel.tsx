@@ -1,7 +1,10 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { api } from '@/lib/api.ts';
 import { SchoolDoc } from '@/shared/types.ts';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 
 interface ParticipantAccountsPanelProps {
   schools: SchoolDoc[];
@@ -14,6 +17,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
   onAccountCreated,
   onViewAsSchool,
 }) => {
+  const { t } = useI18n();
   const [participants, setParticipants] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +92,11 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
       });
 
       setSuccessMsg(
-        `Account created successfully for "${res.schoolName}". School Code: ${res.schoolCode}, Temporary Password: ${temporaryPassword}`
+        t('Account created successfully for "{school}". School Code: {code}, Temporary Password: {password}', {
+          school: res.schoolName,
+          code: res.schoolCode,
+          password: temporaryPassword,
+        })
       );
       setShowCreateModal(false);
       await loadParticipants();
@@ -109,7 +117,10 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
       setError(null);
       await api.admin.participants.resetPassword(resetTargetUser.id, newTempPassword);
       setSuccessMsg(
-        `Password reset for "${resetTargetUser.schoolName}". New temporary password: ${newTempPassword}`
+        t('Password reset for "{school}". New temporary password: {password}', {
+          school: resetTargetUser.schoolName,
+          password: newTempPassword,
+        })
       );
       setShowResetModal(false);
       setResetTargetUser(null);
@@ -125,7 +136,12 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
     try {
       setError(null);
       await api.admin.participants.toggleStatus(user.id, !user.isActive);
-      setSuccessMsg(`Account for "${user.schoolName}" is now ${!user.isActive ? 'Active' : 'Deactivated'}.`);
+      setSuccessMsg(
+        t('Account for "{school}" is now {status}.', {
+          school: user.schoolName,
+          status: t(!user.isActive ? 'Active' : 'Deactivated'),
+        })
+      );
       await loadParticipants();
     } catch (err: any) {
       setError(err.message || 'Failed to toggle account status');
@@ -162,10 +178,10 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
         <div>
           <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
             <Icon name="shieldCheck" size="lg" className="text-indigo-600" />
-            <span>Participant School Accounts</span>
+            <span>{t('Participant School Accounts')}</span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Manage school coach credentials, invite links, and track schedule acknowledgements.
+            {t('Manage school coach credentials, invite links, and track schedule acknowledgements.')}
           </p>
         </div>
 
@@ -174,7 +190,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
           className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors shrink-0"
         >
           <Icon name="userPlus" size="md" />
-          <span>Create School Account</span>
+          <span>{t('Create School Account')}</span>
         </button>
       </div>
 
@@ -182,7 +198,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2">
           <Icon name="circleAlert" size="md" className="shrink-0 text-red-600 mt-0.5" />
-          <span>{error}</span>
+          <span>{t(error)}</span>
         </div>
       )}
 
@@ -197,10 +213,10 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
       {unconfiguredSchools.length > 0 && (
         <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-xl text-xs text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <span className="font-bold">{unconfiguredSchools.length} Schools</span> have not been issued login credentials yet.
+            <span className="font-bold">{t('{count} Schools', { count: unconfiguredSchools.length })}</span> {t('have not been issued login credentials yet.')}
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-amber-800 text-[11px]">Unregistered: {unconfiguredSchools.slice(0, 3).map((s) => s.name).join(', ')}{unconfiguredSchools.length > 3 ? ` +${unconfiguredSchools.length - 3} more` : ''}</span>
+            <span className="text-amber-800 text-[11px]">{t('Unregistered: {names}', { names: unconfiguredSchools.slice(0, 3).map((s) => s.name).join(', ') })}{unconfiguredSchools.length > 3 ? ` ${t('+{count} more', { count: unconfiguredSchools.length - 3 })}` : ''}</span>
           </div>
         </div>
       )}
@@ -210,7 +226,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
         <Icon name="search" size="md" className="text-slate-400 absolute left-3.5 top-3" />
         <input
           type="text"
-          placeholder="Search by school name, school code, or coach name..."
+          placeholder={t('Search by school name, school code, or coach name...')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -223,20 +239,20 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="py-3 px-3">School & Code</th>
-                <th className="py-3 px-3">Representative</th>
-                <th className="py-3 px-3">Account Status</th>
-                <th className="py-3 px-3">Password State</th>
-                <th className="py-3 px-3">Last Login</th>
-                <th className="py-3 px-3 text-center">Acknowledgements</th>
-                <th className="py-3 px-3 text-right">Actions</th>
+                <th className="py-3 px-3">{t('School & Code')}</th>
+                <th className="py-3 px-3">{t('Representative')}</th>
+                <th className="py-3 px-3">{t('Account Status')}</th>
+                <th className="py-3 px-3">{t('Password State')}</th>
+                <th className="py-3 px-3">{t('Last Login')}</th>
+                <th className="py-3 px-3 text-center">{t('Acknowledgements')}</th>
+                <th className="py-3 px-3 text-right">{t('Actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredParticipants.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-slate-500">
-                    No participant accounts found. Click "Create School Account" to issue logins.
+                    {t('No participant accounts found. Click "Create School Account" to issue logins.')}
                   </td>
                 </tr>
               ) : (
@@ -248,7 +264,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                         <div>
                           <p className="font-bold text-slate-900">{p.schoolName}</p>
                           <span className="font-mono text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">
-                            {p.schoolCode || 'No Code'}
+                            {p.schoolCode || t('No Code')}
                           </span>
                         </div>
                       </div>
@@ -256,7 +272,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
 
                     <td className="py-3.5 px-3 text-slate-700">
                       <p className="font-semibold">{p.name}</p>
-                      <p className="text-[11px] text-slate-400">{p.email || p.phone || 'No direct contact'}</p>
+                      <p className="text-[11px] text-slate-400">{p.email || p.phone || t('No direct contact')}</p>
                     </td>
 
                     <td className="py-3.5 px-3">
@@ -267,30 +283,30 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                             : 'bg-rose-50 text-rose-800 border border-rose-200'
                         }`}
                       >
-                        {p.isActive ? 'Active' : 'Deactivated'}
+                        {p.isActive ? t('Active') : t('Deactivated')}
                       </span>
                     </td>
 
                     <td className="py-3.5 px-3">
                       {p.mustChangePassword ? (
                         <span className="text-[11px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                          Pending First Change
+                          {t('Pending First Change')}
                         </span>
                       ) : (
                         <span className="text-[11px] font-medium text-emerald-700">
-                          Password Active
+                          {t('Password Active')}
                         </span>
                       )}
                     </td>
 
                     <td className="py-3.5 px-3 text-slate-500 text-[11px]">
-                      {p.lastLoginAt ? new Date(p.lastLoginAt).toLocaleString() : 'Never logged in'}
+                      {p.lastLoginAt ? new Date(p.lastLoginAt).toLocaleString() : t('Never logged in')}
                     </td>
 
                     <td className="py-3.5 px-3 text-center">
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
                         <Icon name="calendarCheck" size="sm" className="text-indigo-600" />
-                        <span>{p.acknowledgementCount} matches</span>
+                        <span>{t('{count} matches', { count: p.acknowledgementCount })}</span>
                       </span>
                     </td>
 
@@ -299,7 +315,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                         <button
                           onClick={() => onViewAsSchool(p)}
                           className="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition-colors"
-                          title="View as School (Read-Only Preview)"
+                          title={t('View as School (Read-Only Preview)')}
                         >
                           <Icon name="eye" size="sm" />
                         </button>
@@ -308,7 +324,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                       <button
                         onClick={() => handleCopyInvite(p)}
                         className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors"
-                        title="Copy School Credentials & Portal Link"
+                        title={t('Copy School Credentials & Portal Link')}
                       >
                         {copiedId === p.id ? (
                           <Icon name="check" size="sm" className="text-emerald-600" />
@@ -324,7 +340,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                           setShowResetModal(true);
                         }}
                         className="p-1.5 bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-800 rounded-lg transition-colors"
-                        title="Reset Temporary Password"
+                        title={t('Reset Temporary Password')}
                       >
                         <Icon name="rotate" size="sm" />
                       </button>
@@ -336,7 +352,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                             ? 'bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-700'
                             : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
                         }`}
-                        title={p.isActive ? 'Deactivate Account' : 'Reactivate Account'}
+                        title={p.isActive ? t('Deactivate Account') : t('Reactivate Account')}
                       >
                         <Icon name="power" size="sm" />
                       </button>
@@ -363,9 +379,9 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
             <div className="bg-indigo-600 text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Icon name="userPlus" size="lg" />
-                <h3 className="text-base font-bold">Issue School Participant Login</h3>
+                <h3 className="text-base font-bold">{t('Issue School Participant Login')}</h3>
               </div>
-              <button aria-label="Close"
+              <button aria-label={t('Close')}
                 onClick={() => setShowCreateModal(false)}
                 className="text-white/80 hover:text-white"
               >
@@ -376,7 +392,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
             <form onSubmit={handleCreateSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Select School *
+                  {t('Select School *')}
                 </label>
                 <select
                   required
@@ -384,12 +400,12 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                   onChange={(e) => setSelectedSchoolId(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
-                  <option value="">-- Choose School --</option>
+                  <option value="">{t('-- Choose School --')}</option>
                   {schools.map((s) => {
                     const alreadyHas = accountedSchoolIds.has(s.id);
                     return (
                       <option key={s.id} value={s.id} disabled={alreadyHas}>
-                        {s.name} {alreadyHas ? '(Account exists)' : ''}
+                        {s.name} {alreadyHas ? t('(Account exists)') : ''}
                       </option>
                     );
                   })}
@@ -398,7 +414,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Coach / Representative Name *
+                  {t('Coach / Representative Name *')}
                 </label>
                 <input
                   type="text"
@@ -413,7 +429,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Email Address
+                    {t('Email Address')}
                   </label>
                   <input
                     type="email"
@@ -426,7 +442,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Phone / Mobile
+                    {t('Phone / Mobile')}
                   </label>
                   <input
                     type="tel"
@@ -441,11 +457,11 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    School Code (Optional)
+                    {t('School Code (Optional)')}
                   </label>
                   <input
                     type="text"
-                    placeholder="Auto-generated if blank"
+                    placeholder={t('Auto-generated if blank')}
                     value={customSchoolCode}
                     onChange={(e) => setCustomSchoolCode(e.target.value)}
                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono uppercase focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -454,7 +470,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Temporary Password *
+                    {t('Temporary Password *')}
                   </label>
                   <input
                     type="text"
@@ -467,7 +483,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
               </div>
 
               <p className="text-[11px] text-slate-400">
-                School coaches will be prompted to set a permanent password immediately upon their first login.
+                {t('School coaches will be prompted to set a permanent password immediately upon their first login.')}
               </p>
 
               <div className="pt-3 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 border-t border-slate-100">
@@ -476,14 +492,14 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                   onClick={() => setShowCreateModal(false)}
                   className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl"
                 >
-                  Cancel
+                  {t('Cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs"
                 >
-                  {isSubmitting ? 'Creating...' : 'Create Account'}
+                  {isSubmitting ? t('Creating...') : t('Create Account')}
                 </button>
               </div>
             </form>
@@ -498,9 +514,9 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
             <div className="bg-amber-600 text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Icon name="rotate" size="lg" />
-                <h3 className="text-base font-bold">Reset School Password</h3>
+                <h3 className="text-base font-bold">{t('Reset School Password')}</h3>
               </div>
-              <button aria-label="Close"
+              <button aria-label={t('Close')}
                 onClick={() => setShowResetModal(false)}
                 className="text-white/80 hover:text-white"
               >
@@ -510,13 +526,13 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
 
             <form onSubmit={handleResetPassword} className="p-6 space-y-4">
               <p className="text-xs text-slate-600">
-                Generate a new temporary password for{' '}
-                <span className="font-bold text-slate-900">{resetTargetUser.schoolName}</span>. The coach will be required to change it on next login.
+                {t('Generate a new temporary password for')}{' '}
+                <span className="font-bold text-slate-900">{resetTargetUser.schoolName}</span>{t('. The coach will be required to change it on next login.')}
               </p>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  New Temporary Password
+                  {t('New Temporary Password')}
                 </label>
                 <input
                   type="text"
@@ -533,14 +549,14 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
                   onClick={() => setShowResetModal(false)}
                   className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl"
                 >
-                  Cancel
+                  {t('Cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-xs"
                 >
-                  {isSubmitting ? 'Resetting...' : 'Confirm Reset'}
+                  {isSubmitting ? t('Resetting...') : t('Confirm Reset')}
                 </button>
               </div>
             </form>

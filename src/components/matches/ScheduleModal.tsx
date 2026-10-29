@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { MatchDoc } from '@/shared/types.ts';
 
 interface ScheduleModalProps {
@@ -15,6 +18,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const { t } = useI18n();
   const [scheduledAt, setScheduledAt] = useState<string>(
     match.scheduledAt ? new Date(match.scheduledAt).toISOString().slice(0, 16) : ''
   );
@@ -75,13 +79,16 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
         <div className="flex shrink-0 items-center justify-between p-4 sm:p-6 pb-3 border-b border-slate-100">
           <div className="min-w-0">
             <h3 className="text-base font-semibold text-slate-900">
-              Schedule Match
+              {t("Schedule Match")}
             </h3>
             <p className="text-xs text-slate-500 truncate">
-              Match #{match.matchNumber} · {match.roundName}
+              {t("Match #{number} · {round}", {
+                number: match.matchNumber,
+                round: match.roundName,
+              })}
             </p>
           </div>
-          <button aria-label="Close"
+          <button aria-label={t("Close")}
             onClick={onClose}
             className="shrink-0 -mr-1 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-md transition-colors"
           >
@@ -92,14 +99,14 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
         <div className="p-4 sm:p-6 pt-4">
           {error && (
             <div className="mb-4 p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200">
-              {error}
+              {t(error)}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Date & Start Time
+                {t("Date & Start Time")}
               </label>
               <input
                 type="datetime-local"
@@ -111,7 +118,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Venue / Court Name
+                {t("Venue / Court Name")}
               </label>
               <input
                 type="text"
@@ -128,14 +135,14 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                 onClick={onClose}
                 className="px-3 py-2.5 sm:py-1.5 min-h-[40px] sm:min-h-0 text-xs text-slate-600 hover:text-slate-800 rounded-md"
               >
-                Cancel
+                {t("Cancel")}
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
                 className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50 transition-colors"
               >
-                {isSubmitting ? 'Saving...' : 'Save Schedule'}
+                {isSubmitting ? t('Saving...') : t('Save Schedule')}
               </button>
             </div>
           </form>

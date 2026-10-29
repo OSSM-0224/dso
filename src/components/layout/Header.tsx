@@ -4,6 +4,8 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext.tsx';
 import { UserRole } from '@/shared/types.ts';
 import { Icon } from '@/components/ui/Icon.tsx';
+import { LanguageSwitcher } from '@/i18n/LanguageSwitcher.tsx';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 
 /**
  * Slim top bar. The staff permissions-preview control (role switcher) is
@@ -12,6 +14,7 @@ import { Icon } from '@/components/ui/Icon.tsx';
  */
 export const Header: React.FC = () => {
   const { user, role, canScore, switchRole } = useAuth();
+  const { t } = useI18n();
   const pathname = usePathname() || '/';
   const [staffOpen, setStaffOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -59,41 +62,41 @@ export const Header: React.FC = () => {
           <span className="font-serif text-[17px] font-semibold tracking-[-0.01em] text-ink">DSO Navi Mumbai</span>
           {isParticipant && (
             <span className="hidden sm:inline rounded-full border border-accent-soft bg-accent-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.05em] text-accent-strong">
-              Portal
+              {t("Portal")}
             </span>
           )}
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden lg:flex items-center gap-1" aria-label="Primary">
+        <nav className="hidden lg:flex items-center gap-1" aria-label={t("Primary")}>
           {isParticipant ? (
             <>
               <Link href="/school/dashboard" className={linkCls(isOnPortal)}>
-                My school matches
+                {t("My school matches")}
               </Link>
               <Link href="/#tournaments" className={linkCls(pathname === '/')}>
-                Public brackets
+                {t("Public brackets")}
               </Link>
               <Link href="/past-champions" className={linkCls(isOnHistory)}>
-                Past champions
+                {t("Past champions")}
               </Link>
             </>
           ) : (
             <>
               <Link href="/dashboard" className={linkCls(isOnTournaments)}>
-                Tournaments
+                {t("Tournaments")}
               </Link>
               <Link href="/teams" className={linkCls(isOnTeams)}>
-                Teams & schools
+                {t("Teams & schools")}
               </Link>
               <Link href="/school-accounts" className={linkCls(isOnSchoolAccounts)}>
-                School accounts
+                {t("School accounts")}
               </Link>
               <Link href="/past-champions" className={linkCls(isOnHistory)}>
-                Past champions
+                {t("Past champions")}
               </Link>
               <Link href="/engine-tests" className={linkCls(isOnTesting)}>
-                Engine tests
+                {t("Engine tests")}
               </Link>
             </>
           )}
@@ -101,10 +104,11 @@ export const Header: React.FC = () => {
 
         {/* Right: account chip / staff menu */}
         <div className="flex shrink-0 items-center gap-2">
+          <LanguageSwitcher compact />
           {isParticipant ? (
             <div className="hidden text-right sm:block">
               <p className="max-w-[180px] truncate text-xs font-semibold text-ink">
-                {user?.schoolName || user?.name || 'Participant'}
+                {user?.schoolName || user?.name || t('Participant')}
               </p>
               {user?.schoolCode && (
                 <p className="font-mono text-[10px] tabular-nums text-muted">{user.schoolCode}</p>
@@ -118,7 +122,7 @@ export const Header: React.FC = () => {
                 aria-haspopup="menu"
                 className="flex items-center gap-1.5 rounded-[6px] border border-hairline bg-surface px-2.5 py-1.5 text-xs font-medium text-ink transition-colors duration-200 hover:border-faint active:scale-[0.98]"
               >
-                <span className="capitalize">{role}</span>
+                <span className="capitalize">{t(role)}</span>
                 <Icon name="chevronDown" size="sm" className={`text-muted transition-transform duration-200 ${staffOpen ? 'rotate-180' : ''}`} />
               </button>
               {staffOpen && (
@@ -127,7 +131,7 @@ export const Header: React.FC = () => {
                   className="absolute right-0 z-50 mt-2 w-64 rounded-[12px] border border-hairline bg-surface p-1.5 shadow-raise"
                 >
                   <p className="px-2.5 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">
-                    Preview as staff
+                    {t("Preview as staff")}
                   </p>
                   {(['admin', 'organizer', 'scorer', 'viewer', 'participant'] as UserRole[]).map((r) => (
                     <button
@@ -138,7 +142,7 @@ export const Header: React.FC = () => {
                         r === role ? 'bg-accent-soft font-semibold text-accent-strong' : 'text-ink hover:bg-canvas'
                       }`}
                     >
-                      <span className="capitalize">{r === 'participant' ? 'Log in as school' : r}</span>
+                      <span className="capitalize">{r === 'participant' ? t('Log in as school') : t(r)}</span>
                       {r === role && <span aria-hidden="true">•</span>}
                     </button>
                   ))}
@@ -154,7 +158,7 @@ export const Header: React.FC = () => {
                       }`}
                     >
                       <Icon name="bolt" size="sm" className="text-muted" />
-                      Live scoring console
+                      {t("Live scoring console")}
                     </Link>
                   )}
                   <Link
@@ -163,7 +167,7 @@ export const Header: React.FC = () => {
                     className="flex items-center gap-2 rounded-[6px] px-2.5 py-2 text-[13px] text-muted hover:bg-canvas hover:text-ink"
                   >
                     <Icon name="school" size="sm" className="text-muted" />
-                    School login page
+                    {t("School login page")}
                   </Link>
                   <Link
                     href="/engine-tests"
@@ -171,7 +175,7 @@ export const Header: React.FC = () => {
                     className="flex items-center gap-2 rounded-[6px] px-2.5 py-2 text-[13px] text-muted hover:bg-canvas hover:text-ink"
                   >
                     <Icon name="flask" size="sm" className="text-muted" />
-                    Engine tests
+                    {t("Engine tests")}
                   </Link>
                 </div>
               )}

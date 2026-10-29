@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { api } from '@/lib/api.ts';
 import { MatchDoc, ScorerCandidate } from '@/shared/types.ts';
 
@@ -22,6 +25,7 @@ export const ScorerAssignModal: React.FC<ScorerAssignModalProps> = ({
   onClose,
   onSaved,
 }) => {
+  const { t } = useI18n();
   const [candidates, setCandidates] = useState<ScorerCandidate[] | null>(null);
   const [currentNames, setCurrentNames] = useState<string[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -91,7 +95,7 @@ export const ScorerAssignModal: React.FC<ScorerAssignModalProps> = ({
       const res = await api.admin.matches.setScorers(match.id, Array.from(selected));
       setSavedMsg(
         res.scorerNames.length > 0
-          ? `Saved. Scorers: ${res.scorerNames.join(', ')}`
+          ? t('Saved. Scorers: {names}', { names: res.scorerNames.join(', ') })
           : 'Saved. No scorers assigned — admins and organizers can still score this match from the console.'
       );
       onSaved();
@@ -118,14 +122,18 @@ export const ScorerAssignModal: React.FC<ScorerAssignModalProps> = ({
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between p-4 sm:p-6 pb-3 border-b border-slate-100">
           <div className="min-w-0">
-            <h3 className="text-base font-semibold text-slate-900">Assign Scorers</h3>
+            <h3 className="text-base font-semibold text-slate-900">{t("Assign Scorers")}</h3>
             <p className="text-xs text-slate-500 truncate">
-              Match #{match.matchNumber} · {match.roundName} ·{' '}
-              {match.teamA?.name || 'TBD'} vs {match.teamB?.name || 'TBD'}
+              {t("Match #{number} · {round} · {teamA} vs {teamB}", {
+                number: match.matchNumber,
+                round: match.roundName,
+                teamA: match.teamA?.name || t('TBD'),
+                teamB: match.teamB?.name || t('TBD'),
+              })}
             </p>
           </div>
           <button
-            aria-label="Close"
+            aria-label={t("Close")}
             onClick={onClose}
             className="shrink-0 -mr-1 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-md transition-colors"
           >
@@ -136,36 +144,37 @@ export const ScorerAssignModal: React.FC<ScorerAssignModalProps> = ({
         <div className="p-4 sm:p-6 pt-4 space-y-4">
           {error && (
             <div className="p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200">
-              {error}
+              {t(error)}
             </div>
           )}
           {savedMsg && (
             <div className="p-3 bg-emerald-50 text-emerald-800 text-xs rounded-lg border border-emerald-200">
-              {savedMsg}
+              {t(savedMsg)}
             </div>
           )}
           {notice && (
             <div className="p-3 bg-amber-50 text-amber-800 text-[11px] rounded-lg border border-amber-200">
-              {notice}
+              {t(notice)}
             </div>
           )}
 
           <p className="text-[11px] text-slate-500 leading-snug">
-            Assigned scorers may clock in and score <strong>only this match</strong> from{' '}
-            <span className="font-mono text-[10px] bg-slate-100 px-1 rounded">/score</span>.
-            Admins and organizers can score every match without assignment.
+            {t("Assigned scorers may clock in and score")}{' '}
+            <strong>{t("only this match")}</strong> {t("from")}{' '}
+            <span className="font-mono text-[10px] bg-slate-100 px-1 rounded">/score</span>.{' '}
+            {t("Admins and organizers can score every match without assignment.")}
           </p>
 
           {/* Current roster */}
           {currentNames.length > 0 && !isLoading && (
             <div className="text-[11px] text-slate-600">
-              Currently assigned:{' '}
+              {t("Currently assigned:")}{' '}
               <span className="font-semibold">{currentNames.join(', ')}</span>
             </div>
           )}
 
           {isLoading ? (
-            <div className="py-6 text-center text-xs text-slate-500">Loading scorer accounts…</div>
+            <div className="py-6 text-center text-xs text-slate-500">{t("Loading scorer accounts…")}</div>
           ) : candidates && candidates.length > 0 ? (
             <div className="space-y-2">
               {candidates.map((c) => {
@@ -199,7 +208,7 @@ export const ScorerAssignModal: React.FC<ScorerAssignModalProps> = ({
                     </div>
                     {checked && (
                       <span className="shrink-0 text-[10px] font-bold uppercase text-indigo-700">
-                        Assigned
+                        {t("Assigned")}
                       </span>
                     )}
                   </label>
@@ -209,10 +218,10 @@ export const ScorerAssignModal: React.FC<ScorerAssignModalProps> = ({
           ) : (
             !error && (
               <div className="py-4 text-center text-xs text-slate-500 border border-dashed border-slate-200 rounded-lg">
-                No active scorer accounts exist yet.
+                {t("No active scorer accounts exist yet.")}
                 <div className="mt-1 text-[10px] text-slate-400">
-                  Developers: run <span className="font-mono">npm run seed:temp-logins</span> to
-                  create demo scorers (SCORER / SCORER2).
+                  {t("Developers: run")} <span className="font-mono">npm run seed:temp-logins</span>{' '}
+                  {t("to create demo scorers (SCORER / SCORER2).")}
                 </div>
               </div>
             )
@@ -227,14 +236,14 @@ export const ScorerAssignModal: React.FC<ScorerAssignModalProps> = ({
             disabled={isSaving || isLoading}
             className="px-3 py-2.5 sm:py-1.5 min-h-[40px] sm:min-h-0 text-xs text-slate-600 hover:text-slate-800 rounded-md disabled:opacity-50"
           >
-            Close
+            {t("Close")}
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving || isLoading || !candidates}
             className="px-4 py-2.5 sm:py-2 min-h-[40px] sm:min-h-0 text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50 transition-colors"
           >
-            {isSaving ? 'Saving…' : 'Save Scorer Assignment'}
+            {isSaving ? t('Saving…') : t('Save Scorer Assignment')}
           </button>
         </div>
       </div>

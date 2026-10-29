@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { MatchDoc } from '@/shared/types.ts';
 
 interface ResultEntryModalProps {
@@ -26,6 +29,7 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
   mode = 'entry',
   onSubmit,
 }) => {
+  const { t } = useI18n();
   const isCorrection = mode === 'correction';
   const [selectedWinnerId, setSelectedWinnerId] = useState<string>(
     match.winner?.id || match.teamA?.id || ''
@@ -98,13 +102,16 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
         <div className="flex shrink-0 items-center justify-between p-4 sm:p-6 pb-3 border-b border-slate-100">
           <div className="min-w-0">
             <h3 className={`text-base font-semibold ${isCorrection ? 'text-amber-800' : 'text-slate-900'}`}>
-              {isCorrection ? 'Correct Match Result' : 'Record Match Result'}
+              {isCorrection ? t('Correct Match Result') : t('Record Match Result')}
             </h3>
             <p className="text-xs text-slate-500 truncate">
-              Match #{match.matchNumber} · {match.roundName}
+              {t("Match #{number} · {round}", {
+                number: match.matchNumber,
+                round: match.roundName,
+              })}
             </p>
           </div>
-          <button aria-label="Close"
+          <button aria-label={t("Close")}
             onClick={onClose}
             className="shrink-0 -mr-1 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-md transition-colors"
           >
@@ -115,14 +122,16 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
         <div className="p-4 sm:p-6 pt-4">
         {error && (
           <div className="mb-4 p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200">
-            {error}
+            {t(error)}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-2">
-              {isCorrection ? 'Corrected Winner (Bracket Re-Advances)' : 'Select Winner (Auto-Advances to next round)'}
+              {isCorrection
+                ? t('Corrected Winner (Bracket Re-Advances)')
+                : t('Select Winner (Auto-Advances to next round)')}
             </label>
             <div className="space-y-2">
               {match.teamA && (
@@ -151,7 +160,7 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
                       </div>
                     </div>
                   </div>
-                  <span className="text-xs font-medium text-slate-600 shrink-0 pl-2">Team A</span>
+                  <span className="text-xs font-medium text-slate-600 shrink-0 pl-2">{t("Team A")}</span>
                 </label>
               )}
 
@@ -181,7 +190,7 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
                       </div>
                     </div>
                   </div>
-                  <span className="text-xs font-medium text-slate-600 shrink-0 pl-2">Team B</span>
+                  <span className="text-xs font-medium text-slate-600 shrink-0 pl-2">{t("Team B")}</span>
                 </label>
               )}
             </div>
@@ -191,25 +200,25 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
           <div className="grid grid-cols-2 gap-3 pt-2">
             <div className="min-w-0">
               <label className="block text-[11px] leading-snug font-medium text-slate-600 mb-1 break-words">
-                {match.teamA?.name || 'Team A'} Score / Points
+                {t("{team} Score / Points", { team: match.teamA?.name || t('Team A') })}
               </label>
               <input
                 type="number"
                 value={teamAScore}
                 onChange={(e) => setTeamAScore(e.target.value)}
-                placeholder="e.g. 14"
+                placeholder={t("e.g. 14")}
                 className="w-full text-base sm:text-xs border border-slate-200 rounded-md px-3 py-2.5 sm:p-2 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-200"
               />
             </div>
             <div className="min-w-0">
               <label className="block text-[11px] leading-snug font-medium text-slate-600 mb-1 break-words">
-                {match.teamB?.name || 'Team B'} Score / Points
+                {t("{team} Score / Points", { team: match.teamB?.name || t('Team B') })}
               </label>
               <input
                 type="number"
                 value={teamBScore}
                 onChange={(e) => setTeamBScore(e.target.value)}
-                placeholder="e.g. 10"
+                placeholder={t("e.g. 10")}
                 className="w-full text-base sm:text-xs border border-slate-200 rounded-md px-3 py-2.5 sm:p-2 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-200"
               />
             </div>
@@ -217,13 +226,13 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
 
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
-              Match Summary / Kho-Kho Innings Note (Optional)
+              {t("Match Summary / Kho-Kho Innings Note (Optional)")}
             </label>
             <input
               type="text"
               value={details}
               onChange={(e) => setDetails(e.target.value)}
-              placeholder="e.g. Won by 4 points and 2 minutes remaining"
+              placeholder={t("e.g. Won by 4 points and 2 minutes remaining")}
               className="w-full text-base sm:text-xs border border-slate-200 rounded-md px-3 py-2.5 sm:p-2 focus:outline-none focus:ring-2 focus:ring-indigo-200"
             />
           </div>
@@ -231,9 +240,8 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
           {isCorrection && (
             <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-md text-[11px] text-amber-800">
               <Icon name="triangleExclamation" size="sm" className="mr-1 inline" />
-              <strong>Correction mode:</strong> this match already has an official result.
-              Submitting rewrites the record and re-advances the bracket from this point.
-              The change is audit-logged with the previous winner.
+              <strong>{t("Correction mode:")}</strong>{' '}
+              {t("this match already has an official result. Submitting rewrites the record and re-advances the bracket from this point. The change is audit-logged with the previous winner.")}
             </div>
           )}
 
@@ -242,12 +250,13 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
               <Icon name="trophy" size="sm" className="mr-1 inline" />
               {isCorrection ? (
                 <>
-                  <strong>Final Match:</strong> the corrected winner becomes the tournament
-                  Champion and the public bracket updates immediately.
+                  <strong>{t("Final Match:")}</strong>{' '}
+                  {t("the corrected winner becomes the tournament Champion and the public bracket updates immediately.")}
                 </>
               ) : (
                 <>
-                  <strong>Final Match:</strong> Submitting will mark this tournament as Completed, declare the champion, and store them for future lookback history!
+                  <strong>{t("Final Match:")}</strong>{' '}
+                  {t("Submitting will mark this tournament as Completed, declare the champion, and store them for future lookback history!")}
                 </>
               )}
             </div>
@@ -259,7 +268,7 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
               onClick={onClose}
               className="px-3 py-2.5 sm:py-1.5 min-h-[40px] sm:min-h-0 text-xs text-slate-600 hover:text-slate-800 rounded-md"
             >
-              Cancel
+              {t("Cancel")}
             </button>
             <button
               type="submit"
@@ -269,10 +278,10 @@ export const ResultEntryModal: React.FC<ResultEntryModalProps> = ({
               }`}
             >
               {isSubmitting
-                ? 'Saving...'
+                ? t('Saving...')
                 : isCorrection
-                  ? 'Apply Correction'
-                  : 'Confirm Winner & Advance'}
+                  ? t('Apply Correction')
+                  : t('Confirm Winner & Advance')}
             </button>
           </div>
         </form>

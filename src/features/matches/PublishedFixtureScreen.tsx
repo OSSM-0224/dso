@@ -1,6 +1,9 @@
+'use client';
+
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon.tsx';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { BracketView } from '../../components/bracket/BracketView.tsx';
 import { ResultEntryModal } from '../../components/matches/ResultEntryModal.tsx';
 import { ScheduleModal } from '../../components/matches/ScheduleModal.tsx';
@@ -25,6 +28,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
   canWrite,
   onOpenPublicView,
 }) => {
+  const { t } = useI18n();
   const [viewMode, setViewMode] = useState<'bracket' | 'list'>('bracket');
   const [selectedMatchForResult, setSelectedMatchForResult] = useState<MatchDoc | null>(null);
   const [selectedMatchForCorrection, setSelectedMatchForCorrection] = useState<MatchDoc | null>(null);
@@ -47,10 +51,14 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
       const res = await api.matches.recordResult(selectedMatchForResult.id, result);
       if (res.tournamentCompleted) {
         setSuccessMsg(
-          `Championship Final Completed: "${res.match.winner?.name}" is crowned Champion. Tournament recorded as completed.`
+          t('Championship Final Completed: "{name}" is crowned Champion. Tournament recorded as completed.', {
+            name: res.match.winner?.name ?? '',
+          })
         );
       } else {
-        setSuccessMsg(`Winner "${res.match.winner?.name}" advanced to the next round.`);
+        setSuccessMsg(
+          t('Winner "{name}" advanced to the next round.', { name: res.match.winner?.name ?? '' })
+        );
       }
       onRefresh();
     } catch (err: any) {
@@ -90,7 +98,9 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
           : { details: 'CORRECTED · result rewritten' },
       });
       setSuccessMsg(
-        `Result corrected: "${res.match.winner?.name}" is the official winner; the bracket has been re-advanced.`
+        t('Result corrected: "{name}" is the official winner; the bracket has been re-advanced.', {
+          name: res.match.winner?.name ?? '',
+        })
       );
       onRefresh();
     } catch (err: any) {
@@ -115,13 +125,13 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
       {/* Alert Notices */}
       {error && (
         <div className="p-4 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200">
-          {error}
+          {t(error)}
         </div>
       )}
       {successMsg && (
         <div className="p-4 bg-emerald-50 text-emerald-800 text-xs rounded-lg border border-emerald-200 flex items-center justify-between">
-          <span>{successMsg}</span>
-          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4" aria-label="Dismiss message"><Icon name="xmark" size="sm" /></button>
+          <span>{t(successMsg)}</span>
+          <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4" aria-label={t("Dismiss message")}><Icon name="xmark" size="sm" /></button>
         </div>
       )}
 
@@ -130,13 +140,18 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
         <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 text-white rounded-xl p-6 shadow-md flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-xs uppercase font-bold tracking-wider text-amber-100">
-              Tournament Champion Crowned
+              {t("Tournament Champion Crowned")}
             </span>
             <h2 className="text-2xl font-extrabold tracking-tight">
               <Icon name="trophy" size="sm" className="mr-1" />{tournament.winnerName}
             </h2>
             <p className="text-xs text-amber-100">
-              Completed {tournament.sport.toUpperCase()} {tournament.ageGroup} {tournament.gender} Championship ({tournament.year}). This team is now saved as a recent champion for upcoming seasons.
+              {t("Completed {sport} {ageGroup} {gender} Championship ({year}). This team is now saved as a recent champion for upcoming seasons.", {
+                sport: tournament.sport.toUpperCase(),
+                ageGroup: tournament.ageGroup,
+                gender: tournament.gender,
+                year: tournament.year,
+              })}
             </p>
           </div>
         </div>
@@ -154,7 +169,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Bracket View
+            {t("Bracket View")}
           </button>
           <button
             onClick={() => setViewMode('list')}
@@ -164,7 +179,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Match Schedule List
+            {t("Match Schedule List")}
           </button>
         </div>
 
@@ -173,18 +188,18 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
           <button
             onClick={onOpenPublicView}
             className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-md transition-colors shadow-sm flex items-center gap-1.5"
-            title="Open public read-only bracket"
+            title={t("Open public read-only bracket")}
           >
             <span>🔗</span>
-            <span>Public Share Link</span>
+            <span>{t("Public Share Link")}</span>
           </button>
           <button
             onClick={handlePrint}
             className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-md transition-colors shadow-sm flex items-center gap-1.5"
-            title="Export / Print Bracket to PDF"
+            title={t("Export / Print Bracket to PDF")}
           >
             <Icon name="print" size="sm" />
-            <span>Export to PDF / Print</span>
+            <span>{t("Export to PDF / Print")}</span>
           </button>
         </div>
       </div>
@@ -209,12 +224,12 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-slate-100 pb-3">
             <h3 className="text-sm font-bold text-slate-900">
-              Round-wise Match List & Results
+              {t("Round-wise Match List & Results")}
             </h3>
 
             {/* Round Filter */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">Filter Round:</span>
+              <span className="text-xs text-slate-500">{t("Filter Round:")}</span>
               <select
                 value={selectedRoundFilter}
                 onChange={(e) =>
@@ -224,10 +239,10 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
                 }
                 className="text-xs border border-slate-200 rounded px-2 py-1 bg-white"
               >
-                <option value="all">All Rounds</option>
+                <option value="all">{t("All Rounds")}</option>
                 {rounds.map((r) => (
                   <option key={r} value={r}>
-                    Round {r}
+                    {t("Round {round}", { round: r })}
                   </option>
                 ))}
               </select>
@@ -249,23 +264,23 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
                       <span>{m.roundName}</span>
                       {m.status === 'live' && (
                         <span className="text-[10px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded font-bold">
-                          LIVE
+                          {t("LIVE")}
                         </span>
                       )}
                       {m.status === 'completed' && (
                         <span className="text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded font-medium">
-                          Completed
+                          {t("Completed")}
                         </span>
                       )}
                       {m.isBye && (
                         <span className="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
-                          BYE
+                          {t("BYE")}
                         </span>
                       )}
                     </div>
                     <div className="text-slate-600 mt-0.5">
-                      {m.teamA?.name || 'TBD'} <span className="text-slate-400">vs</span>{' '}
-                      {m.isBye ? 'BYE' : m.teamB?.name || 'TBD'}
+                      {m.teamA?.name || t('TBD')} <span className="text-slate-400">{t("vs")}</span>{' '}
+                      {m.isBye ? t('BYE') : m.teamB?.name || t('TBD')}
                     </div>
                   </div>
                 </div>
@@ -276,7 +291,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
                     {m.scheduledAt ? (
                       <div>{new Date(m.scheduledAt).toLocaleString()}</div>
                     ) : (
-                      <div>Schedule: TBD</div>
+                      <div>{t("Schedule: TBD")}</div>
                     )}
                     {m.venue && <div className="text-slate-400">{m.venue}</div>}
                   </div>
@@ -295,44 +310,44 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
                           <Link
                             href={`/score/${m.id}`}
                             className="px-2.5 py-1 border border-emerald-300 bg-emerald-50 text-emerald-700 rounded font-medium flex items-center gap-1 hover:bg-emerald-100"
-                            title="Open the live scoring console for this match"
+                            title={t("Open the live scoring console for this match")}
                           >
                             <Icon name="stopwatch" size="sm" />
-                            Scorer Console
+                            {t("Scorer Console")}
                           </Link>
                         )}
                         <button
                           onClick={() => setSelectedMatchForSchedule(m)}
                           className="px-2.5 py-1 border border-slate-200 rounded text-slate-600 hover:bg-slate-50"
                         >
-                          Schedule
+                          {t("Schedule")}
                         </button>
                         {m.status !== 'completed' && m.teamA && m.teamB && (
                           <button
                             onClick={() => setSelectedMatchForResult(m)}
                             className="px-2.5 py-1 bg-indigo-600 text-white rounded font-medium hover:bg-indigo-700"
                           >
-                            Result
+                            {t("Result")}
                           </button>
                         )}
                         {m.status === 'completed' && m.teamA && m.teamB && (
                           <button
                             onClick={() => setSelectedMatchForCorrection(m)}
                             className="px-2.5 py-1 border border-amber-300 bg-amber-50 text-amber-800 rounded font-medium hover:bg-amber-100 flex items-center gap-1"
-                            title="Rewrite the official result (audit-logged)"
+                            title={t("Rewrite the official result (audit-logged)")}
                           >
                             <Icon name="pen" size="sm" />
-                            Correct
+                            {t("Correct")}
                           </button>
                         )}
                         {m.teamA && m.teamB && (
                           <button
                             onClick={() => setSelectedMatchForScorers(m)}
                             className="px-2.5 py-1 border border-slate-200 rounded text-slate-600 hover:bg-slate-50 flex items-center gap-1"
-                            title="Assign or replace the scorer roster for this match"
+                            title={t("Assign or replace the scorer roster for this match")}
                           >
                             <Icon name="users" size="sm" />
-                            Scorers
+                            {t("Scorers")}
                           </button>
                         )}
                       </div>

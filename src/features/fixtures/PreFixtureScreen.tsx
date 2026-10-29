@@ -1,6 +1,8 @@
+'use client';
 import React, { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { api } from '@/lib/api.ts';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { TeamDoc, TournamentDoc } from '@/shared/types.ts';
 
 interface PreFixtureScreenProps {
@@ -16,6 +18,7 @@ export const PreFixtureScreen: React.FC<PreFixtureScreenProps> = ({
   onFixturesGenerated,
   canWrite,
 }) => {
+  const { t } = useI18n();
   const [selectedStrong, setSelectedStrong] = useState<string[]>(tournament.strongTeams || []);
   const [recentChampions, setRecentChampions] = useState<
     Array<{
@@ -90,50 +93,50 @@ export const PreFixtureScreen: React.FC<PreFixtureScreenProps> = ({
     <div className="space-y-6">
       {error && (
         <div className="p-4 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200">
-          {error}
+          {t(error)}
         </div>
       )}
 
       {/* Bracket Math & Format Preview Strip */}
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
-          Play-In Bracket Geometry Preview
+          {t("Play-In Bracket Geometry Preview")}
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           <div className="p-3 bg-slate-50 rounded-lg">
-            <span className="text-[11px] text-slate-500">Total Enrolled</span>
+            <span className="text-[11px] text-slate-500">{t("Total Enrolled")}</span>
             <div className="text-xl font-bold font-mono text-slate-900 tabular-nums">
               {N}
             </div>
-            <span className="text-[10px] text-slate-400">Teams</span>
+            <span className="text-[10px] text-slate-400">{t("Teams")}</span>
           </div>
           <div className="p-3 bg-slate-50 rounded-lg">
-            <span className="text-[11px] text-slate-500">Next Power-of-2</span>
+            <span className="text-[11px] text-slate-500">{t("Next Power-of-2")}</span>
             <div className="text-xl font-bold font-mono text-indigo-600 tabular-nums">
               {P}
             </div>
-            <span className="text-[10px] text-slate-400">Bracket Slots</span>
+            <span className="text-[10px] text-slate-400">{t("Bracket Slots")}</span>
           </div>
           <div className="p-3 bg-slate-50 rounded-lg">
-            <span className="text-[11px] text-slate-500">Round 1 Byes</span>
+            <span className="text-[11px] text-slate-500">{t("Round 1 Byes")}</span>
             <div className="text-xl font-bold font-mono text-emerald-600 tabular-nums">
               {byes}
             </div>
-            <span className="text-[10px] text-slate-400">P - N Byes</span>
+            <span className="text-[10px] text-slate-400">{t("P - N Byes")}</span>
           </div>
           <div className="p-3 bg-slate-50 rounded-lg">
-            <span className="text-[11px] text-slate-500">Round 1 Matches</span>
+            <span className="text-[11px] text-slate-500">{t("Round 1 Matches")}</span>
             <div className="text-xl font-bold font-mono text-slate-900 tabular-nums">
               {playInMatches}
             </div>
-            <span className="text-[10px] text-slate-400">N - P/2 Play-Ins</span>
+            <span className="text-[10px] text-slate-400">{t("N - P/2 Play-Ins")}</span>
           </div>
           <div className="p-3 bg-slate-50 rounded-lg col-span-2 sm:col-span-1">
-            <span className="text-[11px] text-slate-500">Round 2 Teams</span>
+            <span className="text-[11px] text-slate-500">{t("Round 2 Teams")}</span>
             <div className="text-xl font-bold font-mono text-slate-900 tabular-nums">
               {r2Teams}
             </div>
-            <span className="text-[10px] text-slate-400">P/2 Teams</span>
+            <span className="text-[10px] text-slate-400">{t("P/2 Teams")}</span>
           </div>
         </div>
       </div>
@@ -144,14 +147,14 @@ export const PreFixtureScreen: React.FC<PreFixtureScreenProps> = ({
           <div>
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-bold text-slate-900">
-                Pick Strong Teams
+                {t("Pick Strong Teams")}
               </h3>
               <span className="text-xs font-mono text-indigo-600">
-                {selectedStrong.length} selected
+                {t("{count} selected", { count: selectedStrong.length })}
               </span>
             </div>
             <p className="text-xs text-slate-500 mb-4">
-              Organizer selects top contending teams (e.g. NHPS, MNR, BVPT). The engine seeds them into separate quarters so they only meet in the semifinals or final, and grants them byes after champions.
+              {t("Organizer selects top contending teams (e.g. NHPS, MNR, BVPT). The engine seeds them into separate quarters so they only meet in the semifinals or final, and grants them byes after champions.")}
             </p>
 
             <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
@@ -170,7 +173,7 @@ export const PreFixtureScreen: React.FC<PreFixtureScreenProps> = ({
                     <div>
                       <div className="font-semibold">{team.name}</div>
                       <div className="text-[11px] text-slate-400">
-                        {team.schoolName} · {team.medium} Medium
+                        {team.schoolName} · {team.medium} {t("Medium")}
                       </div>
                     </div>
                     <input
@@ -191,21 +194,33 @@ export const PreFixtureScreen: React.FC<PreFixtureScreenProps> = ({
           <div>
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-bold text-slate-900">
-                Auto-Detected Recent Champions
+                {t("Auto-Detected Recent Champions")}
               </h3>
               <span className="text-xs text-amber-600 font-semibold">
-                Lookback: {tournament.championLookbackYears || 3} Years
+                {t("Lookback: {years} Years", { years: tournament.championLookbackYears || 3 })}
               </span>
             </div>
             <p className="text-xs text-slate-500 mb-4">
-              Rule 1 & 2: System scans the database for winners of completed {tournament.sport} {tournament.ageGroup} {tournament.gender} tournaments in the past {tournament.championLookbackYears || 3} years ({tournament.year - (tournament.championLookbackYears || 3)}–{tournament.year - 1}). These teams receive highest priority for Round 1 byes!
+              {t("Rule 1 & 2: System scans the database for winners of completed {sport} {ageGroup} {gender} tournaments in the past {years} years ({from}–{to}). These teams receive highest priority for Round 1 byes!", {
+                sport: tournament.sport,
+                ageGroup: tournament.ageGroup,
+                gender: tournament.gender,
+                years: tournament.championLookbackYears || 3,
+                from: tournament.year - (tournament.championLookbackYears || 3),
+                to: tournament.year - 1,
+              })}
             </p>
 
             {recentChampions.length === 0 ? (
               <div className="py-8 text-center text-xs text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-                No past champions detected for {tournament.sport} {tournament.ageGroup} {tournament.gender} within {tournament.championLookbackYears || 3} years.
+                {t("No past champions detected for {sport} {ageGroup} {gender} within {years} years.", {
+                  sport: tournament.sport,
+                  ageGroup: tournament.ageGroup,
+                  gender: tournament.gender,
+                  years: tournament.championLookbackYears || 3,
+                })}
                 <div className="mt-1 text-[11px] text-slate-500">
-                  (You can record past tournament results in the Past Champions tab)
+                  {t("(You can record past tournament results in the Past Champions tab)")}
                 </div>
               </div>
             ) : (
@@ -238,32 +253,32 @@ export const PreFixtureScreen: React.FC<PreFixtureScreenProps> = ({
       {/* Applied Rules Summary Card */}
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <h3 className="text-sm font-bold text-slate-900 mb-3">
-          Applied Engine Rules & Priority Hierarchy
+          {t("Applied Engine Rules & Priority Hierarchy")}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600">
           <div className="flex items-start gap-2">
             <span className="font-bold text-indigo-600 shrink-0">1.</span>
-            <span><strong>Same School Separation:</strong> Teams from the same school with different mediums (Marathi vs English) will never face each other in Round 1 (Hard Constraint).</span>
+            <span><strong>{t("Same School Separation:")}</strong> {t("Teams from the same school with different mediums (Marathi vs English) will never face each other in Round 1 (Hard Constraint).")}</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="font-bold text-indigo-600 shrink-0">2.</span>
-            <span><strong>Strong Teams Quarters:</strong> Placed via standard bracket seeding across different quarters. They cannot meet until the semifinals or final.</span>
+            <span><strong>{t("Strong Teams Quarters:")}</strong> {t("Placed via standard bracket seeding across different quarters. They cannot meet until the semifinals or final.")}</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="font-bold text-indigo-600 shrink-0">3.</span>
-            <span><strong>Champions Round 1 Bye:</strong> Auto-detected recent champions receive priority 1 for first-round byes and skip Round 1.</span>
+            <span><strong>{t("Champions Round 1 Bye:")}</strong> {t("Auto-detected recent champions receive priority 1 for first-round byes and skip Round 1.")}</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="font-bold text-indigo-600 shrink-0">4.</span>
-            <span><strong>Quarter Bye Balance:</strong> Byes are evenly distributed across all 4 quarters (no two quarters differ by more than 1 bye).</span>
+            <span><strong>{t("Quarter Bye Balance:")}</strong> {t("Byes are evenly distributed across all 4 quarters (no two quarters differ by more than 1 bye).")}</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="font-bold text-indigo-600 shrink-0">5.</span>
-            <span><strong>Play-In Progression:</strong> All rounds (R1 to Final) are generated up front with auto-advancing nextMatch linkages.</span>
+            <span><strong>{t("Play-In Progression:")}</strong> {t("All rounds (R1 to Final) are generated up front with auto-advancing nextMatch linkages.")}</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="font-bold text-indigo-600 shrink-0">6.</span>
-            <span><strong>Deterministic Reproducibility:</strong> Remaining teams are shuffled using a seeded PRNG for exact audit reproducibility.</span>
+            <span><strong>{t("Deterministic Reproducibility:")}</strong> {t("Remaining teams are shuffled using a seeded PRNG for exact audit reproducibility.")}</span>
           </div>
         </div>
       </div>
@@ -274,11 +289,11 @@ export const PreFixtureScreen: React.FC<PreFixtureScreenProps> = ({
           <div className="flex items-center gap-2">
             <span className="text-base">🔒</span>
             <div>
-              <span className="font-bold">Fixture Generation Blocked:</span> Team enrollment is currently open. You must lock enrollment before generating the tournament draw.
+              <span className="font-bold">{t("Fixture Generation Blocked:")}</span> {t("Team enrollment is currently open. You must lock enrollment before generating the tournament draw.")}
             </div>
           </div>
           <span className="text-[11px] text-amber-700 font-medium">
-            (Go to &quot;Enrolled Teams&quot; tab to lock)
+            {t('(Go to "Enrolled Teams" tab to lock)')}
           </span>
         </div>
       )}
@@ -287,11 +302,11 @@ export const PreFixtureScreen: React.FC<PreFixtureScreenProps> = ({
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-100 p-4 rounded-xl border border-slate-200">
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <label className="text-xs font-semibold text-slate-700 whitespace-nowrap">
-            Optional Random Seed:
+            {t("Optional Random Seed:")}
           </label>
           <input
             type="number"
-            placeholder="Auto-random"
+            placeholder={t("Auto-random")}
             value={customSeed}
             onChange={(e) => setCustomSeed(e.target.value)}
             className="text-xs border border-slate-300 rounded px-2.5 py-1.5 w-32 bg-white font-mono"
@@ -302,15 +317,15 @@ export const PreFixtureScreen: React.FC<PreFixtureScreenProps> = ({
           onClick={handleGenerate}
           disabled={isLoading || !canWrite || !tournament.isEnrollmentLocked || enrolledTeams.length < 4}
           className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs rounded-lg transition-colors disabled:opacity-50 shadow-sm whitespace-nowrap"
-          title={!tournament.isEnrollmentLocked ? 'Lock enrollment first to generate fixtures' : undefined}
+          title={!tournament.isEnrollmentLocked ? t('Lock enrollment first to generate fixtures') : undefined}
         >
           {isLoading
-            ? 'Generating Fixtures...'
+            ? t('Generating Fixtures...')
             : !tournament.isEnrollmentLocked
-            ? '🔒 Lock Enrollment to Generate'
+            ? t('🔒 Lock Enrollment to Generate')
             : enrolledTeams.length < 4
-            ? 'At least 4 teams required'
-            : 'Generate Kho-Kho Fixture'}
+            ? t('At least 4 teams required')
+            : t('Generate Kho-Kho Fixture')}
         </button>
       </div>
     </div>

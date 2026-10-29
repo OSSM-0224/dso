@@ -1,13 +1,17 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { api } from '@/lib/api.ts';
 import { PastTournamentDoc } from '@/shared/types.ts';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 
 interface PastTournamentsScreenProps {
   canWrite: boolean;
 }
 
 export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({ canWrite }) => {
+  const { t } = useI18n();
   const [records, setRecords] = useState<PastTournamentDoc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -67,7 +71,7 @@ export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({ ca
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Delete this past tournament record?')) return;
+    if (!window.confirm(t('Delete this past tournament record?'))) return;
     try {
       await api.pastTournaments.delete(id);
       loadRecords();
@@ -81,10 +85,10 @@ export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({ ca
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-slate-900">
-            Past Tournament Champions (Historical Archive)
+            {t('Past Tournament Champions (Historical Archive)')}
           </h2>
           <p className="text-xs text-slate-500 max-w-2xl mt-1">
-            Rule 1 enables instant auto-detection of past champions for the very first season. Record historical DSO champions here so the fixture generation engine automatically grants them Round 1 byes.
+            {t('Rule 1 enables instant auto-detection of past champions for the very first season. Record historical DSO champions here so the fixture generation engine automatically grants them Round 1 byes.')}
           </p>
         </div>
 
@@ -93,14 +97,14 @@ export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({ ca
             onClick={() => setShowAddForm(true)}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs rounded-lg transition-colors shadow-sm shrink-0"
           >
-            + Record Past Champion
+            {t('+ Record Past Champion')}
           </button>
         )}
       </div>
 
       {error && (
         <div className="p-4 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200">
-          {error}
+        {t(error)}
         </div>
       )}
 
@@ -112,21 +116,21 @@ export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({ ca
         >
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="text-sm font-bold text-slate-900">
-              Record Past Tournament Result
+              {t('Record Past Tournament Result')}
             </h3>
             <button
               type="button"
               onClick={() => setShowAddForm(false)}
               className="text-xs text-slate-400 hover:text-slate-600 font-semibold"
             >
-              Cancel
+              {t('Cancel')}
             </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Tournament Title
+                {t('Tournament Title')}
               </label>
               <input
                 type="text"
@@ -140,7 +144,7 @@ export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({ ca
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Year
+                {t('Year')}
               </label>
               <input
                 type="number"
@@ -153,7 +157,7 @@ export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({ ca
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Sport
+                {t('Sport')}
               </label>
               <select
                 value={sport}
@@ -169,7 +173,7 @@ export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({ ca
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Age Group
+                  {t('Age Group')}
                 </label>
                 <select
                   value={ageGroup}
@@ -183,22 +187,22 @@ export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({ ca
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Gender
+                  {t('Gender')}
                 </label>
                 <select
                   value={gender}
                   onChange={(e) => setGender(e.target.value as 'boys' | 'girls')}
                   className="w-full text-xs border border-slate-200 rounded-md p-2 bg-white"
                 >
-                  <option value="boys">Boys</option>
-                  <option value="girls">Girls</option>
+                  <option value="boys">{t('Boys')}</option>
+                  <option value="girls">{t('Girls')}</option>
                 </select>
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Winner Team Name
+                {t('Winner Team Name')}
               </label>
               <input
                 type="text"
@@ -212,7 +216,7 @@ export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({ ca
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                School Name
+                {t('School Name')}
               </label>
               <input
                 type="text"
@@ -231,13 +235,13 @@ export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({ ca
               onClick={() => setShowAddForm(false)}
               className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800"
             >
-              Cancel
+              {t('Cancel')}
             </button>
             <button
               type="submit"
               className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-md shadow-sm"
             >
-              Save Past Record
+              {t('Save Past Record')}
             </button>
           </div>
         </form>
@@ -246,12 +250,12 @@ export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({ ca
       {/* Records Table */}
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-3">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Recorded Champions Archive ({records.length})
+          {t('Recorded Champions Archive ({count})', { count: records.length })}
         </h3>
 
         {records.length === 0 ? (
           <div className="py-12 text-center text-xs text-slate-400">
-            No past tournament records recorded yet. Click &quot;Record Past Champion&quot; above to add historical winners.
+            {t('No past tournament records recorded yet. Click "Record Past Champion" above to add historical winners.')}
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
@@ -278,7 +282,7 @@ export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({ ca
                     onClick={() => handleDelete(r.id)}
                     className="text-red-600 hover:text-red-800 text-[11px] font-medium shrink-0 self-end sm:self-center"
                   >
-                    Delete
+                    {t('Delete')}
                   </button>
                 )}
               </div>

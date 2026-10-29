@@ -1,6 +1,9 @@
-﻿import React, { useState } from 'react';
+﻿'use client';
+
+import React, { useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { api } from '@/lib/api.ts';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { MyMatchLiveScore } from '@/features/scoring/LiveScorePanel.tsx';
 
 interface MatchDetailModalProps {
@@ -16,6 +19,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   onClose,
   onAcknowledgeSuccess,
 }) => {
+  const { t } = useI18n();
   const [isAcknowledging, setIsAcknowledging] = useState(false);
   const [isAcknowledged, setIsAcknowledged] = useState<boolean>(matchData?.isAcknowledged || false);
   const [ackTimestamp, setAckTimestamp] = useState<string | null>(matchData?.acknowledgedAt || null);
@@ -28,8 +32,8 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   const myTeam = matchData.myTeam;
   const opponentDisplay = matchData.opponentDisplay || {
     isDecided: true,
-    label: matchData.opponentTeam?.name || 'Opponent',
-    schoolName: matchData.opponentTeam?.schoolName || 'Opponent School',
+    label: matchData.opponentTeam?.name || t('Opponent'),
+    schoolName: matchData.opponentTeam?.schoolName || t('Opponent School'),
   };
 
   const handleAcknowledge = async () => {
@@ -68,14 +72,14 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
         month: 'long',
         day: 'numeric',
       })
-    : 'Date to be announced';
+    : t('Date to be announced');
 
   const formattedTime = match.scheduledAt
     ? new Date(match.scheduledAt).toLocaleTimeString('en-IN', {
         hour: '2-digit',
         minute: '2-digit',
       })
-    : 'Time TBD';
+    : t('Time TBD');
 
   const venueName = match.venue || 'DSO Sports Complex, Nerul, Navi Mumbai';
   const mapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -100,17 +104,17 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 {tournament.name || 'DSO Tournament'}
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-800 text-slate-300">
-                Match #{match.matchNumber} · {match.roundName}
+                {t("Match #{number}", { number: match.matchNumber })} · {match.roundName}
               </span>
             </div>
             <h2 className="text-xl font-bold tracking-tight text-white mt-1">
-              Official Match Schedule
+              {t("Official Match Schedule")}
             </h2>
           </div>
           <button
             onClick={onClose}
             className="shrink-0 -mr-1 p-2 rounded-full bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors print:hidden"
-            title="Close"
+            title={t("Close")}
           >
             <Icon name="xmark" size="lg" />
           </button>
@@ -120,7 +124,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
         <div className="p-4 sm:p-6 overflow-y-auto space-y-6">
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
-              {error}
+              {t(error)}
             </div>
           )}
 
@@ -130,27 +134,27 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               {/* My Team */}
               <div className="md:col-span-3 min-w-0">
                 <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-600 text-white mb-1.5">
-                  Your School Team
+                  {t("Your School Team")}
                 </span>
                 <h3 className="text-base font-bold text-slate-900">
-                  {myTeam?.name || 'Your Team'}
+                  {myTeam?.name || t('Your Team')}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  {myTeam?.medium ? `${myTeam.medium} Medium` : ''} · {myTeam?.ageGroup || tournament.ageGroup} ({myTeam?.gender || tournament.gender})
+                  {myTeam?.medium ? `${myTeam.medium} ${t('Medium')}` : ''} · {myTeam?.ageGroup || tournament.ageGroup} ({myTeam?.gender || tournament.gender})
                 </p>
               </div>
 
               {/* VS Divider */}
               <div className="md:col-span-1 flex flex-col items-center justify-center">
                 <span className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-black text-slate-600">
-                  VS
+                  {t("VS")}
                 </span>
               </div>
 
               {/* Opponent */}
               <div className="md:col-span-3 md:text-right min-w-0">
                 <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-200 text-slate-700 mb-1.5">
-                  Opponent
+                  {t("Opponent")}
                 </span>
                 <h3 className="text-base font-bold text-slate-900">
                   {opponentDisplay.label}
@@ -158,7 +162,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 <p className="text-xs text-slate-500">
                   {opponentDisplay.isDecided
                     ? opponentDisplay.schoolName
-                    : opponentDisplay.dependencyText || 'Awaiting completion of earlier round'}
+                    : opponentDisplay.dependencyText || t('Awaiting completion of earlier round')}
                 </p>
               </div>
             </div>
@@ -178,7 +182,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80">
               <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold mb-2">
                 <Icon name="calendar" size="md" className="text-indigo-600" />
-                <span>Kick-off Date & Time</span>
+                <span>{t("Kick-off Date & Time")}</span>
               </div>
               <p className="text-sm font-bold text-slate-900">{formattedDate}</p>
               <div className="flex items-center gap-1.5 text-xs text-indigo-600 font-semibold mt-1">
@@ -191,7 +195,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80">
               <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold mb-2">
                 <Icon name="location" size="md" className="text-emerald-600" />
-                <span>Venue & Directions</span>
+                <span>{t("Venue & Directions")}</span>
               </div>
               <p className="text-sm font-bold text-slate-900 leading-snug">{venueName}</p>
               <a
@@ -200,7 +204,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 text-xs text-emerald-700 hover:text-emerald-800 font-semibold mt-2 underline"
               >
-                <span>Open in Google Maps</span>
+                <span>{t("Open in Google Maps")}</span>
                 <Icon name="external" size="sm" />
               </a>
             </div>
@@ -213,7 +217,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               <MyMatchLiveScore
                 matchId={match.id}
                 enabled={isOpen}
-                title={match.roundName ? `Match #${match.matchNumber} · ${match.roundName}` : undefined}
+                title={match.roundName ? t("Match #{number} · {round}", { number: match.matchNumber, round: match.roundName }) : undefined}
               />
             )}
 
@@ -223,10 +227,10 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
-                    Match Completed
+                    {t("Match Completed")}
                   </span>
                   <p className="text-sm font-semibold text-emerald-950 mt-0.5">
-                    Winner: <span className="font-bold">{match.winner?.name || 'Undecided'}</span>
+                    {t("Winner:")} <span className="font-bold">{match.winner?.name || t('Undecided')}</span>
                   </p>
                 </div>
                 {match.score && (
@@ -256,15 +260,16 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               <div>
                 <p className="text-xs font-bold text-slate-900">
                   {isAcknowledged
-                    ? 'Schedule Acknowledged by School'
-                    : 'Awaiting School Confirmation'}
+                    ? t("Schedule Acknowledged by School")
+                    : t("Awaiting School Confirmation")}
                 </p>
                 <p className="text-[11px] text-slate-500">
                   {isAcknowledged && ackTimestamp
-                    ? `Confirmed on ${new Date(ackTimestamp).toLocaleDateString()} at ${new Date(
-                        ackTimestamp
-                      ).toLocaleTimeString()}`
-                    : 'Let tournament organizers know your school has seen this fixture.'}
+                    ? t("Confirmed on {date} at {time}", {
+                        date: new Date(ackTimestamp).toLocaleDateString(),
+                        time: new Date(ackTimestamp).toLocaleTimeString(),
+                      })
+                    : t("Let tournament organizers know your school has seen this fixture.")}
                 </p>
               </div>
             </div>
@@ -275,7 +280,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 disabled={isAcknowledging}
                 className="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-xs hover:shadow transition-all disabled:bg-emerald-300 shrink-0 print:hidden"
               >
-                {isAcknowledging ? 'Confirming...' : 'Confirm / Acknowledge'}
+                {isAcknowledging ? t("Confirming...") : t("Confirm / Acknowledge")}
               </button>
             )}
           </div>
@@ -289,7 +294,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-100 rounded-lg text-xs font-semibold text-slate-700 transition-colors shadow-2xs"
             >
               <Icon name="calendarPlus" size="sm" className="text-indigo-600" />
-              <span>Add to Calendar (.ics)</span>
+              <span>{t("Add to Calendar (.ics)")}</span>
             </button>
 
             <button
@@ -297,7 +302,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-100 rounded-lg text-xs font-semibold text-slate-700 transition-colors shadow-2xs"
             >
               <Icon name="print" size="sm" className="text-slate-600" />
-              <span>Print Match Pass</span>
+              <span>{t("Print Match Pass")}</span>
             </button>
           </div>
 
@@ -305,7 +310,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
           >
-            Close
+            {t("Close")}
           </button>
         </div>
       </div>

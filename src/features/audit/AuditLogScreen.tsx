@@ -1,12 +1,16 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { api } from '@/lib/api.ts';
 import { AuditLogDoc } from '@/shared/types.ts';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 
 interface AuditLogScreenProps {
   tournamentId: string;
 }
 
 export const AuditLogScreen: React.FC<AuditLogScreenProps> = ({ tournamentId }) => {
+  const { t } = useI18n();
   const [logs, setLogs] = useState<AuditLogDoc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +53,7 @@ export const AuditLogScreen: React.FC<AuditLogScreenProps> = ({ tournamentId }) 
   if (isLoading) {
     return (
       <div className="py-12 text-center text-xs text-slate-400">
-        Loading tournament audit logs...
+        {t('Loading tournament audit logs...')}
       </div>
     );
   }
@@ -57,7 +61,7 @@ export const AuditLogScreen: React.FC<AuditLogScreenProps> = ({ tournamentId }) 
   if (error) {
     return (
       <div className="p-4 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200">
-        {error}
+        {t(error)}
       </div>
     );
   }
@@ -67,23 +71,23 @@ export const AuditLogScreen: React.FC<AuditLogScreenProps> = ({ tournamentId }) 
       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
         <div>
           <h3 className="text-sm font-bold text-slate-900">
-            Tournament Audit Log
+            {t('Tournament Audit Log')}
           </h3>
           <p className="text-xs text-slate-500">
-            Immutable tracking of fixture generation, manual swaps, publish actions, and match score entries.
+            {t('Immutable tracking of fixture generation, manual swaps, publish actions, and match score entries.')}
           </p>
         </div>
         <button
           onClick={loadLogs}
           className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
         >
-          Refresh Log
+          {t('Refresh Log')}
         </button>
       </div>
 
       {logs.length === 0 ? (
         <div className="py-8 text-center text-xs text-slate-400">
-          No audit entries recorded for this tournament yet.
+          {t('No audit entries recorded for this tournament yet.')}
         </div>
       ) : (
         <div className="divide-y divide-slate-100">

@@ -1,7 +1,10 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { api } from '@/lib/api.ts';
 import { useAuth } from '@/context/AuthContext.tsx';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { MatchDetailModal } from './MatchDetailModal.tsx';
 
 interface ParticipantPortalScreenProps {
@@ -18,6 +21,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
   openMatchId = null,
 }) => {
   const { user, signOut } = useAuth();
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'schedule' | 'bracket' | 'notifications'>(initialTab);
 
   // Dashboard Data
@@ -129,7 +133,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
       // Refresh matches and dashboard
       loadAllData();
     } catch (err: any) {
-      alert(err.message || 'Failed to acknowledge match');
+      alert(t(err.message || 'Failed to acknowledge match'));
     }
   };
 
@@ -182,8 +186,8 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
     return (
       <div className="min-h-[500px] flex flex-col items-center justify-center p-8 text-center">
         <Icon name="refresh" size="xl" className="text-indigo-600 animate-spin mb-3" />
-        <p className="text-sm font-semibold text-slate-700">Loading your school portal...</p>
-        <p className="text-xs text-slate-400 mt-1">Fetching authorized match schedule and notifications</p>
+        <p className="text-sm font-semibold text-slate-700">{t("Loading your school portal...")}</p>
+        <p className="text-xs text-slate-400 mt-1">{t("Fetching authorized match schedule and notifications")}</p>
       </div>
     );
   }
@@ -192,13 +196,13 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
     return (
       <div className="max-w-2xl mx-auto my-12 p-6 bg-white border border-red-200 rounded-2xl shadow-sm text-center">
         <Icon name="circleAlert" size="md" className="text-red-500 mx-auto mb-3" />
-        <h3 className="text-base font-bold text-slate-900">Access Error</h3>
-        <p className="text-xs text-slate-600 mt-1">{error}</p>
+        <h3 className="text-base font-bold text-slate-900">{t("Access Error")}</h3>
+        <p className="text-xs text-slate-600 mt-1">{t(error)}</p>
         <button
           onClick={loadAllData}
           className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg"
         >
-          Try Again
+          {t("Try Again")}
         </button>
       </div>
     );
@@ -222,18 +226,21 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-500/30 text-indigo-200 border border-indigo-400/20 truncate max-w-full">
-                  School Code: {school?.schoolCode || 'DSO-PART'}
+                  {t("School Code:")} {school?.schoolCode || 'DSO-PART'}
                 </span>
                 <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1 shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Active Portal
+                  {t("Active Portal")}
                 </span>
               </div>
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white mt-1">
                 {school?.name}
               </h1>
               <p className="text-xs text-slate-300 mt-0.5">
-                Representing {stats?.totalTeams || 0} teams across {school?.mediums?.join(', ')} mediums
+                {t("Representing {count} teams across {mediums} mediums", {
+                  count: stats?.totalTeams || 0,
+                  mediums: school?.mediums?.join(', '),
+                })}
               </p>
             </div>
           </div>
@@ -242,7 +249,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
             <button
               onClick={() => setActiveTab('notifications')}
               className="relative p-2 rounded-xl bg-white/10 hover:bg-white/15 transition-colors"
-              title="Notifications"
+              title={t("Notifications")}
             >
               <Icon name="bell" size="lg" className="text-indigo-200" />
               {unreadNotifsCount > 0 && (
@@ -257,7 +264,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-slate-200 transition-colors"
             >
               <Icon name="rightFromBracket" size="sm" />
-              <span>Sign Out</span>
+              <span>{t("Sign Out")}</span>
             </button>
           </div>
         </div>
@@ -272,7 +279,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                 : 'text-slate-300 hover:text-white hover:bg-white/5'
             }`}
           >
-            Dashboard
+            {t("Dashboard")}
           </button>
           <button
             onClick={() => setActiveTab('schedule')}
@@ -282,7 +289,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                 : 'text-slate-300 hover:text-white hover:bg-white/5'
             }`}
           >
-            My Schedule ({matches.length})
+            {t("My Schedule ({count})", { count: matches.length })}
           </button>
           <button
             onClick={() => setActiveTab('bracket')}
@@ -292,7 +299,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                 : 'text-slate-300 hover:text-white hover:bg-white/5'
             }`}
           >
-            My Bracket Path
+            {t("My Bracket Path")}
           </button>
           <button
             onClick={() => setActiveTab('notifications')}
@@ -302,7 +309,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                 : 'text-slate-300 hover:text-white hover:bg-white/5'
             }`}
           >
-            <span>Notifications</span>
+            <span>{t("Notifications")}</span>
             {unreadNotifsCount > 0 && (
               <span className="px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px]">
                 {unreadNotifsCount}
@@ -322,7 +329,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white/20 text-white backdrop-blur-xs">
-                      NEXT MATCH
+                      {t("NEXT MATCH")}
                     </span>
                     <span className="text-xs text-indigo-200">
                       {nextMatch.tournament?.name} · {nextMatch.match?.roundName}
@@ -331,14 +338,14 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
 
                   <div className="space-y-1">
                     <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-                      {nextMatch.myTeam?.name} <span className="text-indigo-200 text-base font-normal">vs</span>{' '}
+                      {nextMatch.myTeam?.name} <span className="text-indigo-200 text-base font-normal">{t("vs")}</span>{' '}
                       {nextMatch.opponentDisplay?.label}
                     </h2>
                     <p className="text-xs text-indigo-200">
                       {nextMatch.opponentDisplay?.dependencyText ||
                         (nextMatch.opponentDisplay?.isDecided
-                          ? `Against ${nextMatch.opponentDisplay?.schoolName}`
-                          : 'Awaiting earlier round winner')}
+                          ? t("Against {school}", { school: nextMatch.opponentDisplay?.schoolName })
+                          : t("Awaiting earlier round winner"))}
                     </p>
                   </div>
 
@@ -351,7 +358,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                             month: 'short',
                             day: 'numeric',
                           })
-                        : 'Date TBD'}
+                        : t("Date TBD")}
                     </span>
                     <span className="flex items-center gap-1.5">
                       <Icon name="clock" size="md" className="text-indigo-300" />
@@ -360,7 +367,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                             hour: '2-digit',
                             minute: '2-digit',
                           })
-                        : 'Time TBD'}
+                        : t("Time TBD")}
                     </span>
                     <span className="flex items-center gap-1.5">
                       <Icon name="location" size="md" className="text-indigo-300" />
@@ -372,27 +379,27 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                 {/* Countdown Block */}
                 <div className="bg-black/20 rounded-xl p-4 backdrop-blur-xs flex flex-col items-center justify-center min-w-[220px] text-center border border-white/10">
                   <span className="text-[11px] font-semibold text-indigo-200 uppercase tracking-wider mb-2">
-                    {countdownText.isPast ? 'Match Time' : 'Kick-Off Countdown'}
+                    {countdownText.isPast ? t("Match Time") : t("Kick-Off Countdown")}
                   </span>
                   {countdownText.isPast ? (
-                    <span className="text-sm font-bold text-emerald-300">Match in progress or scheduled</span>
+                    <span className="text-sm font-bold text-emerald-300">{t("Match in progress or scheduled")}</span>
                   ) : (
                     <div className="grid grid-cols-4 gap-2 text-center">
                       <div className="bg-white/10 rounded-lg p-2 min-w-[42px]">
                         <span className="text-lg font-black block">{countdownText.days}</span>
-                        <span className="text-[9px] text-indigo-200 uppercase">Days</span>
+                        <span className="text-[9px] text-indigo-200 uppercase">{t("Days")}</span>
                       </div>
                       <div className="bg-white/10 rounded-lg p-2 min-w-[42px]">
                         <span className="text-lg font-black block">{countdownText.hours}</span>
-                        <span className="text-[9px] text-indigo-200 uppercase">Hrs</span>
+                        <span className="text-[9px] text-indigo-200 uppercase">{t("Hrs")}</span>
                       </div>
                       <div className="bg-white/10 rounded-lg p-2 min-w-[42px]">
                         <span className="text-lg font-black block">{countdownText.minutes}</span>
-                        <span className="text-[9px] text-indigo-200 uppercase">Min</span>
+                        <span className="text-[9px] text-indigo-200 uppercase">{t("Min")}</span>
                       </div>
                       <div className="bg-white/10 rounded-lg p-2 min-w-[42px]">
                         <span className="text-lg font-black block">{countdownText.seconds}</span>
-                        <span className="text-[9px] text-indigo-200 uppercase">Sec</span>
+                        <span className="text-[9px] text-indigo-200 uppercase">{t("Sec")}</span>
                       </div>
                     </div>
                   )}
@@ -402,15 +409,15 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                       onClick={() => setSelectedMatchData(nextMatch)}
                       className="flex-1 py-1.5 bg-white text-indigo-900 text-xs font-bold rounded-lg hover:bg-indigo-50 transition-colors shadow-xs"
                     >
-                      Match Details
+                      {t("Match Details")}
                     </button>
                     {!nextMatch.isAcknowledged && (
                       <button
                         onClick={() => handleAcknowledge(nextMatch.match.id)}
                         className="py-1.5 px-3 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition-colors"
-                        title="Acknowledge schedule"
+                        title={t("Acknowledge schedule")}
                       >
-                        Confirm
+                        {t("Confirm")}
                       </button>
                     )}
                   </div>
@@ -420,11 +427,11 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
           ) : (
             <div className="p-8 bg-white border border-slate-200 rounded-2xl text-center shadow-xs">
               <Icon name="calendar" size="md" className="text-slate-400 mx-auto mb-2" />
-              <h3 className="text-sm font-bold text-slate-800">No Upcoming Matches Scheduled</h3>
+              <h3 className="text-sm font-bold text-slate-800">{t("No Upcoming Matches Scheduled")}</h3>
               <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
                 {stats?.activeTournamentsCount === 0
-                  ? 'Fixtures not published yet. You will be notified as soon as DSO releases the official bracket.'
-                  : 'Your teams currently have no pending upcoming matches.'}
+                  ? t("Fixtures not published yet. You will be notified as soon as DSO releases the official bracket.")
+                  : t("Your teams currently have no pending upcoming matches.")}
               </p>
             </div>
           )}
@@ -432,27 +439,27 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-xs">
-              <span className="text-xs text-slate-500 font-medium">Matches Played</span>
+              <span className="text-xs text-slate-500 font-medium">{t("Matches Played")}</span>
               <p className="text-2xl font-black text-slate-900 mt-1">{stats?.matchesPlayed || 0}</p>
-              <span className="text-[11px] text-slate-400">Completed fixtures</span>
+              <span className="text-[11px] text-slate-400">{t("Completed fixtures")}</span>
             </div>
 
             <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-xs">
-              <span className="text-xs text-emerald-600 font-semibold">Won</span>
+              <span className="text-xs text-emerald-600 font-semibold">{t("Won")}</span>
               <p className="text-2xl font-black text-emerald-600 mt-1">{stats?.matchesWon || 0}</p>
-              <span className="text-[11px] text-slate-400">Victories recorded</span>
+              <span className="text-[11px] text-slate-400">{t("Victories recorded")}</span>
             </div>
 
             <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-xs">
-              <span className="text-xs text-rose-600 font-semibold">Lost</span>
+              <span className="text-xs text-rose-600 font-semibold">{t("Lost")}</span>
               <p className="text-2xl font-black text-rose-600 mt-1">{stats?.matchesLost || 0}</p>
-              <span className="text-[11px] text-slate-400">Eliminations</span>
+              <span className="text-[11px] text-slate-400">{t("Eliminations")}</span>
             </div>
 
             <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-xs">
-              <span className="text-xs text-indigo-600 font-semibold">Upcoming</span>
+              <span className="text-xs text-indigo-600 font-semibold">{t("Upcoming")}</span>
               <p className="text-2xl font-black text-indigo-600 mt-1">{stats?.matchesUpcoming || 0}</p>
-              <span className="text-[11px] text-slate-400">Scheduled fixtures</span>
+              <span className="text-[11px] text-slate-400">{t("Scheduled fixtures")}</span>
             </div>
           </div>
 
@@ -463,10 +470,10 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <Icon name="trophy" size="md" className="text-indigo-600" />
-                  <span>Enrolled Tournaments</span>
+                  <span>{t("Enrolled Tournaments")}</span>
                 </h3>
                 <span className="text-xs font-semibold text-slate-400">
-                  {dashboardData?.tournaments?.length || 0} Published
+                  {t("{count} Published", { count: dashboardData?.tournaments?.length || 0 })}
                 </span>
               </div>
 
@@ -487,7 +494,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                         }}
                         className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5 shrink-0 whitespace-nowrap"
                       >
-                        <span>View Matches</span>
+                        <span>{t("View Matches")}</span>
                         <Icon name="chevronRight" size="sm" />
                       </button>
                     </div>
@@ -495,7 +502,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                 </div>
               ) : (
                 <p className="text-xs text-slate-500 py-3">
-                  No tournaments with published fixtures yet.
+                  {t("No tournaments with published fixtures yet.")}
                 </p>
               )}
             </div>
@@ -505,10 +512,10 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <Icon name="users" size="md" className="text-indigo-600" />
-                  <span>School Teams Roster</span>
+                  <span>{t("School Teams Roster")}</span>
                 </h3>
                 <span className="text-xs font-semibold text-slate-400">
-                  {dashboardData?.teams?.length || 0} Registered
+                  {t("{count} Registered", { count: dashboardData?.teams?.length || 0 })}
                 </span>
               </div>
 
@@ -519,7 +526,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                       <div className="min-w-0">
                         <p className="text-xs font-bold text-slate-800 truncate">{team.name}</p>
                         <p className="text-[11px] text-slate-500">
-                          {team.medium} Medium · {team.ageGroup} ({team.gender})
+                          {team.medium} {t("Medium")} · {team.ageGroup} ({team.gender})
                         </p>
                       </div>
                       <button
@@ -529,13 +536,13 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                         }}
                         className="text-xs font-semibold text-indigo-600 hover:text-indigo-800"
                       >
-                        Filter
+                        {t("Filter")}
                       </button>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-slate-500 py-3">No teams registered for this school.</p>
+                <p className="text-xs text-slate-500 py-3">{t("No teams registered for this school.")}</p>
               )}
             </div>
           </div>
@@ -556,7 +563,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                     scheduleDateFilter === 'all' ? 'bg-white text-slate-900 shadow-2xs font-bold' : ''
                   }`}
                 >
-                  All ({matches.length})
+                  {t("All ({count})", { count: matches.length })}
                 </button>
                 <button
                   onClick={() => setScheduleDateFilter('today')}
@@ -564,7 +571,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                     scheduleDateFilter === 'today' ? 'bg-white text-slate-900 shadow-2xs font-bold' : ''
                   }`}
                 >
-                  Today
+                  {t("Today")}
                 </button>
                 <button
                   onClick={() => setScheduleDateFilter('upcoming')}
@@ -572,7 +579,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                     scheduleDateFilter === 'upcoming' ? 'bg-white text-slate-900 shadow-2xs font-bold' : ''
                   }`}
                 >
-                  Upcoming
+                  {t("Upcoming")}
                 </button>
                 <button
                   onClick={() => setScheduleDateFilter('past')}
@@ -580,7 +587,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                     scheduleDateFilter === 'past' ? 'bg-white text-slate-900 shadow-2xs font-bold' : ''
                   }`}
                 >
-                  Completed
+                  {t("Completed")}
                 </button>
               </div>
 
@@ -591,7 +598,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                   onChange={(e) => setSelectedTournamentFilter(e.target.value)}
                   className="text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
-                  <option value="all">All Tournaments</option>
+                  <option value="all">{t("All Tournaments")}</option>
                   {dashboardData?.tournaments?.map((t: any) => (
                     <option key={t.id} value={t.id}>
                       {t.name}
@@ -604,7 +611,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                   onChange={(e) => setSelectedTeamFilter(e.target.value)}
                   className="text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
-                  <option value="all">All Teams</option>
+                  <option value="all">{t("All Teams")}</option>
                   {dashboardData?.teams?.map((team: any) => (
                     <option key={team.id} value={team.id}>
                       {team.name}
@@ -619,9 +626,9 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
           {filteredMatches.length === 0 ? (
             <div className="p-12 bg-white border border-slate-200 rounded-2xl text-center shadow-xs">
               <Icon name="calendar" size="md" className="text-slate-400 mx-auto mb-2" />
-              <h3 className="text-sm font-bold text-slate-800">No matches found matching criteria</h3>
+              <h3 className="text-sm font-bold text-slate-800">{t("No matches found matching criteria")}</h3>
               <p className="text-xs text-slate-500 mt-1">
-                Try switching filters or check back later once fixtures are updated.
+                {t("Try switching filters or check back later once fixtures are updated.")}
               </p>
             </div>
           ) : (
@@ -633,14 +640,14 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                       month: 'short',
                       day: 'numeric',
                     })
-                  : 'Date TBD';
+                  : t("Date TBD");
 
                 const formattedTime = m.scheduledAt
                   ? new Date(m.scheduledAt).toLocaleTimeString('en-IN', {
                       hour: '2-digit',
                       minute: '2-digit',
                     })
-                  : 'Time TBD';
+                  : t("Time TBD");
 
                 return (
                   <div
@@ -651,7 +658,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                     <div className="space-y-2 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700">
-                          Match #{m.matchNumber} · {m.roundName}
+                          {t("Match #{number}", { number: m.matchNumber })} · {m.roundName}
                         </span>
 
                         <span className="text-xs font-medium text-slate-500">
@@ -666,13 +673,13 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                                 : 'bg-rose-100 text-rose-800'
                             }`}
                           >
-                            {m.outcome === 'won' ? (<span className="inline-flex items-center gap-1"><Icon name="check" size="sm" />Won</span>) : (<span className="inline-flex items-center gap-1"><Icon name="xmark" size="sm" />Lost</span>)}
+                            {m.outcome === 'won' ? (<span className="inline-flex items-center gap-1"><Icon name="check" size="sm" />{t("Won")}</span>) : (<span className="inline-flex items-center gap-1"><Icon name="xmark" size="sm" />{t("Lost")}</span>)}
                           </span>
                         )}
 
                         {m.status !== 'completed' && (
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-indigo-50 text-indigo-700">
-                            Upcoming
+                            {t("Upcoming")}
                           </span>
                         )}
                       </div>
@@ -681,7 +688,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                       <div className="min-w-0">
                         <div className="text-sm sm:text-base font-bold text-slate-900 break-words">
                           <span className="text-indigo-600 break-words">{m.myTeam?.name}</span>{' '}
-                          <span className="text-slate-400 font-normal">vs</span>{' '}
+                          <span className="text-slate-400 font-normal">{t("vs")}</span>{' '}
                           <span>{m.opponentDisplay?.label}</span>
                         </div>
                         {m.opponentDisplay?.dependencyText && (
@@ -719,14 +726,14 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                       {m.isAcknowledged ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">
                           <Icon name="circleCheck" size="sm" className="text-emerald-600" />
-                          <span>Acknowledged</span>
+                          <span>{t("Acknowledged")}</span>
                         </span>
                       ) : (
                         <button
                           onClick={() => handleAcknowledge(m.id)}
                           className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-2xs transition-colors"
                         >
-                          Acknowledge
+                          {t("Acknowledge")}
                         </button>
                       )}
 
@@ -734,14 +741,14 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                         onClick={() => setSelectedMatchData(m)}
                         className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-lg transition-colors"
                       >
-                        Details
+                        {t("Details")}
                       </button>
 
                       <a
                         href={api.my.getCalendarDownloadUrl(m.id)}
                         download={`match-${m.id}.ics`}
                         className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors"
-                        title="Download .ics Calendar"
+                        title={t("Download .ics Calendar")}
                       >
                         <Icon name="calendarPlus" size="md" className="text-indigo-600" />
                       </a>
@@ -759,9 +766,9 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
         <div className="space-y-4">
           <div className="bg-white p-4 border border-slate-200 rounded-2xl shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-bold text-slate-900">Tournament Route & Path</h3>
+              <h3 className="text-sm font-bold text-slate-900">{t("Tournament Route & Path")}</h3>
               <p className="text-xs text-slate-500">
-                Track your school teams' progression path through the tournament bracket.
+                {t("Track your school teams' progression path through the tournament bracket.")}
               </p>
             </div>
 
@@ -786,7 +793,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                   onClick={() => onOpenPublicBracket(selectedBracketTournamentId)}
                   className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-lg transition-colors"
                 >
-                  <span>Full Public Bracket</span>
+                  <span>{t("Full Public Bracket")}</span>
                   <Icon name="external" size="sm" />
                 </button>
               )}
@@ -803,7 +810,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                   <div className="flex items-center justify-between gap-2 min-w-0">
                     <div className="min-w-0">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        {tp.team.medium} Medium · {tp.team.ageGroup} ({tp.team.gender})
+                        {tp.team.medium} {t("Medium")} · {tp.team.ageGroup} ({tp.team.gender})
                       </span>
                       <h4 className="text-base font-black text-slate-900 truncate">{tp.team.name}</h4>
                     </div>
@@ -818,10 +825,10 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                       }`}
                     >
                       {tp.overallStatus === 'winner'
-                        ? (<><Icon name="trophy" size="sm" />Tournament Winner</>)
+                        ? (<><Icon name="trophy" size="sm" />{t("Tournament Winner")}</>)
                         : tp.overallStatus === 'eliminated'
-                        ? 'Eliminated'
-                        : 'Active in Tournament'}
+                        ? t("Eliminated")
+                        : t("Active in Tournament")}
                     </span>
                   </div>
 
@@ -840,18 +847,18 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                       >
                         <div className="flex items-center justify-between text-[11px] font-bold mb-1">
                           <span>{r.roundName}</span>
-                          <span>Match #{r.matchNumber}</span>
+                          <span>{t("Match #{number}", { number: r.matchNumber })}</span>
                         </div>
                         <p className="text-xs font-semibold truncate">
-                          vs {r.opponent?.label || 'TBD'}
+                          {t("vs")} {r.opponent?.label || t("TBD")}
                         </p>
                         <div className="mt-2 text-[10px] font-medium flex items-center justify-between">
                           <span>
                             {r.status === 'completed'
                               ? r.isWinner
-                                ? (<span className="inline-flex items-center gap-1"><Icon name="check" size="sm" />Advanced</span>)
-                                : (<span className="inline-flex items-center gap-1"><Icon name="xmark" size="sm" />Eliminated</span>)
-                              : 'Upcoming'}
+                                ? (<span className="inline-flex items-center gap-1"><Icon name="check" size="sm" />{t("Advanced")}</span>)
+                                : (<span className="inline-flex items-center gap-1"><Icon name="xmark" size="sm" />{t("Eliminated")}</span>)
+                              : t("Upcoming")}
                           </span>
                           {r.score && (
                             <span className="font-bold">
@@ -869,7 +876,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
             <div className="p-8 bg-white border border-slate-200 rounded-2xl text-center shadow-xs">
               <Icon name="layers" size="xl" className="text-slate-400 mx-auto mb-2" />
               <p className="text-xs text-slate-500">
-                No active paths found for your school teams in this tournament.
+                {t("No active paths found for your school teams in this tournament.")}
               </p>
             </div>
           )}
@@ -881,9 +888,9 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
         <div className="space-y-4">
           <div className="bg-white p-4 border border-slate-200 rounded-2xl shadow-xs flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h3 className="text-sm font-bold text-slate-900">Notifications & Schedule Alerts</h3>
+              <h3 className="text-sm font-bold text-slate-900">{t("Notifications & Schedule Alerts")}</h3>
               <p className="text-xs text-slate-500">
-                Official alerts from DSO regarding match rescheduling, venues, and results.
+                {t("Official alerts from DSO regarding match rescheduling, venues, and results.")}
               </p>
             </div>
 
@@ -893,7 +900,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                 className="flex items-center gap-1.5 px-3 py-2 min-h-[40px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
               >
                 <Icon name="checkDouble" size="sm" className="text-indigo-600" />
-                <span>Mark All Read</span>
+                <span>{t("Mark All Read")}</span>
               </button>
             )}
           </div>
@@ -901,9 +908,9 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
           {notifications.length === 0 ? (
             <div className="p-12 bg-white border border-slate-200 rounded-2xl text-center shadow-xs">
               <Icon name="bell" size="md" className="text-slate-300 mx-auto mb-2" />
-              <h4 className="text-sm font-bold text-slate-800">No notifications yet</h4>
+              <h4 className="text-sm font-bold text-slate-800">{t("No notifications yet")}</h4>
               <p className="text-xs text-slate-500 mt-1">
-                You'll receive alerts here whenever matches are scheduled, rescheduled, or when fixtures are published.
+                {t("You'll receive alerts here whenever matches are scheduled, rescheduled, or when fixtures are published.")}
               </p>
             </div>
           ) : (
@@ -927,7 +934,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                           <h4 className="text-xs font-bold text-slate-900">{notif.title}</h4>
                           {isScheduleChange && (
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                              Changed
+                              {t("Changed")}
                             </span>
                           )}
                           {!notif.isRead && (
@@ -943,20 +950,20 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                             {notif.oldValue?.scheduledAt !== notif.newValue?.scheduledAt && (
                               <div>
                                 <span className="text-slate-400 line-through mr-2">
-                                  Was: {notif.oldValue?.scheduledAt || 'TBD'}
+                                  {t("Was:")} {notif.oldValue?.scheduledAt || t("TBD")}
                                 </span>
                                 <span className="text-emerald-700 font-bold">
-                                  Now: {notif.newValue?.scheduledAt || 'TBD'}
+                                  {t("Now:")} {notif.newValue?.scheduledAt || t("TBD")}
                                 </span>
                               </div>
                             )}
                             {notif.oldValue?.venue !== notif.newValue?.venue && (
                               <div>
                                 <span className="text-slate-400 line-through mr-2">
-                                  Was Venue: {notif.oldValue?.venue || 'TBD'}
+                                  {t("Was Venue:")} {notif.oldValue?.venue || t("TBD")}
                                 </span>
                                 <span className="text-emerald-700 font-bold">
-                                  Now Venue: {notif.newValue?.venue || 'TBD'}
+                                  {t("Now Venue:")} {notif.newValue?.venue || t("TBD")}
                                 </span>
                               </div>
                             )}
@@ -973,7 +980,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
                           onClick={() => handleMarkNotificationRead(notif.id)}
                           className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 shrink-0"
                         >
-                          Mark read
+                          {t("Mark read")}
                         </button>
                       )}
                     </div>

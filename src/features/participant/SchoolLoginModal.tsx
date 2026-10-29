@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { useAuth } from '@/context/AuthContext.tsx';
+import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { QuickLoginDropdown } from '@/dev/temp-logins/QuickLoginDropdown.tsx'; // TEMP-LOGIN: remove later
 
 interface SchoolLoginModalProps {
@@ -15,6 +16,7 @@ export const SchoolLoginModal: React.FC<SchoolLoginModalProps> = ({
   onSuccess,
 }) => {
   const { loginAsSchool } = useAuth();
+  const { t } = useI18n();
   const [loginMode, setLoginMode] = useState<'code' | 'email'>('code');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -59,7 +61,7 @@ export const SchoolLoginModal: React.FC<SchoolLoginModalProps> = ({
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-white/80 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors"
-            title="Close"
+            title={t("Close")}
           >
             <Icon name="xmark" size="lg" />
           </button>
@@ -68,12 +70,14 @@ export const SchoolLoginModal: React.FC<SchoolLoginModalProps> = ({
               <Icon name="school" size="xl" className="text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold tracking-tight">Participant Portal Login</h2>
-              <p className="text-xs text-indigo-100">District Sports Office · Navi Mumbai</p>
+              <h2 className="text-xl font-bold tracking-tight">{t("Participant Portal Login")}</h2>
+              <p className="text-xs text-indigo-100">{t("District Sports Office · Navi Mumbai")}</p>
             </div>
           </div>
           <p className="text-xs text-indigo-200 mt-2 leading-relaxed">
-            School coaches and team managers can access their exclusive match schedule, venue navigation, and notifications.
+            {t(
+              "School coaches and team managers can access their exclusive match schedule, venue navigation, and notifications."
+            )}
           </p>
         </div>
 
@@ -83,8 +87,8 @@ export const SchoolLoginModal: React.FC<SchoolLoginModalProps> = ({
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-xs text-red-700 animate-in fade-in">
               <Icon name="circleAlert" size="md" className="shrink-0 text-red-600 mt-0.5" />
               <div>
-                <p className="font-semibold">Unable to sign in</p>
-                <p>{error}</p>
+                <p className="font-semibold">{t("Unable to sign in")}</p>
+                <p>{t(error)}</p>
               </div>
             </div>
           )}
@@ -101,7 +105,7 @@ export const SchoolLoginModal: React.FC<SchoolLoginModalProps> = ({
                 loginMode === 'code' ? 'bg-white text-indigo-700 shadow-xs' : 'hover:text-slate-900'
               }`}
             >
-              School Code
+              {t("School Code")}
             </button>
             <button
               type="button"
@@ -113,7 +117,7 @@ export const SchoolLoginModal: React.FC<SchoolLoginModalProps> = ({
                 loginMode === 'email' ? 'bg-white text-indigo-700 shadow-xs' : 'hover:text-slate-900'
               }`}
             >
-              Email or Phone
+              {t("Email or Phone")}
             </button>
           </div>
 
@@ -130,14 +134,16 @@ export const SchoolLoginModal: React.FC<SchoolLoginModalProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                {loginMode === 'code' ? 'School Code' : 'Registered Email or Phone'}
+                {loginMode === 'code' ? t("School Code") : t("Registered Email or Phone")}
               </label>
               <div className="relative">
                 <input
                   type="text"
                   required
                   placeholder={
-                    loginMode === 'code' ? 'e.g. NHPS101 or MNR202' : 'coach@school.edu or 98200XXXXX'
+                    loginMode === 'code'
+                      ? t('e.g. NHPS101 or MNR202')
+                      : 'coach@school.edu or 98200XXXXX'
                   }
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
@@ -146,14 +152,14 @@ export const SchoolLoginModal: React.FC<SchoolLoginModalProps> = ({
               </div>
               <p className="text-[11px] text-slate-500 mt-1">
                 {loginMode === 'code'
-                  ? 'Your unique school identifier assigned by DSO organizers.'
-                  : 'Email or phone number registered with DSO during enrollment.'}
+                  ? t('Your unique school identifier assigned by DSO organizers.')
+                  : t('Email or phone number registered with DSO during enrollment.')}
               </p>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Password
+                {t("Password")}
               </label>
               <div className="relative">
                 <input
@@ -178,7 +184,7 @@ export const SchoolLoginModal: React.FC<SchoolLoginModalProps> = ({
                 ) : (
                   <>
                     <Icon name="key" size="md" />
-                    <span>Sign In to School Portal</span>
+                    <span>{t("Sign In to School Portal")}</span>
                   </>
                 )}
               </button>
@@ -189,9 +195,9 @@ export const SchoolLoginModal: React.FC<SchoolLoginModalProps> = ({
           <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
             <span className="flex items-center gap-1.5">
               <Icon name="shieldCheck" size="sm" className="text-emerald-600" />
-              Direct School Authorization
+              {t("Direct School Authorization")}
             </span>
-            <span>Single-School Isolation</span>
+            <span>{t("Single-School Isolation")}</span>
           </div>
         </div>
       </div>

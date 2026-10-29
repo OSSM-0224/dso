@@ -110,13 +110,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <LandingNav />
 
       <main id="main-content">
-        <section className="relative flex min-h-[calc(100dvh-4rem)] flex-col overflow-x-hidden">
-          <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-8 px-3 py-10 sm:gap-12 sm:px-4 lg:grid-cols-2 lg:gap-14 lg:px-8">
+        <section className="relative flex min-h-[calc(100dvh-4rem)] flex-col">
+          <div className="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 items-center gap-8 px-3 py-10 sm:gap-12 sm:px-4 lg:grid-cols-2 lg:gap-14 lg:px-8">
             <div className="max-w-xl w-full min-w-0">
               <p className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-accent">
                 District Sports Office • Navi Mumbai
               </p>
-              <h1 className="mt-5 font-serif text-[2.2rem] font-semibold leading-[1.02] tracking-[-0.03em] text-ink xs:text-[2.4rem] sm:text-5xl lg:text-[3.5rem]">
+              <h1 className="mt-5 font-serif text-[1.9rem] font-semibold leading-[1.02] tracking-[-0.03em] text-ink xs:text-[2.2rem] sm:text-5xl lg:text-[3.5rem]">
                 A <span className="text-accent">fair draw</span>,
                 <br className="hidden sm:block" /> kept on the record.
               </h1>
@@ -141,7 +141,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
             </div>
 
-            <div className="xl:pt-4">
+            <div className="w-full min-w-0 xl:pt-4">
               <BracketDiagram />
             </div>
           </div>

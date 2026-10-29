@@ -25,11 +25,11 @@ const MatchCard: React.FC<{
 );
 
 export const BracketDiagram: React.FC = () => (
-  <div className="relative">
+  <div className="relative w-full min-w-0">
     <div
       role="img"
       aria-label="Illustrative eight-team single-elimination bracket from quarter-finals to a champion."
-      className="rounded-[14px] border border-hairline bg-surface p-4 shadow-raise sm:p-5"
+      className="w-full rounded-[14px] border border-hairline bg-surface p-4 shadow-raise sm:p-5"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -46,8 +46,8 @@ export const BracketDiagram: React.FC = () => (
         </span>
       </div>
 
-      <div className="mt-5 overflow-x-auto pb-1 -mx-2 sm:mx-0 px-2 sm:px-0">
-        <div className="min-w-[450px] sm:min-w-[500px]">
+      <div className="mt-5 w-full max-w-full touch-pan-x overflow-x-auto overscroll-x-contain pb-1 -mx-2 sm:mx-0 px-2 sm:px-0">
+        <div className="min-w-[420px] sm:min-w-[460px] lg:min-w-0">
           <div className="grid grid-cols-[1.2fr_0.95fr_0.8fr_0.7fr] gap-2 border-b border-hairline pb-2">
             {['Quarter-final', 'Semi-final', 'Final', 'Champion'].map((round) => (
               <p
@@ -116,7 +116,7 @@ export const BracketDiagram: React.FC = () => (
       </div>
     </div>
 
-    <div className="absolute -bottom-4 -right-2 hidden items-center gap-2 rounded-[9px] border border-hairline bg-surface px-3 py-2 shadow-raise sm:flex">
+    <div className="absolute -bottom-4 right-0 hidden items-center gap-2 rounded-[9px] border border-hairline bg-surface px-3 py-2 shadow-raise sm:flex">
       <span className="flex h-7 w-7 items-center justify-center rounded-[6px] bg-accent-soft text-accent">
         <Icon name="shieldCheck" size="sm" />
       </span>

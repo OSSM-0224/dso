@@ -80,16 +80,16 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
   const enrolledTeamIds = new Set(activeEnrollments.map((e) => e.teamId));
 
   // Available teams not yet enrolled
-  const availableTeams = allTeams.filter((t) => !enrolledTeamIds.has(t.id));
+  const availableTeams = allTeams.filter((team) => !enrolledTeamIds.has(team.id));
 
   // Search filtered available teams
-  const filteredAvailableTeams = availableTeams.filter((t) => {
+  const filteredAvailableTeams = availableTeams.filter((team) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
-      t.name.toLowerCase().includes(q) ||
-      (t.schoolName || '').toLowerCase().includes(q) ||
-      t.medium.toLowerCase().includes(q)
+      team.name.toLowerCase().includes(q) ||
+      (team.schoolName || '').toLowerCase().includes(q) ||
+      team.medium.toLowerCase().includes(q)
     );
   });
 
@@ -115,7 +115,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
     if (selectedToEnroll.length === filteredAvailableTeams.length) {
       setSelectedToEnroll([]);
     } else {
-      setSelectedToEnroll(filteredAvailableTeams.map((t) => t.id));
+      setSelectedToEnroll(filteredAvailableTeams.map((team) => team.id));
     }
   };
 

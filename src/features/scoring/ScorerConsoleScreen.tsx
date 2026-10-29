@@ -452,8 +452,8 @@ export const ScorerConsoleScreen: React.FC<{ matchId: string }> = ({ matchId }) 
   ) : null;
 
   const totals = sb?.teams ?? [];
-  const totalA = totals.find((t) => t.id === match.teamA?.id)?.totalPoints ?? 0;
-  const totalB = totals.find((t) => t.id === match.teamB?.id)?.totalPoints ?? 0;
+  const totalA = totals.find((team) => team.id === match.teamA?.id)?.totalPoints ?? 0;
+  const totalB = totals.find((team) => team.id === match.teamB?.id)?.totalPoints ?? 0;
 
   const TotalsStrip = (
     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-[12px] border border-hairline bg-surface p-4">

@@ -81,7 +81,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
       setMatches(mData);
       setAllTeams(allTeamsList);
 
-      const enrolled = allTeamsList.filter((t) => tData.teams.includes(t.id));
+      const enrolled = allTeamsList.filter((team) => tData.teams.includes(team.id));
       setEnrolledTeams(enrolled);
     } catch (err: any) {
       setError(err.message || 'Failed to load tournament');

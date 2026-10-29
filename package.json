@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "tsc --noEmit",
     "test": "node --conditions=react-server --import tsx src/server/tests/runTests.ts",
+    "migrate:teams": "node --conditions=react-server --import tsx scripts/migrate-team-tournament.ts",
+    "migrate:teams:dry-run": "node --conditions=react-server --import tsx scripts/migrate-team-tournament.ts --dry-run",
     "seed:temp-logins": "node --conditions=react-server --import tsx scripts/seed-temp-logins.ts",
     "seed:temp-logins:remove": "node --conditions=react-server --import tsx scripts/seed-temp-logins.ts --remove"
   },

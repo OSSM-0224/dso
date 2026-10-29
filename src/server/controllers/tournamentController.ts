@@ -128,7 +128,12 @@ export const matchController = {
 };
 
 export const teamController = {
-  async list(params: { ageGroup?: string; gender?: string; schoolId?: string }) {
+  async list(params: {
+    tournamentId?: string;
+    ageGroup?: string;
+    gender?: string;
+    schoolId?: string;
+  }) {
     return teamRepository.findAll(params);
   },
 
@@ -151,7 +156,11 @@ export const teamController = {
 
   async importAndValidate(user: UserSession, body: unknown) {
     const parsed = bulkImportTeamsSchema.parse(body);
-    return teamService.validateAndImportCsv(parsed.rows, parsed.commit || false);
+    return teamService.validateAndImportCsv(
+      parsed.rows,
+      parsed.tournamentId,
+      parsed.commit || false
+    );
   },
 };
 

@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Icon } from '@/components/ui/Icon.tsx';
-import { api } from '@/lib/api.ts';
-import { useI18n } from '@/i18n/LanguageProvider.tsx';
-import { TeamDoc, TournamentDoc } from '@/shared/types.ts';
+import React, { useEffect, useState } from "react";
+import { Icon } from "@/components/ui/Icon.tsx";
+import { api } from "@/lib/api.ts";
+import { useI18n } from "@/i18n/LanguageProvider.tsx";
+import { TournamentDoc } from "@/shared/types.ts";
 
 interface TournamentsListScreenProps {
   onSelectTournament: (id: string) => void;
@@ -17,19 +17,17 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
 }) => {
   const { t } = useI18n();
   const [tournaments, setTournaments] = useState<TournamentDoc[]>([]);
-  const [allTeams, setAllTeams] = useState<TeamDoc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // New Tournament Form State
-  const [name, setName] = useState('');
-  const [sport, setSport] = useState('kho-kho');
-  const [format, setFormat] = useState('single-elimination');
-  const [ageGroup, setAgeGroup] = useState<'U-14' | 'U-17' | 'U-19'>('U-14');
-  const [gender, setGender] = useState<'boys' | 'girls'>('boys');
+  const [name, setName] = useState("");
+  const [sport, setSport] = useState("kho-kho");
+  const [format, setFormat] = useState("single-elimination");
+  const [ageGroup, setAgeGroup] = useState<"U-14" | "U-17" | "U-19">("U-14");
+  const [gender, setGender] = useState<"boys" | "girls">("boys");
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [championLookbackYears, setChampionLookbackYears] = useState<number>(3);
-  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,14 +39,10 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
     try {
       setIsLoading(true);
       setError(null);
-      const [tList, teamList] = await Promise.all([
-        api.tournaments.list(),
-        api.teams.list(),
-      ]);
+      const tList = await api.tournaments.list();
       setTournaments(tList);
-      setAllTeams(teamList);
     } catch (err: any) {
-      setError(err.message || 'Failed to load tournaments');
+      setError(err.message || "Failed to load tournaments");
     } finally {
       setIsLoading(false);
     }
@@ -69,37 +63,41 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
         gender,
         year: Number(year),
         championLookbackYears: Number(championLookbackYears),
-        teams: selectedTeams,
       });
 
       setShowCreateModal(false);
-      setName('');
-      setSelectedTeams([]);
+      setName("");
       await loadData();
       onSelectTournament(created.id);
     } catch (err: any) {
-      setError(err.message || 'Failed to create tournament');
+      setError(err.message || "Failed to create tournament");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDeleteTournament = async (e: React.MouseEvent, id: string, name: string) => {
+  const handleDeleteTournament = async (
+    e: React.MouseEvent,
+    id: string,
+    name: string,
+  ) => {
     e.stopPropagation();
-    if (!window.confirm(t('Delete tournament "{name}"? This action cannot be undone.', { name }))) return;
+    if (
+      !window.confirm(
+        t('Delete tournament "{name}"? This action cannot be undone.', {
+          name,
+        }),
+      )
+    )
+      return;
     try {
       setError(null);
       await api.tournaments.delete(id);
       await loadData();
     } catch (err: any) {
-      setError(err.message || 'Failed to delete tournament');
+      setError(err.message || "Failed to delete tournament");
     }
   };
-
-  // Filter available teams matching current form ageGroup and gender
-  const availableTeamsForForm = allTeams.filter(
-    (t) => t.ageGroup === ageGroup && t.gender === gender
-  );
 
   return (
     <div className="space-y-6">
@@ -110,7 +108,9 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
             {t("DSO District Tournaments & Fixtures")}
           </h2>
           <p className="text-xs text-slate-500 max-w-2xl mt-1">
-            {t("Official single-elimination tournament management for District Sports Office Navi Mumbai. Generate mathematically balanced play-in brackets with automatic champion detection, strong team separation, and cross-medium school conflict prevention.")}
+            {t(
+              "Official single-elimination tournament management for District Sports Office Navi Mumbai. Generate mathematically balanced play-in brackets with automatic champion detection, strong team separation, and cross-medium school conflict prevention.",
+            )}
           </p>
         </div>
 
@@ -134,16 +134,22 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
       {isLoading ? (
         <div className="py-20 text-center">
           <div className="inline-block animate-spin h-7 w-7 border-3 border-indigo-600 border-t-transparent rounded-full mb-2" />
-          <div className="text-xs text-slate-500">{t("Loading tournaments...")}</div>
+          <div className="text-xs text-slate-500">
+            {t("Loading tournaments...")}
+          </div>
         </div>
       ) : tournaments.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm space-y-3">
-          <div className="text-3xl"><Icon name="trophy" size="xl" /></div>
+          <div className="text-3xl">
+            <Icon name="trophy" size="xl" />
+          </div>
           <h3 className="text-base font-bold text-slate-900">
             {t("No Tournaments Created Yet")}
           </h3>
           <p className="text-xs text-slate-500 max-w-md mx-auto">
-            {t("Get started by creating your first tournament or registering teams in Teams & Schools.")}
+            {t(
+              "Get started by creating your first tournament or registering teams in Teams & Schools.",
+            )}
           </p>
           {canWrite && (
             <button
@@ -169,16 +175,16 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
                   </span>
                   <span
                     className={`font-semibold capitalize px-2 py-0.5 rounded text-[10px] ${
-                      tournament.status === 'completed'
-                        ? 'bg-amber-100 text-amber-900'
-                        : tournament.status === 'published'
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : tournament.status === 'fixtures-generated'
-                        ? 'bg-indigo-100 text-indigo-800'
-                        : 'bg-slate-100 text-slate-700'
+                      tournament.status === "completed"
+                        ? "bg-amber-100 text-amber-900"
+                        : tournament.status === "published"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : tournament.status === "fixtures-generated"
+                            ? "bg-indigo-100 text-indigo-800"
+                            : "bg-slate-100 text-slate-700"
                     }`}
                   >
-                    {tournament.status.replace('-', ' ')}
+                    {tournament.status.replace("-", " ")}
                   </span>
                 </div>
 
@@ -196,26 +202,41 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
 
                 {tournament.winnerName && (
                   <div className="text-xs bg-amber-50 text-amber-900 border border-amber-200 rounded p-2 flex items-center gap-1.5 font-medium">
-                    <span className="inline-flex items-center gap-1.5"><Icon name="trophy" size="sm" />{t("Champion:")}</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Icon name="trophy" size="sm" />
+                      {t("Champion:")}
+                    </span>
                     <span className="truncate">{tournament.winnerName}</span>
                   </div>
                 )}
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                <span>{t("{count} Teams Enrolled", { count: tournament.teams.length })}</span>
+                <span>
+                  {t("{count} Teams Enrolled", {
+                    count: tournament.teams.length,
+                  })}
+                </span>
                 <div className="flex items-center gap-2">
                   {canWrite && (
                     <button
                       type="button"
-                      onClick={(e) => handleDeleteTournament(e, tournament.id, tournament.name)}
+                      onClick={(e) =>
+                        handleDeleteTournament(
+                          e,
+                          tournament.id,
+                          tournament.name,
+                        )
+                      }
                       className="text-red-600 hover:text-red-800 font-semibold"
                       title={t("Delete tournament")}
                     >
                       {t("Delete")}
                     </button>
                   )}
-                  <span className="text-indigo-600 font-semibold">{t("Open Draw →")}</span>
+                  <span className="text-indigo-600 font-semibold">
+                    {t("Open Draw →")}
+                  </span>
                 </div>
               </div>
             </div>
@@ -241,8 +262,9 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
               <h3 className="text-base font-bold text-slate-900">
                 {t("Create New Tournament")}
               </h3>
-              <button aria-label={t("Close")}
-  type="button"
+              <button
+                aria-label={t("Close")}
+                type="button"
                 onClick={() => setShowCreateModal(false)}
                 className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
               >
@@ -259,7 +281,9 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={t("e.g. Navi Mumbai DSO Kho-Kho Championship 2026")}
+                placeholder={t(
+                  "e.g. Navi Mumbai DSO Kho-Kho Championship 2026",
+                )}
                 className="w-full text-xs border border-slate-200 rounded-md p-2"
               />
             </div>
@@ -275,8 +299,12 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
                   className="w-full text-xs border border-slate-200 rounded-md p-2 bg-white"
                 >
                   <option value="kho-kho">Kho-Kho</option>
-                  <option value="kabaddi">{t("Kabaddi (Modular plug-in)")}</option>
-                  <option value="volleyball">{t("Volleyball (Modular plug-in)")}</option>
+                  <option value="kabaddi">
+                    {t("Kabaddi (Modular plug-in)")}
+                  </option>
+                  <option value="volleyball">
+                    {t("Volleyball (Modular plug-in)")}
+                  </option>
                 </select>
               </div>
 
@@ -289,9 +317,15 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
                   onChange={(e) => setFormat(e.target.value)}
                   className="w-full text-xs border border-slate-200 rounded-md p-2 bg-white"
                 >
-                  <option value="single-elimination">{t("Single Elimination (Play-In)")}</option>
-                  <option value="round-robin">{t("Round Robin (Modular plug-in)")}</option>
-                  <option value="groups-knockout">{t("Groups + Knockout (Modular)")}</option>
+                  <option value="single-elimination">
+                    {t("Single Elimination (Play-In)")}
+                  </option>
+                  <option value="round-robin">
+                    {t("Round Robin (Modular plug-in)")}
+                  </option>
+                  <option value="groups-knockout">
+                    {t("Groups + Knockout (Modular)")}
+                  </option>
                 </select>
               </div>
             </div>
@@ -346,82 +380,46 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
               </label>
               <select
                 value={championLookbackYears}
-                onChange={(e) => setChampionLookbackYears(Number(e.target.value))}
+                onChange={(e) =>
+                  setChampionLookbackYears(Number(e.target.value))
+                }
                 className="w-full text-xs border border-slate-200 rounded-md p-2 bg-white"
               >
-                <option value={3}>{t("3 Years (Default - {start} to {end})", { start: year - 3, end: year - 1 })}</option>
-                <option value={4}>{t("4 Years ({start} to {end})", { start: year - 4, end: year - 1 })}</option>
+                <option value={3}>
+                  {t("3 Years (Default - {start} to {end})", {
+                    start: year - 3,
+                    end: year - 1,
+                  })}
+                </option>
+                <option value={4}>
+                  {t("4 Years ({start} to {end})", {
+                    start: year - 4,
+                    end: year - 1,
+                  })}
+                </option>
               </select>
               <span className="text-[10px] text-slate-400">
-                {t("Number of previous years to scan for recent champions of the same sport + ageGroup + gender.")}
+                {t(
+                  "Number of previous years to scan for recent champions of the same sport + ageGroup + gender.",
+                )}
               </span>
             </div>
 
-            {/* Team Selection */}
-            <div>
-              <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
-                <label className="block text-xs font-semibold text-slate-700">
-                  {t("Select Enrolled Teams ({count} selected)", { count: selectedTeams.length })}
-                </label>
-                {availableTeamsForForm.length > 0 && (
-                  <button
-  type="button"
-                    onClick={() => {
-                      if (selectedTeams.length === availableTeamsForForm.length) {
-                        setSelectedTeams([]);
-                      } else {
-                        setSelectedTeams(availableTeamsForForm.map((team) => team.id));
-                      }
-                    }}
-                    className="text-[11px] text-indigo-600 hover:text-indigo-800 font-medium"
-                  >
-                    {selectedTeams.length === availableTeamsForForm.length ? t("Deselect All") : t("Select All")}
-                  </button>
-                )}
-              </div>
-
-              {availableTeamsForForm.length === 0 ? (
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-500 text-center">
-                  {t("No {ageGroup} ({gender}) teams found. You can enroll teams now or add them later in Teams & Schools.", { ageGroup, gender })}
-                </div>
-              ) : (
-                <div className="max-h-40 overflow-y-auto space-y-1.5 border border-slate-200 rounded-md p-2">
-                  {availableTeamsForForm.map((team) => {
-                    const isSelected = selectedTeams.includes(team.id);
-                    return (
-                      <div
-                        key={team.id}
-                        onClick={() =>
-                          setSelectedTeams((prev) =>
-                            prev.includes(team.id) ? prev.filter((id) => id !== team.id) : [...prev, team.id]
-                          )
-                        }
-                        className={`p-2 rounded text-xs flex items-center justify-between cursor-pointer ${
-                          isSelected ? 'bg-indigo-50 text-indigo-900 font-medium' : 'hover:bg-slate-50'
-                        }`}
-                      >
-                        <div>
-                          <div>{team.name}</div>
-                          <div className="text-[10px] text-slate-400">
-                            {team.schoolName} · {team.medium} {t("Medium")}
-                          </div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => {}}
-                          className="rounded text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5"
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
+            {/* Teams Note */}
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-600">
+              <Icon
+                name="circleInfo"
+                size="xs"
+                className="mr-1 text-indigo-600"
+              />
+              {t(
+                "Teams will be enrolled and managed inside the tournament after creation.",
               )}
             </div>
 
             <div className="flex flex-col-reverse items-stretch sm:flex-row sm:items-center sm:justify-end gap-2 pt-2 border-t border-slate-100">
               <button
-  type="button"
+                type="button"
                 onClick={() => setShowCreateModal(false)}
                 className="px-3 py-2.5 sm:py-1.5 min-h-[40px] sm:min-h-0 text-xs text-slate-600 hover:text-slate-800 rounded-md"
               >

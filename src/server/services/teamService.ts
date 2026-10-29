@@ -1,6 +1,7 @@
 ﻿import 'server-only';
 import { schoolRepository } from '../repositories/schoolRepository.ts';
 import { teamRepository } from '../repositories/teamRepository.ts';
+import { tournamentRepository } from '../repositories/tournamentRepository.ts';
 import {
   CsvImportReport,
   CsvImportRow,
@@ -13,9 +14,15 @@ export type { CsvImportReport, CsvImportRow, CsvValidationItem };
 export class TeamService {
   async validateAndImportCsv(
     rows: CsvImportRow[],
+    tournamentId: string,
     commit: boolean = false
   ): Promise<CsvImportReport> {
-    const existingTeams = await teamRepository.findAll();
+    const tournament = await tournamentRepository.findById(tournamentId);
+    if (!tournament) {
+      throw new Error('Tournament not found');
+    }
+
+    const existingTeams = await teamRepository.findAll({ tournamentId });
     const existingSchools = await schoolRepository.findAll();
 
     const schoolMapByName = new Map<string, typeof existingSchools[0]>();
@@ -44,6 +51,15 @@ export class TeamService {
       }
       if (!['boys', 'girls'].includes(gender)) {
         errors.push(`Invalid gender "${gender}". Allowed: boys, girls`);
+      }
+      if (
+        ['U-14', 'U-17', 'U-19', 'Open'].includes(ageGroup) &&
+        ['boys', 'girls'].includes(gender) &&
+        (ageGroup !== tournament.ageGroup || gender !== tournament.gender)
+      ) {
+        errors.push(
+          `Category must match the tournament (${tournament.ageGroup} ${tournament.gender}).`
+        );
       }
 
       // Check school existence
@@ -138,6 +154,7 @@ export class TeamService {
 
         // 2. Create team
         await teamRepository.create({
+          tournamentId,
           name: teamName,
           schoolId: school.id,
           medium,

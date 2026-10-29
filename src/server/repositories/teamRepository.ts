@@ -4,10 +4,18 @@ import { TeamDoc } from '../../shared/types.ts';
 import { schoolRepository } from './schoolRepository.ts';
 
 export class TeamRepository {
-  async findAll(filter?: { ageGroup?: string; gender?: string; schoolId?: string }): Promise<TeamDoc[]> {
+  async findAll(filter?: {
+    tournamentId?: string;
+    ageGroup?: string;
+    gender?: string;
+    schoolId?: string;
+  }): Promise<TeamDoc[]> {
     let list = await collections.teams.all();
 
     if (filter) {
+      if (filter.tournamentId) {
+        list = list.filter((t) => t.tournamentId === filter.tournamentId);
+      }
       if (filter.ageGroup) {
         list = list.filter((t) => t.ageGroup === filter.ageGroup);
       }
@@ -54,6 +62,7 @@ export class TeamRepository {
   }
 
   async create(data: {
+    tournamentId: string;
     name: string;
     schoolId: string;
     medium: string;
@@ -66,6 +75,7 @@ export class TeamRepository {
 
     const doc: TeamDoc = {
       id,
+      tournamentId: data.tournamentId,
       name: data.name.trim(),
       schoolId: data.schoolId,
       schoolName: school ? school.name : '',
@@ -102,7 +112,8 @@ export class TeamRepository {
     name: string,
     schoolId: string,
     ageGroup: string,
-    gender: 'boys' | 'girls'
+    gender: 'boys' | 'girls',
+    tournamentId?: string
   ): Promise<TeamDoc | null> {
     const list = await collections.teams.all();
     const match = list.find(
@@ -110,7 +121,8 @@ export class TeamRepository {
         t.schoolId === schoolId &&
         t.name.toLowerCase() === name.trim().toLowerCase() &&
         t.ageGroup === ageGroup &&
-        t.gender === gender
+        t.gender === gender &&
+        (!tournamentId || t.tournamentId === tournamentId)
     );
     if (!match) return null;
     if (!match.schoolName) {
@@ -122,6 +134,7 @@ export class TeamRepository {
 
   async bulkCreate(
     teamsData: Array<{
+      tournamentId: string;
       name: string;
       schoolId: string;
       medium: string;

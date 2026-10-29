@@ -90,6 +90,7 @@ export interface SchoolDoc {
 
 export interface TeamDoc {
   id: string;
+  tournamentId: string | null; // Team belongs to exactly one tournament
   name: string;
   schoolId: string;
   schoolName?: string;

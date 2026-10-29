@@ -36,6 +36,7 @@ export const createSchoolSchema = z.object({
 });
 
 export const createTeamSchema = z.object({
+  tournamentId: z.string().min(1, 'Tournament ID is required'),
   name: z.string().min(2, 'Team name must have at least 2 characters'),
   schoolId: z.string().min(1, 'School ID is required'),
   medium: z.string().min(1, 'Medium is required'),
@@ -76,6 +77,7 @@ export const bulkEnrollSchema = z.object({
 });
 
 export const bulkImportTeamsSchema = z.object({
+  tournamentId: z.string().min(1, 'Tournament ID is required'),
   rows: z.array(
     z.object({
       schoolName: z.string().min(1, 'School name is required'),

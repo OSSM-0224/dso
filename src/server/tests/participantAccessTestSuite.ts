@@ -1,4 +1,4 @@
-﻿import 'server-only';
+import 'server-only';
 import { TestResult, TestSuiteSummary } from '../../shared/tests/testSuite.ts';
 
 import { matchRepository } from '../repositories/matchRepository.ts';
@@ -8,6 +8,7 @@ import { teamRepository } from '../repositories/teamRepository.ts';
 import { enrollmentRepository } from '../repositories/enrollmentRepository.ts';
 import { acknowledgementRepository } from '../repositories/acknowledgementRepository.ts';
 import { notificationRepository } from '../repositories/notificationRepository.ts';
+import { enrollmentService } from '../services/enrollmentService.ts';
 import { matchService } from '../services/matchService.ts';
 import { authService } from '../services/authService.ts';
 import { MatchDoc, TeamDoc, TournamentDoc, UserSession } from '../../shared/types.ts';
@@ -30,7 +31,16 @@ export async function runParticipantAccessTestSuite(): Promise<TestSuiteSummary>
     const schB = await schoolRepository.create({ name: 'Synthetic School Beta' });
     const schC = await schoolRepository.create({ name: 'Synthetic School Gamma' });
 
+    const tourney = await tournamentRepository.create({
+      name: 'Synthetic Published Kho-Kho Trophy',
+      ageGroup: 'U-14',
+      gender: 'boys',
+      year: 2026,
+    });
+    await tournamentRepository.update(tourney.id, { status: 'published' });
+
     const teamA = await teamRepository.create({
+      tournamentId: tourney.id,
       name: 'Alpha Boys U-14',
       schoolId: schA.id,
       medium: 'English',
@@ -39,6 +49,7 @@ export async function runParticipantAccessTestSuite(): Promise<TestSuiteSummary>
     });
 
     const teamB = await teamRepository.create({
+      tournamentId: tourney.id,
       name: 'Beta Boys U-14',
       schoolId: schB.id,
       medium: 'Marathi',
@@ -47,20 +58,13 @@ export async function runParticipantAccessTestSuite(): Promise<TestSuiteSummary>
     });
 
     const teamC = await teamRepository.create({
+      tournamentId: tourney.id,
       name: 'Gamma Boys U-14',
       schoolId: schC.id,
       medium: 'English',
       ageGroup: 'U-14',
       gender: 'boys',
     });
-
-    const tourney = await tournamentRepository.create({
-      name: 'Synthetic Published Kho-Kho Trophy',
-      ageGroup: 'U-14',
-      gender: 'boys',
-      year: 2026,
-    });
-    await tournamentRepository.update(tourney.id, { status: 'published' });
 
     // Enroll all 3 teams
     await enrollmentRepository.create({ tournamentId: tourney.id, teamId: teamA.id });
@@ -157,6 +161,7 @@ export async function runParticipantAccessTestSuite(): Promise<TestSuiteSummary>
     const schB = await schoolRepository.create({ name: 'School B' });
 
     const teamB1 = await teamRepository.create({
+      tournamentId: 't-isolated',
       name: 'Team B1',
       schoolId: schB.id,
       medium: 'Marathi',
@@ -164,6 +169,7 @@ export async function runParticipantAccessTestSuite(): Promise<TestSuiteSummary>
       gender: 'boys',
     });
     const teamB2 = await teamRepository.create({
+      tournamentId: 't-isolated',
       name: 'Team B2',
       schoolId: schB.id,
       medium: 'English',
@@ -290,7 +296,17 @@ export async function runParticipantAccessTestSuite(): Promise<TestSuiteSummary>
   const t4Start = Date.now();
   try {
     const schX = await schoolRepository.create({ name: 'School X' });
+    const schY = await schoolRepository.create({ name: 'School Y' });
+
+    const tourney = await tournamentRepository.create({
+      name: 'Notification Test League',
+      ageGroup: 'U-14',
+      gender: 'boys',
+      year: 2026,
+    });
+
     const teamX = await teamRepository.create({
+      tournamentId: tourney.id,
       name: 'Team X',
       schoolId: schX.id,
       medium: 'Marathi',
@@ -298,20 +314,13 @@ export async function runParticipantAccessTestSuite(): Promise<TestSuiteSummary>
       gender: 'boys',
     });
 
-    const schY = await schoolRepository.create({ name: 'School Y' });
     const teamY = await teamRepository.create({
+      tournamentId: tourney.id,
       name: 'Team Y',
       schoolId: schY.id,
       medium: 'English',
       ageGroup: 'U-14',
       gender: 'boys',
-    });
-
-    const tourney = await tournamentRepository.create({
-      name: 'Notification Test League',
-      ageGroup: 'U-14',
-      gender: 'boys',
-      year: 2026,
     });
 
     const testMatch: MatchDoc = {
@@ -597,6 +606,68 @@ export async function runParticipantAccessTestSuite(): Promise<TestSuiteSummary>
       passed: false,
       message: `Error: ${err.message}`,
       durationMs: Date.now() - t7Start,
+    });
+  }
+
+  // Test 8: Cross-Tournament Enrollment Rejection (Hard Barrier)
+  const t8Start = Date.now();
+  try {
+    const sch = await schoolRepository.create({ name: 'Cross-Enroll School' });
+    const t1 = await tournamentRepository.create({
+      name: 'Tournament 1',
+      ageGroup: 'U-14',
+      gender: 'boys',
+      year: 2026,
+    });
+    const t2 = await tournamentRepository.create({
+      name: 'Tournament 2',
+      ageGroup: 'U-14',
+      gender: 'boys',
+      year: 2026,
+    });
+
+    const foreignTeam = await teamRepository.create({
+      tournamentId: t1.id,
+      name: 'T1 Squad',
+      schoolId: sch.id,
+      medium: 'Marathi',
+      ageGroup: 'U-14',
+      gender: 'boys',
+    });
+
+    let rejected = false;
+    let errorMsg = '';
+    try {
+      await enrollmentService.enrollTeams(t2.id, [foreignTeam.id], {
+        id: 'admin',
+        name: 'Admin',
+        role: 'admin',
+      });
+    } catch (err: any) {
+      rejected = true;
+      errorMsg = err.message;
+    }
+
+    const passed = rejected && errorMsg.includes('different tournament');
+
+    results.push({
+      id: 'TEST_CROSS_TOURNAMENT_ENROLLMENT_REJECTED',
+      name: 'Enrollment Isolation: Rejects enrolling a team from a different tournament',
+      category: 'Participant Access Control',
+      passed,
+      message: passed
+        ? 'Cross-tournament enrollment was properly rejected with clear error.'
+        : `Expected rejection but got: ${rejected ? errorMsg : 'No error thrown'}`,
+      durationMs: Date.now() - t8Start,
+    });
+  } catch (err: any) {
+    results.push({
+      id: 'TEST_CROSS_TOURNAMENT_ENROLLMENT_REJECTED',
+      name: 'Enrollment Isolation: Rejects enrolling a team from a different tournament',
+      category: 'Participant Access Control',
+      passed: false,
+      message: `Error: ${err.message}`,
+      durationMs: Date.now() - t8Start,
     });
   }
 

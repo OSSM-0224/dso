@@ -1,4 +1,4 @@
-﻿import 'server-only';
+import 'server-only';
 import { collections } from '../db/docStore.ts';
 import { EnrollmentDoc, EnrollmentStatus } from '../../shared/types.ts';
 import { teamRepository } from './teamRepository.ts';
@@ -83,6 +83,14 @@ export class EnrollmentRepository {
     );
     if (!found) return false;
     return collections.enrollments.delete(found.id);
+  }
+
+  async deleteByTournamentId(tournamentId: string): Promise<number> {
+    const list = await this.findByTournamentId(tournamentId);
+    for (const e of list) {
+      await collections.enrollments.delete(e.id);
+    }
+    return list.length;
   }
 }
 

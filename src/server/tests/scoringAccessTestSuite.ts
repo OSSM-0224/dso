@@ -44,21 +44,6 @@ async function seedScoreableMatch(suffix: string, scorerIds: string[] = []) {
   const schoolA = await schoolRepository.create({ name: `Scorer School A (${suffix})` });
   const schoolB = await schoolRepository.create({ name: `Scorer School B (${suffix})` });
 
-  const teamA = await teamRepository.create({
-    name: `Scorer Team A (${suffix})`,
-    schoolId: schoolA.id,
-    medium: 'English',
-    ageGroup: 'U-14',
-    gender: 'boys',
-  });
-  const teamB = await teamRepository.create({
-    name: `Scorer Team B (${suffix})`,
-    schoolId: schoolB.id,
-    medium: 'Marathi',
-    ageGroup: 'U-14',
-    gender: 'boys',
-  });
-
   const tournament = await tournamentRepository.create({
     name: `Scoring Access Test Cup ${suffix}`,
     ageGroup: 'U-14',
@@ -66,6 +51,23 @@ async function seedScoreableMatch(suffix: string, scorerIds: string[] = []) {
     year: 2026,
   });
   await tournamentRepository.update(tournament.id, { status: 'published' });
+
+  const teamA = await teamRepository.create({
+    tournamentId: tournament.id,
+    name: `Scorer Team A (${suffix})`,
+    schoolId: schoolA.id,
+    medium: 'English',
+    ageGroup: 'U-14',
+    gender: 'boys',
+  });
+  const teamB = await teamRepository.create({
+    tournamentId: tournament.id,
+    name: `Scorer Team B (${suffix})`,
+    schoolId: schoolB.id,
+    medium: 'Marathi',
+    ageGroup: 'U-14',
+    gender: 'boys',
+  });
 
   const match = makeMatch(`match-score-${suffix}`, tournament.id, teamA, teamB, scorerIds);
   await matchRepository.saveBatch([match]);

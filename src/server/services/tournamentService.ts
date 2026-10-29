@@ -1,5 +1,6 @@
-﻿import 'server-only';
+import 'server-only';
 import { auditLogRepository } from '../repositories/auditLogRepository.ts';
+import { enrollmentRepository } from '../repositories/enrollmentRepository.ts';
 import { pastTournamentRepository } from '../repositories/pastTournamentRepository.ts';
 import { teamRepository } from '../repositories/teamRepository.ts';
 import { tournamentRepository } from '../repositories/tournamentRepository.ts';
@@ -116,6 +117,13 @@ export class TournamentService {
 
     const ok = await tournamentRepository.delete(id);
     if (ok) {
+      // Cascade delete teams scoped to this tournament
+      const tournamentTeams = await teamRepository.findAll({ tournamentId: id });
+      for (const t of tournamentTeams) {
+        await teamRepository.delete(t.id);
+      }
+      // Cascade delete enrollments for this tournament
+      await enrollmentRepository.deleteByTournamentId(id);
       await auditLogRepository.create({
         tournamentId: id,
         who: user.name,

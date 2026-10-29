@@ -30,5 +30,8 @@ export async function ensureDatabaseIndexes(): Promise<void> {
     collections.tournaments.ensureIndexes([
       { keys: { status: 1, createdAt: -1 }, options: { name: 'by_status_time' } },
     ]),
+    collections.teams.ensureIndexes([
+      { keys: { tournamentId: 1 }, options: { name: 'by_tournament' } },
+    ]),
   ]);
 }

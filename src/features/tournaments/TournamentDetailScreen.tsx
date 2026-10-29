@@ -73,7 +73,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
       const [tData, mData, allTeamsList] = await Promise.all([
         api.tournaments.get(tournamentId),
         api.tournaments.getMatches(tournamentId),
-        api.teams.list(),
+        api.teams.list({ tournamentId }),
       ]);
 
       setTournament(tData);

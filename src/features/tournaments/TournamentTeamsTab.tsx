@@ -5,6 +5,7 @@ import { Icon } from '@/components/ui/Icon.tsx';
 import { api } from '@/lib/api.ts';
 import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { EnrollmentDoc, SchoolDoc, TeamDoc, TournamentDoc } from '@/shared/types.ts';
+import { CsvImportModal } from '../teams/CsvImportModal.tsx';
 
 interface TournamentTeamsTabProps {
   tournament: TournamentDoc;
@@ -31,6 +32,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
 
   // Quick Add Team Shortcut Modal
   const [showAddTeamShortcut, setShowAddTeamShortcut] = useState(false);
+  const [showCsvModal, setShowCsvModal] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamSchoolId, setNewTeamSchoolId] = useState('');
   const [newTeamMedium, setNewTeamMedium] = useState('');
@@ -51,10 +53,7 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
       setError(null);
       const [enrollList, teamsList, schoolList] = await Promise.all([
         api.tournaments.getEnrollments(tournament.id),
-        api.teams.list({
-          ageGroup: tournament.ageGroup,
-          gender: tournament.gender,
-        }),
+        api.teams.list({ tournamentId: tournament.id }),
         api.schools.list(),
       ]);
 
@@ -205,8 +204,9 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
 
     try {
       setError(null);
-      // 1. Create team
+      // 1. Create team scoped to this tournament
       const team = await api.teams.create({
+        tournamentId: tournament.id,
         name: newTeamName.trim(),
         schoolId: newTeamSchoolId,
         medium: newTeamMedium,
@@ -417,12 +417,20 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
               </div>
 
               {canWrite && !tournament.isEnrollmentLocked && (
-                <button
-                  onClick={() => setShowAddTeamShortcut(true)}
-                  className="px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold rounded-md transition-colors"
-                >
-                  <Icon name="bolt" size="sm" className="mr-1" />{t("One-Click Add Team")}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowCsvModal(true)}
+                    className="px-3 py-1 bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 text-xs font-semibold rounded-md transition-colors"
+                  >
+                    <Icon name="fileCsv" size="sm" className="mr-1" />{t("Bulk Import CSV")}
+                  </button>
+                  <button
+                    onClick={() => setShowAddTeamShortcut(true)}
+                    className="px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold rounded-md transition-colors"
+                  >
+                    <Icon name="bolt" size="sm" className="mr-1" />{t("One-Click Add Team")}
+                  </button>
+                </div>
               )}
             </div>
 
@@ -624,6 +632,16 @@ export const TournamentTeamsTab: React.FC<TournamentTeamsTabProps> = ({
             </div>
           </form>
         </div>
+      )}
+
+      {/* Tournament-scoped CSV Bulk Import Modal */}
+      {showCsvModal && (
+        <CsvImportModal
+          isOpen={true}
+          tournamentId={tournament.id}
+          onClose={() => setShowCsvModal(false)}
+          onSuccess={() => loadData()}
+        />
       )}
 
       {/* Unlock Confirmation Modal */}

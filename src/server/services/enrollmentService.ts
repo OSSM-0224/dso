@@ -40,6 +40,13 @@ export class EnrollmentService {
         throw new Error(`Team with ID ${teamId} not found.`);
       }
 
+      // Validation: team must belong to this tournament
+      if (team.tournamentId !== tournamentId) {
+        throw new Error(
+          `Cannot enroll "${team.name}": team belongs to a different tournament. Teams are tournament-scoped and can only be enrolled in their own tournament.`
+        );
+      }
+
       // Validation: team's ageGroup and gender must match the tournament!
       if (team.ageGroup !== tournament.ageGroup || team.gender !== tournament.gender) {
         throw new Error(

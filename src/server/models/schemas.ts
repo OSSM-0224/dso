@@ -12,6 +12,7 @@ export const SchoolSchema = new Schema(
 export const TeamSchema = new Schema(
   {
     name: { type: String, required: true, trim: true },
+    tournament: { type: Schema.Types.ObjectId, ref: 'Tournament', required: true, index: true },
     school: { type: Schema.Types.ObjectId, ref: 'School', required: true },
     medium: { type: String, required: true },
     ageGroup: { type: String, required: true },

@@ -6,6 +6,7 @@ export async function GET(req: Request) {
   return handler(async () => {
     const { searchParams } = new URL(req.url);
     const list = await teamController.list({
+      tournamentId: searchParams.get('tournamentId') ?? undefined,
       ageGroup: searchParams.get('ageGroup') ?? undefined,
       gender: searchParams.get('gender') ?? undefined,
       schoolId: searchParams.get('schoolId') ?? undefined,

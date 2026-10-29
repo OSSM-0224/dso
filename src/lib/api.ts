@@ -235,15 +235,15 @@ export const api = {
 
   // Teams
   teams: {
-    list: (filter?: { ageGroup?: string; gender?: string; schoolId?: string }) => {
-      const params = new URLSearchParams();
-      if (filter?.ageGroup) params.append('ageGroup', filter.ageGroup);
-      if (filter?.gender) params.append('gender', filter.gender);
-      if (filter?.schoolId) params.append('schoolId', filter.schoolId);
-      const q = params.toString();
-      return request<TeamDoc[]>(`/teams${q ? `?${q}` : ''}`);
+    list: (filter: { tournamentId: string; ageGroup?: string; gender?: string; schoolId?: string }) => {
+      const params = new URLSearchParams({ tournamentId: filter.tournamentId });
+      if (filter.ageGroup) params.append('ageGroup', filter.ageGroup);
+      if (filter.gender) params.append('gender', filter.gender);
+      if (filter.schoolId) params.append('schoolId', filter.schoolId);
+      return request<TeamDoc[]>(`/teams?${params.toString()}`);
     },
     create: (data: {
+      tournamentId: string;
       name: string;
       schoolId: string;
       medium: string;
@@ -264,10 +264,10 @@ export const api = {
       request<{ success: boolean }>(`/teams/${id}`, {
         method: 'DELETE',
       }),
-    importCsv: (rows: CsvImportRow[], commit: boolean = false) =>
+    importCsv: (tournamentId: string, rows: CsvImportRow[], commit: boolean = false) =>
       request<CsvImportReport>('/teams/import', {
         method: 'POST',
-        body: JSON.stringify({ rows, commit }),
+        body: JSON.stringify({ tournamentId, rows, commit }),
       }),
   },
 

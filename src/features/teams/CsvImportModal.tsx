@@ -10,12 +10,14 @@ import { CsvImportReport, CsvImportRow } from '@/shared/types.ts';
 
 interface CsvImportModalProps {
   isOpen: boolean;
+  tournamentId: string;
   onClose: () => void;
   onSuccess: () => void;
 }
 
 export const CsvImportModal: React.FC<CsvImportModalProps> = ({
   isOpen,
+  tournamentId,
   onClose,
   onSuccess,
 }) => {
@@ -104,7 +106,7 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
       setIsValidating(true);
       setError(null);
       const rows = parseCsv(text);
-      const res = await api.teams.importCsv(rows, false);
+      const res = await api.teams.importCsv(tournamentId, rows, false);
       setReport(res);
     } catch (err: any) {
       setError(err.message || t('Failed to parse and validate CSV'));
@@ -121,7 +123,7 @@ Father Agnel Vashi,Father Agnel Boys,English,U-14,boys`;
       setIsImporting(true);
       setError(null);
       const validRows = report.items.filter((i) => i.status === 'valid').map((i) => i.data);
-      const res = await api.teams.importCsv(validRows, true);
+      const res = await api.teams.importCsv(tournamentId, validRows, true);
       setSuccessMsg(t('Successfully imported {count} team(s)!', { count: res.createdCount ?? 0 }));
       setTimeout(() => {
         onSuccess();

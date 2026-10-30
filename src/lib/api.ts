@@ -317,6 +317,62 @@ export const api = {
       }),
   },
 
+  // Players
+  players: {
+    list: (filter?: {
+      teamId?: string;
+      schoolId?: string;
+      search?: string;
+    }) => {
+      const params = new URLSearchParams();
+
+      if (filter?.teamId) params.append("teamId", filter.teamId);
+      if (filter?.schoolId) params.append("schoolId", filter.schoolId);
+      if (filter?.search) params.append("search", filter.search);
+
+      const query = params.toString();
+      return request<PlayerDoc[]>(`/players${query ? `?${query}` : ""}`);
+    },
+
+    get: (id: string) => request<PlayerDoc>(`/players/${id}`),
+
+    create: (data: {
+      teamId: string;
+      name: string;
+      jerseyNumber?: number;
+      ageGroup?: string;
+      gender?: "boys" | "girls";
+      dateOfBirth?: string;
+      isActive?: boolean;
+    }) =>
+      request<PlayerDoc>("/players", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+
+    update: (
+      id: string,
+      data: Partial<{
+        teamId: string;
+        name: string;
+        jerseyNumber: number;
+        ageGroup: string;
+        gender: "boys" | "girls";
+        dateOfBirth: string;
+        isActive: boolean;
+      }>,
+    ) =>
+      request<PlayerDoc>(`/players/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+
+    delete: (id: string) =>
+      request<{ message: string }>(`/players/${id}`, {
+        method: "DELETE",
+      }),
+  },
+
   // Past Tournaments (History for Season 1)
   pastTournaments: {
     list: () => request<PastTournamentDoc[]>("/past-tournaments"),

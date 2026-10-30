@@ -111,13 +111,14 @@ export async function runScoringScopingTestSuite(): Promise<TestSuiteSummary> {
   const startAll = Date.now();
 
   const push = (
+    id: string,
     name: string,
     category: string,
     passed: boolean,
     message: string,
     start: number
   ) => {
-    results.push({ name, category, passed, message, durationMs: Date.now() - start });
+    results.push({ id, name, category, passed, message, durationMs: Date.now() - start });
   };
 
   // ---------------------------------------------------------------
@@ -158,9 +159,16 @@ export async function runScoringScopingTestSuite(): Promise<TestSuiteSummary> {
       const scorerSeesT1 = summaryT1.some((s) => s.id === t1.tournament.id);
       const scorerDoesNotSeeT2 = !summaryT1.some((s) => s.id === t2.tournament.id);
 
-      results.push({ name: 'Scoring scoping: organizer overview + scorer picker are tournament-scoped', category: 'Scoping', passed: overviewHasBoth && scorerSeesT1 && scorerDoesNotSeeT2, message: `overview=${overview.length} t1=${scorerSeesT1} t2=${scorerDoesNotSeeT2}`, start, id: 'scoping:organizer-overview+picker' });
+      push(
+        'TEST_SCOPING_PICKER_OVERVIEW_SCOPED',
+        'Scoring scoping: organizer overview + scorer picker are tournament-scoped',
+        'Scoping',
+        overviewHasBoth && scorerSeesT1 && scorerDoesNotSeeT2,
+        `overview=${overview.length} t1=${scorerSeesT1} t2=${scorerDoesNotSeeT2}`,
+        start
+      );
     } catch (err: any) {
-      push('Scoring scoping: organizer overview + scorer picker are tournament-scoped', 'Scoping', false, err?.message ?? String(err), start);
+      push('TEST_SCOPING_PICKER_OVERVIEW_SCOPED', 'Scoring scoping: organizer overview + scorer picker are tournament-scoped', 'Scoping', false, err?.message ?? String(err), start);
     }
   }
 
@@ -181,9 +189,16 @@ export async function runScoringScopingTestSuite(): Promise<TestSuiteSummary> {
         notAssignedMessage = /not assigned to this match/i.test(err?.message ?? '');
       }
 
-      results.push({ name: 'Scoring scoping: hub lists only own tournament + 403 read guard', category: 'Scoping', passed: idsOk && onlyOwn && readForbidden && notAssignedMessage, message: `idsOk=${idsOk} onlyOwn=${onlyOwn} readForbidden=${readForbidden} msg=${notAssignedMessage}`, start, id: 'scoping:hub-list+403-guard' });
+      push(
+        'TEST_SCOPING_HUB_LIST_AND_READ_GUARD',
+        'Scoring scoping: hub lists only own tournament + 403 read guard',
+        'Scoping',
+        idsOk && onlyOwn && readForbidden && notAssignedMessage,
+        `idsOk=${idsOk} onlyOwn=${onlyOwn} readForbidden=${readForbidden} msg=${notAssignedMessage}`,
+        start
+      );
     } catch (err: any) {
-      results.push({ name: 'Scoring scoping: hub list scoping', category: 'Scoping', passed: false, message: err?.message ?? String(err), start, id: 'scoping:hub-list' });
+      push('TEST_SCOPING_HUB_LIST_AND_READ_GUARD', 'Scoring scoping: hub lists only own tournament + 403 read guard', 'Scoping', false, err?.message ?? String(err), start);
     }
   }
 
@@ -198,9 +213,16 @@ export async function runScoringScopingTestSuite(): Promise<TestSuiteSummary> {
         mismatch = statusOf(err) === 404 && /not found in this tournament/i.test(err?.message ?? '');
       }
 
-      results.push({ name: 'Scoring scoping: match/tournament mismatch is a 404', category: 'Scoping', passed: mismatch, message: `mismatch=${mismatch}`, start, id: 'scoping:mismatch-404' });
+      push(
+        'TEST_SCOPING_MISMATCH_IS_404',
+        'Scoring scoping: match/tournament mismatch is a 404',
+        'Scoping',
+        mismatch,
+        `mismatch=${mismatch}`,
+        start
+      );
     } catch (err: any) {
-      results.push({ name: 'Scoring scoping: mismatch 404', category: 'Scoping', passed: false, message: err?.message ?? String(err), start, id: 'scoping:mismatch-404' });
+      push('TEST_SCOPING_MISMATCH_IS_404', 'Scoring scoping: match/tournament mismatch is a 404', 'Scoping', false, err?.message ?? String(err), start);
     }
   }
 
@@ -237,9 +259,19 @@ export async function runScoringScopingTestSuite(): Promise<TestSuiteSummary> {
         legacyTournamentForOtherScorer = statusOf(err) === 403;
       }
 
-      results.push({ name: 'Scoring scoping: writer roster is tournament-scoped', category: 'Scoping', passed: firstScore !== null && crossTournamentBlocked && assignedMsg && legacyTournamentForOtherScorer, message: `ensure=${firstScore !== null} cross=${crossTournamentBlocked} msg=${assignedMsg} outsider=${legacyTournamentForOtherScorer}`, start, id: 'scoping:writer-roster' });
+      push(
+        'TEST_SCOPING_WRITER_ROSTER_SCOPED',
+        'Scoring scoping: writer roster is tournament-scoped',
+        'Scoping',
+        firstScore !== null &&
+          crossTournamentBlocked &&
+          assignedMsg &&
+          legacyTournamentForOtherScorer,
+        `ensure=${firstScore !== null} cross=${crossTournamentBlocked} msg=${assignedMsg} outsider=${legacyTournamentForOtherScorer}`,
+        start
+      );
     } catch (err: any) {
-      push('Scoring scoping: writer scoping', 'Scoping', false, err?.message ?? String(err), start);
+      push('TEST_SCOPING_WRITER_ROSTER_SCOPED', 'Scoring scoping: writer roster is tournament-scoped', 'Scoping', false, err?.message ?? String(err), start);
     }
   }
 
@@ -264,9 +296,16 @@ export async function runScoringScopingTestSuite(): Promise<TestSuiteSummary> {
         undoScoped = statusOf(err) === 403;
       }
 
-      results.push({ name: 'Scoring scoping: undo/complete respect the tournament boundary', category: 'Scoping', passed: undoneOk && undoScoped, message: `undone=${undoneOk} undoScoped=${undoScoped}`, start, id: 'scoping:undo-complete-boundary' });
+      push(
+        'TEST_SCOPING_UNDO_COMPLETE_BOUNDARY',
+        'Scoring scoping: undo/complete respect the tournament boundary',
+        'Scoping',
+        undoneOk && undoScoped,
+        `undone=${undoneOk} undoScoped=${undoScoped}`,
+        start
+      );
     } catch (err: any) {
-      push('Scoring scoping: undo scoping', 'Scoping', false, err?.message ?? String(err), start);
+      push('TEST_SCOPING_UNDO_COMPLETE_BOUNDARY', 'Scoring scoping: undo/complete respect the tournament boundary', 'Scoping', false, err?.message ?? String(err), start);
     }
   }
 
@@ -282,9 +321,16 @@ export async function runScoringScopingTestSuite(): Promise<TestSuiteSummary> {
       } catch (err: any) {
         staffOnly = statusOf(err) === 403;
       }
-      results.push({ name: 'Scoring scoping: tournament roster endpoint round-trips (staff only)', category: 'Scoping', passed: roster.scorerIds.includes(scorerUser.id) && staffOnly, message: `roster=${roster.scorerIds.length} staffOnly=${staffOnly}`, start, id: 'scoping:roster-endpoint' });
+      push(
+        'TEST_SCOPING_ROSTER_ENDPOINT_ROUND_TRIP',
+        'Scoring scoping: tournament roster endpoint round-trips (staff only)',
+        'Scoping',
+        roster.scorerIds.includes(scorerUser.id) && staffOnly,
+        `roster=${roster.scorerIds.length} staffOnly=${staffOnly}`,
+        start
+      );
     } catch (err: any) {
-      push('Scoring scoping: roster endpoint', 'Scoping', false, err?.message ?? String(err), start);
+      push('TEST_SCOPING_ROSTER_ENDPOINT_ROUND_TRIP', 'Scoring scoping: tournament roster endpoint round-trips (staff only)', 'Scoping', false, err?.message ?? String(err), start);
     }
   }
 
@@ -294,9 +340,16 @@ export async function runScoringScopingTestSuite(): Promise<TestSuiteSummary> {
     try {
       const resolved = await scoringService.resolveMatchTournamentId(t1.match.id);
       const missing = await scoringService.resolveMatchTournamentId('no-such-match');
-      results.push({ name: 'Scoring scoping: legacy redirect resolves the tournament', category: 'Scoping', passed: resolved === t1.tournament.id && missing === null, message: `resolved=${resolved} missing=${missing}`, start, id: 'scoping:legacy-redirect' });
+      push(
+        'TEST_SCOPING_LEGACY_REDIRECT_RESOLVE',
+        'Scoring scoping: legacy redirect resolves the tournament',
+        'Scoping',
+        resolved === t1.tournament.id && missing === null,
+        `resolved=${resolved} missing=${missing}`,
+        start
+      );
     } catch (err: any) {
-      push('Scoring scoping: redirect resolution', 'Scoping', false, err?.message ?? String(err), start);
+      push('TEST_SCOPING_LEGACY_REDIRECT_RESOLVE', 'Scoring scoping: legacy redirect resolves the tournament', 'Scoping', false, err?.message ?? String(err), start);
     }
   }
 

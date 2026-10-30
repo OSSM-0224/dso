@@ -38,6 +38,10 @@ const TournamentTeamsTab = dynamic(
   () => import('./TournamentTeamsTab.tsx').then((m) => m.TournamentTeamsTab),
   { loading: () => <TabLoading /> }
 );
+const TournamentScorersTab = dynamic(
+  () => import('./TournamentScorersTab.tsx').then((m) => m.TournamentScorersTab),
+  { loading: () => <TabLoading /> }
+);
 
 interface TournamentDetailScreenProps {
   tournamentId: string;
@@ -58,7 +62,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
   const [matches, setMatches] = useState<MatchDoc[]>([]);
   const [enrolledTeams, setEnrolledTeams] = useState<TeamDoc[]>([]);
   const [allTeams, setAllTeams] = useState<TeamDoc[]>([]);
-  const [activeTab, setActiveTab] = useState<'fixtures' | 'teams' | 'audit'>('fixtures');
+  const [activeTab, setActiveTab] = useState<'fixtures' | 'teams' | 'scorers' | 'audit'>('fixtures');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -204,6 +208,18 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
         >
           {t("Audit Log")}
         </button>
+        {canWrite && (
+          <button
+            onClick={() => setActiveTab('scorers')}
+            className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
+              activeTab === 'scorers'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            {t("Scorers")}
+          </button>
+        )}
       </div>
 
       {/* TAB 1: FIXTURES */}
@@ -255,6 +271,9 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
 
       {/* TAB 3: AUDIT LOG */}
       {activeTab === 'audit' && <AuditLogScreen tournamentId={tournament.id} />}
+
+      {/* TAB 4: TOURNAMENT-SCOPED SCORER ROSTER */}
+      {activeTab === 'scorers' && canWrite && <TournamentScorersTab tournamentId={tournament.id} />}
     </div>
   );
 };

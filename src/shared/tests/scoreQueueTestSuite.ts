@@ -47,7 +47,7 @@ function makeQueueEnv(
           sent.push({ kind: 'undo', eventId: item.eventId });
           return { ok: true };
         }),
-      onReconcile: handlers.onReconcile ?? (async (ctx) => reconciles.push(ctx)),
+      onReconcile: handlers.onReconcile ?? (async (ctx) => { reconciles.push(ctx); }),
       onRejected:
         handlers.onRejected ?? ((message, droppedCount) => rejected.push({ message, droppedCount })),
     },
@@ -98,7 +98,7 @@ export async function runScoreQueueTestSuite(): Promise<TestSuiteSummary> {
   const results: TestResult[] = [];
   const startAll = Date.now();
 
-  const run = async (name: string, category: string, test: () => Promise<void>) => {
+  const run = async (id: string, name: string, category: string, test: () => Promise<void>) => {
     const start = Date.now();
     let message = '';
     let passed = true;
@@ -108,11 +108,11 @@ export async function runScoreQueueTestSuite(): Promise<TestSuiteSummary> {
       passed = false;
       message = err instanceof Error ? err.message : String(err);
     }
-    results.push({ name, category, passed, message, durationMs: Date.now() - start });
+    results.push({ id, name, category, passed, message, durationMs: Date.now() - start });
   };
 
   // Bug fix #1: undo orders AFTER a still-in-flight event (never races ahead).
-  await run('queue FIFO: undo waits behind an in-flight event', 'Queue', async () => {
+  await run('TEST_QUEUE_UNDO_FIFO_ORDER', 'queue FIFO: undo waits behind an in-flight event', 'Queue', async () => {
     let releaseEvent!: () => void;
     const hang = new Promise<void>((resolve) => {
       releaseEvent = resolve;

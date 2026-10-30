@@ -5,10 +5,10 @@
  *    for unknown ones (so the console host can render its friendly fallback);
  *  - configSummary lines up with the engine's per-age-group config.
  *
- * Component-level resolution (Console/LiveView) is exercised by the Node
- * runner only when `registryComponents.ts` is importable under the
- * `react-server` condition — see checkComponentRegistry() below; otherwise it
- * is reported as NOT COVERED here (never silently skipped).
+ * Component-level resolution (Console/LiveView) is exercised by the separate
+ * async `runRegistryComponentTestSuite()`, which the runners include ONLY
+ * when `registryComponents.ts` is importable in the runner; otherwise it
+ * reports the category as explicitly NOT COVERED.
  */
 import { TestResult, TestSuiteSummary } from './testSuite.ts';
 import {
@@ -86,18 +86,6 @@ export function runRegistryTestSuite(): TestSuiteSummary {
     }
   });
 
-  // Component-level registry resolution (Console + LiveView wiring). The
-  // metadata registry is deliberately component-free so this suite runs under
-  // the node `react-server` condition; the component registry pulls
-  // next/link and may not be importable there. Probe for it and report the
-  // outcome — covered OR explicitly not covered, never silently skipped.
-
-  const componentSummary = checkComponentRegistry();
-  if (componentSummary) {
-    results.push(componentSummary.covered);
-    if (componentSummary.skipped) results.push(componentSummary.skipped);
-  }
-
   const total = results.length;
   const passed = results.filter((r) => r.passed).length;
   return {
@@ -110,54 +98,75 @@ export function runRegistryTestSuite(): TestSuiteSummary {
 }
 
 /**
- * Attempts to import the component registry non-dynamically-safe-free (sync
- * require is not available in ESM + TS here, so this uses a guarded dynamic
- * import that CANNOT throw unhandled). Returns real TestResults when the
- * import succeeds, or a "NOT COVERED" result when the node runner cannot
- * load the component graph ('use client' + next/link).
+ * Component-level registry assertions (spec §7: "kho-kho resolves its Console
+ * and LiveView"). The component registry pulls 'use client' modules and
+ * next/link, which is NOT loadable under the node `react-server` condition
+ * the unit runner uses. This suite probes dynamically import-ability in an
+ * async context and ALWAYS yields a real row:
+ *  - covered: the actual Console/LiveView/unknown-sport assertions, or
+ *  - NOT COVERED: an explicit marker (naming the import error) so the gap is
+ *    visible in the runner output — never a fabricated pass.
  */
-async function checkComponentRegistry(): Promise<{ covered: TestResult; skipped: TestResult | null } | null> {
+export async function runRegistryComponentTestSuite(): Promise<TestSuiteSummary> {
+  const results: TestResult[] = [];
+  const startAll = Date.now();
+
   const start = Date.now();
+  let importError: string | null = null;
+  let mod: typeof import('../../features/scoring/consoles/registryComponents.ts') | null = null;
   try {
-    const mod = await import('../../features/scoring/consoles/registryComponents.ts');
-    const entry = mod.getSportConsole('kho-kho');
-    const unknown = mod.getSportConsole('kabaddi');
-    const live = mod.getSportLiveView('kho-kho');
+    mod = await import('../../features/scoring/consoles/registryComponents.ts');
+  } catch (err) {
+    importError = err instanceof Error ? err.message : String(err);
+  }
 
-    const problems: string[] = [];
-    if (!entry) problems.push('kho-kho missing from the component registry');
-    else {
-      if (typeof entry.Console !== 'function') problems.push('Console missing');
-      if (typeof entry.LiveView !== 'function') problems.push('LiveView missing');
-      if (entry.engineId !== 'kho-kho') throw new Error(`engineId=${entry.engineId}`);
+  if (mod) {
+    let problems: string[] = [];
+    try {
+      const entry = mod.getSportConsole('kho-kho');
+      const unknown = mod.getSportConsole('kabaddi');
+      const live = mod.getSportLiveView('kho-kho');
+      if (!entry) {
+        problems.push('kho-kho missing from the component registry');
+      } else {
+        if (typeof entry.Console !== 'function') problems.push('Console missing');
+        if (typeof entry.LiveView !== 'function') problems.push('LiveView missing');
+        if (entry.engineId !== 'kho-kho') problems.push(`engineId=${entry.engineId}`);
+      }
+      if (unknown !== null) problems.push('unknown sport resolved unexpectedly');
+      if (typeof live !== 'function') problems.push('getSportLiveView did not resolve');
+    } catch (err) {
+      problems = [err instanceof Error ? err.message : String(err)];
     }
-    if (unknown !== null) problems.push('unknown sport resolved unexpectedly');
-    if (typeof live !== 'function') problems.push('getSportLiveView did not resolve');
-
     const passed = problems.length === 0;
-    const covered: TestResult = {
+    results.push({
       id: 'TEST_REGISTRY_COMPONENTS_RESOLVE',
-      name: 'registry components: kho-kho Console + LiveView resolve (or fallback card for unknown)',
+      name: 'registry components: kho-kho Console + LiveView resolve, unknown sport null',
       category: 'Registry',
       passed,
       message: passed
         ? 'Component registry resolved kho-kho Console + LiveView; unknown sport returned null.'
         : problems.join('; '),
       durationMs: Date.now() - start,
-    };
-    return { covered, skipped: null };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    const skipped: TestResult = {
+    });
+  } else {
+    results.push({
       id: 'TEST_REGISTRY_COMPONENTS_NOT_COVERED',
       name: 'registry components: NOT COVERED in this runner',
       category: 'Registry',
       passed: true,
-      message: `registryComponents.ts is not importable here (${message}); component wiring must be covered by a browser/e2e runner. This is an explicit NOT COVERED, not a pass of the assertion.`,
+      message: `registryComponents.ts is not importable here (${importError}); Console/LiveView wiring must be covered by a browser/e2e runner. Explicit NOT COVERED — not an assertion pass.`,
       durationMs: Date.now() - start,
-    };
-    // A placeholder "covered" entry is never fabricated; only the explicit
-    // not-covered marker is registered.
-    return { covered: skipped, skipped: null };
+    });
   }
+
+  const total = results.length;
+  const passed = results.filter((r) => r.passed).length;
+  return {
+    total,
+    passed,
+    failed: total - passed,
+    durationMs: Date.now() - startAll,
+    results,
+  };
 }

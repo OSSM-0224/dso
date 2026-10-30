@@ -121,6 +121,8 @@ export interface TournamentDoc {
   createdAt: string;
   updatedAt: string;
   publishedAt?: string | null;
+  /** UserDoc ids (role="scorer") authorised to score any match of this tournament. */
+  scorerIds?: string[];
 }
 
 export type EnrollmentStatus = 'enrolled' | 'withdrawn';
@@ -252,6 +254,44 @@ export interface ScoringMatchListItem {
   hasScore: boolean;
   scoreVersion: number;
   scorerNames: string[];
+}
+
+/**
+ * One card of the tournament-scoped scoring picker (/score). Scorers get the
+ * tournaments they are assigned to; admins/organizers get every scoreable one.
+ */
+export interface ScoringTournamentSummary {
+  id: string;
+  name: string;
+  sport: string;
+  status: TournamentStatus;
+  ageGroup: string;
+  gender: string;
+  publishedAt?: string | null;
+  /** Matches currently marked live. */
+  liveMatchCount: number;
+  /** Matches scheduled with today's date. */
+  todayMatchCount: number;
+  /** Matches this user could actually score in the hub right now. */
+  scoreableMatchCount: number;
+  /** Completed/archived tournaments are rendered read-only. */
+  isReadOnly: boolean;
+  /** Number of scorers assigned at tournament level. */
+  scorerCount: number;
+}
+
+/** Admin/organizer view of a tournament's scorer roster + assignable pool. */
+export interface TournamentScorerRoster {
+  tournamentId: string;
+  scorerIds: string[];
+  scorerNames: string[];
+  candidates: ScorerCandidate[];
+}
+
+/** Staff-only organizer overview: every tournament's live/scoreable matches. */
+export interface OrganizerOverviewGroup {
+  tournament: ScoringTournamentSummary;
+  matches: ScoringMatchListItem[];
 }
 
 export interface FixtureSnapshotDoc {

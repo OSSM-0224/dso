@@ -37,6 +37,9 @@ export const TournamentSchema = new Schema(
     },
     teams: [{ type: Schema.Types.ObjectId, ref: 'Team' }],
     strongTeams: [{ type: Schema.Types.ObjectId, ref: 'Team' }],
+    // UserDoc ids (role="scorer") authorised to score any match of this
+    // tournament. MatchDoc.scorerIds may additionally narrow per match.
+    scorerIds: [{ type: String }],
     championLookbackYears: { type: Number, default: 3, enum: [3, 4] },
     winner: { type: Schema.Types.ObjectId, ref: 'Team', default: null },
     isEnrollmentLocked: { type: Boolean, default: false },

@@ -16,6 +16,8 @@ export class MatchScoreRepository {
   async create(data: {
     matchId: string;
     tournamentId: string;
+    /** Resolved from tournament.sport in the scoring service — never hard-coded here. */
+    sport: string;
     config: MatchScoreDoc['config'];
     teams: MatchScoreDoc['teams'];
   }): Promise<MatchScoreDoc> {
@@ -24,7 +26,7 @@ export class MatchScoreRepository {
       id: `score-${data.matchId}`,
       matchId: data.matchId,
       tournamentId: data.tournamentId,
-      sport: 'kho-kho',
+      sport: data.sport,
       config: data.config,
       teams: data.teams,
       version: 0,

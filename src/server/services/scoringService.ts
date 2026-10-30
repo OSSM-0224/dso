@@ -15,20 +15,66 @@ import { userRepository } from '../repositories/userRepository.ts';
 import { auditLogRepository } from '../repositories/auditLogRepository.ts';
 import { matchService } from './matchService.ts';
 import { sanitizeMatchDto, sanitizeMatchScoreDto } from '../serializers/dtoSerializers.ts';
-import { MatchDoc, MatchScoreDoc, MatchScoreViewDto, ScoreEventDoc, ScorerCandidate, ScoringMatchListItem, TeamDoc, TournamentDoc, UserSession } from '../../shared/types.ts';
+import { MatchDoc, MatchScoreDoc, MatchScoreViewDto, OrganizerOverviewGroup, ScoreEventDoc, ScorerCandidate, ScoringMatchListItem, ScoringTournamentSummary, TeamDoc, TournamentDoc, TournamentScorerRoster, TournamentStatus, UserSession } from '../../shared/types.ts';
 import {
   getScoringEngine,
+  ScoringEngine,
 } from '../../shared/scoring/engine.ts';
 import {
   KhoKhoScoreEvent,
   ScoringAgeGroup,
+  ScoringSport,
   defaultKhoKhoConfigForAgeGroup,
 } from '../../shared/scoring/types.ts';
 
 const SCOREABLE_TOURNAMENT_STATUSES = ['published', 'ongoing'] as const;
 const READABLE_TOURNAMENT_STATUSES = ['published', 'ongoing', 'completed'] as const;
 
-const engine = getScoringEngine('kho-kho');
+/** Shared wording so the UI can detect an assignment failure without parsing prose. */
+const SCORER_NOT_ASSIGNED_MESSAGE =
+  'You are not assigned to this match/tournament. Ask the organizer to assign you as a scorer.';
+
+/**
+ * Engine registry resolved PER TOURNAMENT (`tournament.sport`), never a
+ * hard-coded 'kho-kho' singleton. An unknown sport surfaces as 400 so both
+ * the API and the console screens degrade gracefully.
+ */
+class ScoringEngineResolver {
+  private readonly cache = new Map<string, ScoringEngine>();
+
+  resolve(sport: string): ScoringEngine {
+    const cached = this.cache.get(sport);
+    if (cached) return cached;
+    try {
+      const engine = getScoringEngine(sport as ScoringSport);
+      this.cache.set(sport, engine);
+      return engine;
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        400,
+        `Scoring is not available for the sport "${sport}" yet.`
+      );
+    }
+  }
+}
+
+/**
+ * One default scoring config per sport. New sports plug in here when their
+ * engine lands (see README "How to add a new sport"); existing tournaments
+ * with a registered sport always get a deterministic config.
+ */
+function defaultConfigForTournament(tournament: TournamentDoc): MatchScoreDoc['config'] {
+  switch (tournament.sport) {
+    case 'kho-kho':
+      return defaultKhoKhoConfigForAgeGroup(tournament.ageGroup as ScoringAgeGroup);
+    default:
+      throw new ApiError(
+        400,
+        `Scoring is not available for the sport "${tournament.sport}" yet.`
+      );
+  }
+}
 
 function toApiError(err: unknown): ApiError {
   if (err instanceof ApiError) return err;
@@ -48,13 +94,28 @@ interface ScoringContext {
 }
 
 class ScoringService {
+  /** Per-tournament engine resolution (see class doc above). */
+  private readonly engines = new ScoringEngineResolver();
+
   // ------------------------------------------------------------------
   // Private helpers
   // ------------------------------------------------------------------
 
-  private async assertScoreableMatch(matchId: string): Promise<ScoringContext> {
+  private engineFor(sport: string): ScoringEngine {
+    return this.engines.resolve(sport);
+  }
+
+  private async assertScoreableMatch(
+    matchId: string,
+    expectedTournamentId?: string | null
+  ): Promise<ScoringContext> {
     const match = await matchRepository.findById(matchId);
     if (!match) throw new ApiError(404, 'Match not found');
+
+    // Match/tournament mismatch is a 404, never a leak of another tournament.
+    if (expectedTournamentId && match.tournamentId !== expectedTournamentId) {
+      throw new ApiError(404, 'Match not found in this tournament.');
+    }
 
     const tournament = await tournamentRepository.findById(match.tournamentId);
     if (!tournament) throw new ApiError(404, 'Tournament for this match not found');
@@ -80,18 +141,102 @@ class ScoringService {
     return { match, tournament };
   }
 
-  /** Admins/organizers may score every match; scorers only matches they are
-   * assigned to via `MatchDoc.scorerIds`. */
-  private assertWriterAuthorized(user: UserSession, match: MatchDoc): void {
+  /**
+   * Admins/organizers may score every match. A scorer must be assigned to the
+   * TOURNAMENT (`TournamentDoc.scorerIds`); an existing match-level
+   * `MatchDoc.scorerIds` additionally narrows within that tournament.
+   *
+   * Legacy fallback: a tournament without `TournamentDoc.scorerIds` (not yet
+   * migrated) keeps the old per-match behaviour so pre-migration data keeps
+   * scoring while the migration runs.
+   */
+  private assertWriterAuthorized(user: UserSession, match: MatchDoc, tournament: TournamentDoc): void {
     if (user.role === 'admin' || user.role === 'organizer') return;
     if (user.role === 'scorer') {
+      const tournamentScorers = Array.isArray(tournament.scorerIds) ? tournament.scorerIds : [];
+
+      if (tournamentScorers.length > 0) {
+        if (!tournamentScorers.includes(user.id)) {
+          throw new ApiError(403, SCORER_NOT_ASSIGNED_MESSAGE);
+        }
+        // Tournament-level assignment allows any match in THIS tournament,
+        // narrowed by an optional per-match roster when it exists.
+        if (Array.isArray(match.scorerIds) && match.scorerIds.length > 0) {
+          if (!match.scorerIds.includes(user.id)) {
+            throw new ApiError(403, SCORER_NOT_ASSIGNED_MESSAGE);
+          }
+        }
+        return;
+      }
+
+      // Legacy (not yet migrated): match-level assignment only.
       if (match.scorerIds?.includes(user.id)) return;
-      throw new ApiError(403, 'You are not assigned as a scorer for this match.');
+      throw new ApiError(403, SCORER_NOT_ASSIGNED_MESSAGE);
     }
     throw new ApiError(403, `Access denied. Role "${user.role}" cannot score matches.`);
   }
 
+  /**
+   * READ authorization for the tournament-scoped hub/console. Scorers may
+   * only read matches of tournaments they are assigned to (with the same
+   * legacy fallback as {@link assertWriterAuthorized}). Staff read everything.
+   */
+  private assertReaderAuthorized(user: UserSession, tournament: TournamentDoc): void {
+    if (user.role === 'admin' || user.role === 'organizer') return;
+    if (user.role === 'scorer') {
+      const tournamentScorers = Array.isArray(tournament.scorerIds) ? tournament.scorerIds : [];
+      if (tournamentScorers.includes(user.id)) return;
+      throw new ApiError(403, SCORER_NOT_ASSIGNED_MESSAGE);
+    }
+    throw new ApiError(403, `Access denied. Role "${user.role}" cannot access the scoring console.`);
+  }
+
+  /** True when a scorer may score matches of this tournament (list helpers). */
+  private async scorerAssignedToTournament(user: UserSession, tournament: TournamentDoc): Promise<boolean> {
+    const tournamentScorers = Array.isArray(tournament.scorerIds) ? tournament.scorerIds : [];
+    if (tournamentScorers.includes(user.id)) return true;
+    // Legacy fallback: any match-level assignment inside this tournament.
+    const matches = await matchRepository.findByTournamentId(tournament.id);
+    return matches.some((m) => Array.isArray(m.scorerIds) && m.scorerIds.includes(user.id));
+  }
+
+  private tournamentSummary(tournament: TournamentDoc, matches: MatchDoc[]): ScoringTournamentSummary {
+    const now = new Date();
+    const isSameDay = (iso: string | null) => {
+      if (!iso) return false;
+      try {
+        const d = new Date(iso);
+        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+      } catch {
+        return false;
+      }
+    };
+
+    const nonBye = matches.filter((m) => !m.isBye && m.teamA && m.teamB);
+    const isReadOnly = !((SCOREABLE_TOURNAMENT_STATUSES as readonly string[]).includes(tournament.status));
+    const scoreable = nonBye.filter(
+      (m) =>
+        m.status === 'upcoming' || m.status === 'live'
+    );
+
+    return {
+      id: tournament.id,
+      name: tournament.name,
+      sport: tournament.sport,
+      status: tournament.status as TournamentStatus,
+      ageGroup: tournament.ageGroup,
+      gender: tournament.gender,
+      publishedAt: tournament.publishedAt || null,
+      liveMatchCount: nonBye.filter((m) => m.status === 'live').length,
+      todayMatchCount: nonBye.filter((m) => isSameDay(m.scheduledAt)).length,
+      scoreableMatchCount: scoreable.length,
+      isReadOnly,
+      scorerCount: Array.isArray(tournament.scorerIds) ? tournament.scorerIds.length : 0,
+    };
+  }
+
   private buildEngineState(scoreDoc: MatchScoreDoc, events: ScoreEventDoc[]) {
+    const engine = this.engineFor(scoreDoc.sport);
     let state = engine.createInitialState({ teams: scoreDoc.teams, config: scoreDoc.config });
     for (const ev of events) {
       try {
@@ -115,7 +260,8 @@ class ScoringService {
     const created = await matchScoreRepository.create({
       matchId: match.id,
       tournamentId: match.tournamentId,
-      config: defaultKhoKhoConfigForAgeGroup(tournament.ageGroup as ScoringAgeGroup),
+      sport: tournament.sport,
+      config: defaultConfigForTournament(tournament),
       teams: [teamSnapshot(match.teamA), teamSnapshot(match.teamB)].filter(
         Boolean
       ) as MatchScoreDoc['teams'],
@@ -166,6 +312,7 @@ class ScoringService {
     const requestedAtMs = clientAtMs ?? serverNowMs;
     event.atMs = Math.max(last?.atMs ?? 0, Math.min(requestedAtMs, serverNowMs));
 
+    const engine = this.engineFor(scoreDoc.sport);
     try {
       engine.validateEvent(state, event);
     } catch (err) {
@@ -222,7 +369,7 @@ class ScoringService {
     // creation-epoch-anchored) events — see appendValidatedEvent.
     const epoch = Date.parse(scoreDoc.createdAt) || 0;
     const serverNowMs = Math.max(0, Date.now() - epoch);
-    const scoreboard = engine.getScoreboard(state, serverNowMs);
+    const scoreboard = this.engineFor(scoreDoc.sport).getScoreboard(state, serverNowMs);
     return sanitizeMatchScoreDto(scoreDoc, scoreboard, events, serverNowMs);
   }
 
@@ -245,6 +392,19 @@ class ScoringService {
     const items: ScoringMatchListItem[] = [];
 
     for (const tournament of scoreableTournaments) {
+      const tournamentScorers = Array.isArray(tournament.scorerIds) ? tournament.scorerIds : [];
+      // Tournament-level scoring assignment: a scorer sees (and may score) any
+      // scoreable match. Legacy tournaments (no tournament-level roster) keep
+      // the per-match narrowing below.
+      const tournamentAssigned = tournamentScorers.includes(user.id);
+      const legacyMode = user.role === 'scorer' && !tournamentAssigned && tournamentScorers.length === 0;
+      if (legacyMode) {
+        const tournamentMatches = await matchRepository.findByTournamentId(tournament.id);
+        if (!tournamentMatches.some((m) => Array.isArray(m.scorerIds) && m.scorerIds.includes(user.id))) {
+          continue;
+        }
+      }
+
       const [matches, tournamentScores] = await Promise.all([
         matchRepository.findByTournamentId(tournament.id),
         matchScoreRepository.findByTournamentId(tournament.id),
@@ -257,7 +417,13 @@ class ScoringService {
         if (!match.teamA || !match.teamB) continue;
         if (match.status !== 'upcoming' && match.status !== 'live') continue;
 
-        if (user.role === 'scorer' && !match.scorerIds?.includes(user.id)) continue;
+        if (legacyMode && !match.scorerIds?.includes(user.id)) continue;
+        if (user.role === 'scorer' && tournamentAssigned) {
+          // Optional per-match narrowing within the tournament.
+          if (Array.isArray(match.scorerIds) && match.scorerIds.length > 0 && !match.scorerIds.includes(user.id)) {
+            continue;
+          }
+        }
 
         const scoreDoc = scoreByMatchId.get(match.id);
         const scorerIds = match.scorerIds || [];
@@ -297,9 +463,9 @@ class ScoringService {
     return items;
   }
 
-  async getMatchForScoring(user: UserSession, matchId: string) {
-    const { match, tournament } = await this.assertScoreableMatch(matchId);
-    this.assertWriterAuthorized(user, match);
+  async getMatchForScoring(user: UserSession, tournamentId: string, matchId: string) {
+    const { match, tournament } = await this.assertScoreableMatch(matchId, tournamentId);
+    this.assertWriterAuthorized(user, match, tournament);
 
     const scoreDoc = await matchScoreRepository.findByMatchId(matchId);
     const scorerIds = match.scorerIds || [];
@@ -326,9 +492,9 @@ class ScoringService {
     };
   }
 
-  async ensureMatchScore(user: UserSession, matchId: string): Promise<MatchScoreViewDto> {
-    const { match, tournament } = await this.assertScoreableMatch(matchId);
-    this.assertWriterAuthorized(user, match);
+  async ensureMatchScore(user: UserSession, tournamentId: string, matchId: string): Promise<MatchScoreViewDto> {
+    const { match, tournament } = await this.assertScoreableMatch(matchId, tournamentId);
+    this.assertWriterAuthorized(user, match, tournament);
 
     if (match.status === 'completed') {
       throw new ApiError(409, 'This match is already completed and cannot be scored.');
@@ -340,11 +506,12 @@ class ScoringService {
 
   async appendEvent(
     user: UserSession,
+    tournamentId: string,
     matchId: string,
     rawEvent: Record<string, unknown>
   ): Promise<MatchScoreViewDto> {
-    const { match, tournament } = await this.assertScoreableMatch(matchId);
-    this.assertWriterAuthorized(user, match);
+    const { match, tournament } = await this.assertScoreableMatch(matchId, tournamentId);
+    this.assertWriterAuthorized(user, match, tournament);
 
     if (match.status === 'completed') {
       throw new ApiError(409, 'This match is already completed and cannot be scored.');
@@ -382,9 +549,9 @@ class ScoringService {
     return this.buildViewDto(appended.scoreDoc, appended.events);
   }
 
-  async undoLastEvent(user: UserSession, matchId: string): Promise<MatchScoreViewDto> {
-    const { match } = await this.assertScoreableMatch(matchId);
-    this.assertWriterAuthorized(user, match);
+  async undoLastEvent(user: UserSession, tournamentId: string, matchId: string): Promise<MatchScoreViewDto> {
+    const { match, tournament } = await this.assertScoreableMatch(matchId, tournamentId);
+    this.assertWriterAuthorized(user, match, tournament);
 
     if (match.status === 'completed') {
       throw new ApiError(409, 'This match is already completed; use the admin correction tools instead.');
@@ -400,7 +567,7 @@ class ScoringService {
 
     const events = await matchScoreRepository.findEventsByMatchId(matchId);
     const state = this.buildEngineState(scoreDoc, events);
-    const target = engine.getUndoTarget(state);
+    const target = this.engineFor(scoreDoc.sport).getUndoTarget(state);
     if (!target) {
       throw new ApiError(409, 'NOTHING_TO_UNDO: There is no active scoring event left to undo.');
     }
@@ -426,9 +593,9 @@ class ScoringService {
     return this.buildViewDto(appended.scoreDoc, appended.events);
   }
 
-  async completeMatch(user: UserSession, matchId: string) {
-    const { match } = await this.assertScoreableMatch(matchId);
-    this.assertWriterAuthorized(user, match);
+  async completeMatch(user: UserSession, tournamentId: string, matchId: string) {
+    const { match, tournament } = await this.assertScoreableMatch(matchId, tournamentId);
+    this.assertWriterAuthorized(user, match, tournament);
 
     if (match.status === 'completed') {
       throw new ApiError(409, 'This match is already completed.');
@@ -441,6 +608,7 @@ class ScoringService {
 
     const events = await matchScoreRepository.findEventsByMatchId(matchId);
     const state = this.buildEngineState(scoreDoc, events);
+    const engine = this.engineFor(scoreDoc.sport);
     const evaluation = engine.computeWinner(state);
     if (!evaluation.resolved || !evaluation.winnerTeamId) {
       const epoch = Date.parse(scoreDoc.createdAt) || 0;
@@ -494,11 +662,12 @@ class ScoringService {
 
   async overrideWinner(
     user: UserSession,
+    tournamentId: string,
     matchId: string,
     criteria: { winnerTeamId: string; reason: string }
   ) {
-    const { match, tournament } = await this.assertScoreableMatch(matchId);
-    this.assertWriterAuthorized(user, match);
+    const { match, tournament } = await this.assertScoreableMatch(matchId, tournamentId);
+    this.assertWriterAuthorized(user, match, tournament);
 
     if (match.status === 'completed') {
       throw new ApiError(409, 'This match is already completed.');

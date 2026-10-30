@@ -1,6 +1,6 @@
-export type ScoringSport = 'kho-kho';
+export type ScoringSport = "kho-kho";
 
-export type ScoringAgeGroup = 'U-14' | 'U-17' | 'U-19' | 'Open';
+export type ScoringAgeGroup = "U-14" | "U-17" | "U-19" | "Open";
 
 export interface ScoringTeamRef {
   id: string;
@@ -36,9 +36,10 @@ export const DEFAULT_KHO_KHO_SCORING_CONFIG: KhoKhoScoringConfig = {
 };
 
 export function defaultKhoKhoConfigForAgeGroup(
-  ageGroup: ScoringAgeGroup
+  ageGroup: ScoringAgeGroup,
 ): KhoKhoScoringConfig {
-  const turnDurationSec = ageGroup === 'U-17' || ageGroup === 'U-19' ? 540 : 420;
+  const turnDurationSec =
+    ageGroup === "U-17" || ageGroup === "U-19" ? 540 : 420;
   return { ...DEFAULT_KHO_KHO_SCORING_CONFIG, turnDurationSec };
 }
 
@@ -47,7 +48,7 @@ export class ScoringRuleError extends Error {
 
   constructor(code: string, message: string) {
     super(message);
-    this.name = 'ScoringRuleError';
+    this.name = "ScoringRuleError";
     this.code = code;
   }
 }
@@ -58,72 +59,72 @@ interface ScoringEventBase {
   recordedBy?: string;
 }
 
-export type KhoKhoTossStage = 'first_innings' | 'extra_innings';
+export type KhoKhoTossStage = "first_innings" | "extra_innings";
 
 export interface KhoKhoTossEvent extends ScoringEventBase {
-  type: 'TOSS';
+  type: "TOSS";
   stage: KhoKhoTossStage;
   winnerTeamId: string;
-  decision: 'CHASE' | 'DEFEND';
+  decision: "CHASE" | "DEFEND";
 }
 
 export interface KhoKhoTurnStartEvent extends ScoringEventBase {
-  type: 'TURN_START';
+  type: "TURN_START";
   innings?: number;
   turn?: number;
   chaserTeamId?: string;
 }
 
 export interface KhoKhoTurnPauseEvent extends ScoringEventBase {
-  type: 'TURN_PAUSE';
+  type: "TURN_PAUSE";
 }
 
 export interface KhoKhoTurnResumeEvent extends ScoringEventBase {
-  type: 'TURN_RESUME';
+  type: "TURN_RESUME";
 }
 
-export type KhoKhoTurnEndReason = 'timer_expired' | 'all_out' | 'manual';
+export type KhoKhoTurnEndReason = "timer_expired" | "all_out" | "manual";
 
 export interface KhoKhoTurnEndEvent extends ScoringEventBase {
-  type: 'TURN_END';
+  type: "TURN_END";
   reason: KhoKhoTurnEndReason;
   reasonText?: string;
 }
 
-export type KhoKhoDismissalType = 'TAG' | 'OUT_OF_BOUNDS' | 'LATE_ENTRY';
+export type KhoKhoDismissalType = "TAG" | "OUT_OF_BOUNDS" | "LATE_ENTRY";
 
 export interface KhoKhoDismissalEvent extends ScoringEventBase {
-  type: 'DISMISSAL';
+  type: "DISMISSAL";
   dismissalType: KhoKhoDismissalType;
   defenderPlayerId?: string;
 }
 
 export interface KhoKhoFoulEvent extends ScoringEventBase {
-  type: 'FOUL_LOG';
+  type: "FOUL_LOG";
   note?: string;
 }
 
 export interface KhoKhoFollowOnEvent extends ScoringEventBase {
-  type: 'FOLLOW_ON_DECISION';
+  type: "FOLLOW_ON_DECISION";
   optedByTeamId: string;
   opted: boolean;
 }
 
 export interface KhoKhoMinTimeEvent extends ScoringEventBase {
-  type: 'MIN_TIME_RESULT';
+  type: "MIN_TIME_RESULT";
   teamId: string;
   scored: boolean;
   elapsedMs?: number;
 }
 
 export interface KhoKhoManualDecisionEvent extends ScoringEventBase {
-  type: 'MANUAL_DECISION';
+  type: "MANUAL_DECISION";
   winnerTeamId: string;
   reason: string;
 }
 
 export interface VoidScoringEvent extends ScoringEventBase {
-  type: 'VOID';
+  type: "VOID";
   targetEventId: string;
 }
 
@@ -152,12 +153,9 @@ export interface CreateScoringMatchInput {
   config?: Partial<KhoKhoScoringConfig>;
 }
 
-export type KhoKhoTurnStatus = 'live' | 'paused' | 'ended';
+export type KhoKhoTurnStatus = "live" | "paused" | "ended";
 
-export type KhoKhoTurnStageLabel =
-  | 'Innings 1'
-  | 'Innings 2'
-  | 'Extra Innings';
+export type KhoKhoTurnStageLabel = "Innings 1" | "Innings 2" | "Extra Innings";
 
 export interface KhoKhoTurnSummary {
   slot: number;
@@ -184,22 +182,22 @@ export interface KhoKhoTurnSummary {
 }
 
 export type KhoKhoMatchPhase =
-  | 'awaiting_toss'
-  | 'turn_live'
-  | 'turn_paused'
-  | 'turn_break'
-  | 'follow_on_prompt'
-  | 'awaiting_extra_toss'
-  | 'min_time'
-  | 'awaiting_manual_decision'
-  | 'completed';
+  | "awaiting_toss"
+  | "turn_live"
+  | "turn_paused"
+  | "turn_break"
+  | "follow_on_prompt"
+  | "awaiting_extra_toss"
+  | "min_time"
+  | "awaiting_manual_decision"
+  | "completed";
 
 export type KhoKhoWinnerKind =
-  | 'points'
-  | 'innings'
-  | 'extra'
-  | 'min_time'
-  | 'manual';
+  | "points"
+  | "innings"
+  | "extra"
+  | "min_time"
+  | "manual";
 
 export interface KhoKhoWinnerEvaluation {
   resolved: boolean;
@@ -243,9 +241,9 @@ export interface KhoKhoSuddenDeathSummary {
 }
 
 export type KhoKhoNextAction =
-  | { action: 'prompt_toss' }
+  | { action: "prompt_toss" }
   | {
-      action: 'start_turn';
+      action: "start_turn";
       innings: number;
       turn: number;
       stage: KhoKhoTurnStageLabel;
@@ -253,28 +251,28 @@ export type KhoKhoNextAction =
       chaserTeamId: string;
       chaserTeamName: string;
     }
-  | { action: 'turn_running'; remainingMs: number }
+  | { action: "turn_running"; remainingMs: number }
   | {
-      action: 'turn_paused';
+      action: "turn_paused";
       remainingMs: number;
       pausedForMs: number;
     }
   | {
-      action: 'end_turn_available';
-      reasonHint: 'timer_expired' | 'all_out';
+      action: "end_turn_available";
+      reasonHint: "timer_expired" | "all_out";
       remainingMs: number;
     }
   | {
-      action: 'prompt_follow_on';
+      action: "prompt_follow_on";
       leaderTeamId: string;
       leaderTeamName: string;
       leadPoints: number;
       threshold: number;
     }
-  | { action: 'prompt_extra_toss'; round: number }
-  | { action: 'record_min_time'; pendingTeamIds: string[] }
-  | { action: 'prompt_manual_decision' }
-  | { action: 'completed'; winner: KhoKhoWinnerEvaluation };
+  | { action: "prompt_extra_toss"; round: number }
+  | { action: "record_min_time"; pendingTeamIds: string[] }
+  | { action: "prompt_manual_decision" }
+  | { action: "completed"; winner: KhoKhoWinnerEvaluation };
 
 export interface KhoKhoScoreboard {
   sport: ScoringSport;

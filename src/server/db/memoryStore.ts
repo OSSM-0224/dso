@@ -1,4 +1,4 @@
-﻿import 'server-only';
+﻿import "server-only";
 import {
   AcknowledgementDoc,
   AuditLogDoc,
@@ -13,7 +13,8 @@ import {
   TeamDoc,
   TournamentDoc,
   UserDoc,
-} from '../../shared/types.ts';
+  PlayerDoc,
+} from "../../shared/types.ts";
 
 /**
  * Thread-safe In-Memory Store.
@@ -22,6 +23,7 @@ import {
 class MemoryStore {
   schools = new Map<string, SchoolDoc>();
   teams = new Map<string, TeamDoc>();
+  players = new Map<string, PlayerDoc>();
   tournaments = new Map<string, TournamentDoc>();
   matches = new Map<string, MatchDoc>();
   fixtureSnapshots = new Map<string, FixtureSnapshotDoc>();
@@ -60,5 +62,5 @@ interface GlobalMemoryStore {
 const globalRef = globalThis as unknown as GlobalMemoryStore;
 
 export const dbStore: MemoryStore =
-  globalRef.__dsoMemoryStore ?? (globalRef.__dsoMemoryStore = new MemoryStore());
-
+  globalRef.__dsoMemoryStore ??
+  (globalRef.__dsoMemoryStore = new MemoryStore());

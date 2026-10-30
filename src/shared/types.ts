@@ -1,6 +1,17 @@
-import { KhoKhoScoreboard, KhoKhoScoreEvent, KhoKhoScoringConfig, ScoringSport, ScoringTeamRef } from './scoring/types.ts';
+import {
+  KhoKhoScoreboard,
+  KhoKhoScoreEvent,
+  KhoKhoScoringConfig,
+  ScoringSport,
+  ScoringTeamRef,
+} from "./scoring/types.ts";
 
-export type UserRole = 'admin' | 'organizer' | 'scorer' | 'viewer' | 'participant';
+export type UserRole =
+  | "admin"
+  | "organizer"
+  | "scorer"
+  | "viewer"
+  | "participant";
 
 export interface UserSession {
   id: string;
@@ -33,14 +44,29 @@ export interface UserDoc {
   updatedAt: string;
 }
 
+export interface PlayerDoc {
+  id: string;
+  teamId: string; // References TeamDoc.id
+  schoolId: string; // Derived from team
+  schoolName: string; // Enriched for convenience
+  name: string; // Required
+  jerseyNumber?: number; // Optional (individual sports)
+  ageGroup?: string; // Optional (team requirement)
+  gender?: "boys" | "girls"; // Optional (team requirement)
+  isActive: boolean; // Default: true
+  dateOfBirth?: string; // Optional
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type NotificationType =
-  | 'fixture_published'
-  | 'match_scheduled'
-  | 'schedule_changed'
-  | 'venue_changed'
-  | 'result_entered'
-  | 'team_advanced'
-  | 'team_eliminated';
+  | "fixture_published"
+  | "match_scheduled"
+  | "schedule_changed"
+  | "venue_changed"
+  | "result_entered"
+  | "team_advanced"
+  | "team_eliminated";
 
 export interface NotificationDoc {
   id: string;
@@ -72,13 +98,13 @@ export interface AcknowledgementDoc {
 }
 
 export type TournamentStatus =
-  | 'draft'
-  | 'fixtures-generated'
-  | 'published'
-  | 'ongoing'
-  | 'completed';
+  | "draft"
+  | "fixtures-generated"
+  | "published"
+  | "ongoing"
+  | "completed";
 
-export type MatchStatus = 'upcoming' | 'live' | 'completed';
+export type MatchStatus = "upcoming" | "live" | "completed";
 
 export interface SchoolDoc {
   id: string;
@@ -96,7 +122,7 @@ export interface TeamDoc {
   schoolName?: string;
   medium: string;
   ageGroup: string; // e.g. "U-14", "U-17", "U-19"
-  gender: 'boys' | 'girls';
+  gender: "boys" | "girls";
   isActive: boolean;
   createdAt: string;
 }
@@ -107,7 +133,7 @@ export interface TournamentDoc {
   sport: string; // default "kho-kho"
   format: string; // default "single-elimination"
   ageGroup: string;
-  gender: 'boys' | 'girls';
+  gender: "boys" | "girls";
   year: number;
   status: TournamentStatus;
   teams: string[]; // Team IDs
@@ -125,7 +151,7 @@ export interface TournamentDoc {
   scorerIds?: string[];
 }
 
-export type EnrollmentStatus = 'enrolled' | 'withdrawn';
+export type EnrollmentStatus = "enrolled" | "withdrawn";
 
 export interface EnrollmentDoc {
   id: string;
@@ -150,7 +176,7 @@ export interface MatchDoc {
   winner: TeamDoc | null;
   status: MatchStatus;
   nextMatchId: string | null;
-  nextSlot: 'A' | 'B' | null;
+  nextSlot: "A" | "B" | null;
   scheduledAt: string | null;
   venue: string | null;
   quarter: 1 | 2 | 3 | 4;
@@ -163,7 +189,7 @@ export interface MatchDoc {
   } | null;
 }
 
-export type MatchScoreStatus = 'active' | 'completed';
+export type MatchScoreStatus = "active" | "completed";
 
 /** A single scoring event appended to a match, with server-side attribution. */
 export interface ScoreEventDoc {
@@ -198,7 +224,7 @@ export interface MatchScoreDoc {
 export type SanitizedScoreEvent = {
   eventId: string;
   atMs: number;
-  type: KhoKhoScoreEvent['type'];
+  type: KhoKhoScoreEvent["type"];
 } & Record<string, unknown>;
 
 /** Live score payload returned to staff, participants, and the public view. */
@@ -225,7 +251,9 @@ export interface MatchScoreViewDto {
 }
 
 /** Response of a polling GET with an up-to-date ?version= check attached. */
-export type MatchScorePollDto = MatchScoreViewDto | { changed: false; version: number };
+export type MatchScorePollDto =
+  | MatchScoreViewDto
+  | { changed: false; version: number };
 
 /** Console detail payload of the tournament-scoped scoring GET. */
 export interface ScoringMatchDetail {
@@ -252,7 +280,8 @@ export interface ScorerCandidate {
 }
 
 /** One row of the scorer's "my matches" console list. */
-export interface ScoringMatchListItem {  matchId: string;
+export interface ScoringMatchListItem {
+  matchId: string;
   tournamentId: string;
   tournamentName: string;
   tournamentStatus: TournamentStatus;
@@ -337,7 +366,7 @@ export interface PastTournamentDoc {
   name: string;
   sport: string;
   ageGroup: string;
-  gender: 'boys' | 'girls';
+  gender: "boys" | "girls";
   year: number;
   winnerTeamId?: string;
   winnerTeamName: string;
@@ -351,28 +380,28 @@ export interface AuditLogDoc {
   who: string;
   role: string;
   what:
-    | 'generate'
-    | 'regenerate'
-    | 'manual_swap'
-    | 'publish'
-    | 'result_entry'
-    | 'schedule_update'
-    | 'create_tournament'
-    | 'delete_tournament'
-    | 'update_strong_teams'
-    | 'bulk_enroll_teams'
-    | 'withdraw_team'
-    | 'lock_enrollment'
-    | 'unlock_enrollment'
-    | 'create_participant'
-    | 'reset_password'
-    | 'toggle_participant_status'
-    | 'change_password'
-    | 'assign_scorers'
-    | 'score_event'
-    | 'score_undo'
-    | 'score_override_winner'
-    | 'score_complete';
+    | "generate"
+    | "regenerate"
+    | "manual_swap"
+    | "publish"
+    | "result_entry"
+    | "schedule_update"
+    | "create_tournament"
+    | "delete_tournament"
+    | "update_strong_teams"
+    | "bulk_enroll_teams"
+    | "withdraw_team"
+    | "lock_enrollment"
+    | "unlock_enrollment"
+    | "create_participant"
+    | "reset_password"
+    | "toggle_participant_status"
+    | "change_password"
+    | "assign_scorers"
+    | "score_event"
+    | "score_undo"
+    | "score_override_winner"
+    | "score_complete";
   before: any;
   after: any;
   details: string;
@@ -401,18 +430,18 @@ export interface CsvImportRow {
   schoolName: string;
   teamName: string;
   medium: string;
-  ageGroup: 'U-14' | 'U-17' | 'U-19' | 'Open';
-  gender: 'boys' | 'girls';
+  ageGroup: "U-14" | "U-17" | "U-19" | "Open";
+  gender: "boys" | "girls";
 }
 
 export interface CsvValidationItem {
   rowIndex: number;
   data: CsvImportRow;
-  status: 'valid' | 'duplicate' | 'error';
+  status: "valid" | "duplicate" | "error";
   errors: string[];
   warnings: string[];
   schoolExists: boolean;
-  duplicateOf?: 'csv' | 'database';
+  duplicateOf?: "csv" | "database";
 }
 
 export interface CsvImportReport {

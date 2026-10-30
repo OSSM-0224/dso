@@ -190,9 +190,7 @@ export class PlayerService {
           duplicateOf = "csv";
           errors.push("Duplicate player name within the same CSV upload.");
         } else if (
-          existingPlayers.some(
-            (p) => p.name.toLowerCase() === nameKey,
-          )
+          existingPlayers.some((p) => p.name.toLowerCase() === nameKey)
         ) {
           isDuplicate = true;
           duplicateOf = "database";

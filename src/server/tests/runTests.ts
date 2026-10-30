@@ -3,7 +3,7 @@ import 'dotenv/config';
 import { runFixtureEngineTestSuite, TestSuiteSummary } from '../../shared/tests/testSuite.ts';
 import { runScoringEngineTestSuite } from '../../shared/tests/scoringTestSuite.ts';
 import { runScoreQueueTestSuite } from '../../shared/tests/scoreQueueTestSuite.ts';
-import { runRegistryTestSuite } from '../../shared/tests/registryTestSuite.ts';
+import { runRegistryTestSuite, runRegistryComponentTestSuite } from '../../shared/tests/registryTestSuite.ts';
 import { runParticipantAccessTestSuite } from './participantAccessTestSuite.ts';
 import { runScoringAccessTestSuite } from './scoringAccessTestSuite.ts';
 import { runScoringScopingTestSuite } from './scoringScopingTestSuite.ts';
@@ -15,6 +15,7 @@ async function main() {
   const engineSummary = runFixtureEngineTestSuite();
   const scoringSummary = runScoringEngineTestSuite();
   const registrySummary = runRegistryTestSuite();
+  const registryComponentsSummary = await runRegistryComponentTestSuite();
   const scoreQueueSummary = await runScoreQueueTestSuite();
   const participantSummary = await runParticipantAccessTestSuite();
   const scoringAccessSummary = await runScoringAccessTestSuite();
@@ -24,6 +25,7 @@ async function main() {
     engineSummary,
     scoringSummary,
     registrySummary,
+    registryComponentsSummary,
     scoreQueueSummary,
     participantSummary,
     scoringAccessSummary,

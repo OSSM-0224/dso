@@ -36,11 +36,8 @@ import { useScoreEventQueue, type ScoreQueueApi } from '@/features/scoring/share
 import { newScoreEventId, offlineChipLabel } from '@/features/scoring/shared/scoreEventQueue.ts';
 import { ConsoleShell } from '@/features/scoring/shared/ConsoleShell.tsx';
 import { ScoreHeader } from '@/features/scoring/shared/ScoreHeader.tsx';
-import {
-  getSportConsole,
-  type SportConsoleProps,
-  type SportConsoleRegistryEntry,
-} from '@/features/scoring/consoles/registry.ts';
+import { getSportConsole, type SportConsoleRegistryEntry } from '@/features/scoring/consoles/registryComponents.ts';
+import type { SportConsoleProps } from '@/features/scoring/consoles/registry.ts';
 
 const btnGhost =
   'flex items-center justify-center gap-1.5 rounded-[6px] border border-hairline bg-surface px-3 py-2 text-xs font-semibold text-ink transition-colors duration-200 hover:border-faint disabled:opacity-45';

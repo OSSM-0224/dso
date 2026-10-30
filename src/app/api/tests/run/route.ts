@@ -1,7 +1,7 @@
 import { runFixtureEngineTestSuite } from '@/shared/tests/testSuite';
 import { runScoringEngineTestSuite } from '@/shared/tests/scoringTestSuite';
 import { runScoreQueueTestSuite } from '@/shared/tests/scoreQueueTestSuite';
-import { runRegistryTestSuite } from '@/shared/tests/registryTestSuite';
+import { runRegistryTestSuite, runRegistryComponentTestSuite } from '@/shared/tests/registryTestSuite';
 import { runParticipantAccessTestSuite } from '@/server/tests/participantAccessTestSuite';
 import { runScoringAccessTestSuite } from '@/server/tests/scoringAccessTestSuite';
 import { runScoringScopingTestSuite } from '@/server/tests/scoringScopingTestSuite';
@@ -16,6 +16,7 @@ export async function GET() {
     const engineSummary = runFixtureEngineTestSuite();
     const scoringSummary = runScoringEngineTestSuite();
     const registrySummary = runRegistryTestSuite();
+    const registryComponentsSummary = await runRegistryComponentTestSuite();
     const scoreQueueSummary = await runScoreQueueTestSuite();
     const participantSummary = await runParticipantAccessTestSuite();
     const scoringAccessSummary = await runScoringAccessTestSuite();
@@ -25,6 +26,7 @@ export async function GET() {
       engineSummary,
       scoringSummary,
       registrySummary,
+      registryComponentsSummary,
       scoreQueueSummary,
       participantSummary,
       scoringAccessSummary,

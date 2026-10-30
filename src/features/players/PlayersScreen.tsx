@@ -161,7 +161,6 @@ export const PlayersScreen: React.FC<PlayersScreenProps> = ({
     return players.filter((player) => {
       if (
         filterState.tournamentId &&
-        teamNameById.get(player.teamId) &&
         teamTournamentById.get(player.teamId) !== filterState.tournamentId
       )
         return false;
@@ -305,7 +304,8 @@ export const PlayersScreen: React.FC<PlayersScreenProps> = ({
         filters={filterState}
         onChange={setFilterState}
         teams={teams}
-        showTeamSchool={!schoolScoped}
+        tournaments={tournaments}
+        showStaffFilters={!schoolScoped}
       />
 
       {isReloading && (

@@ -1,4 +1,4 @@
-import { playerController } from "@/server/controllers/playerController.ts";
+import { playerController } from "@/server/controllers/playerControllers";
 import { requirePlayerAccess } from "@/server/auth/guards";
 import { handler, ok } from "@/server/validations/helpers";
 

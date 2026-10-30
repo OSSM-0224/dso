@@ -142,7 +142,7 @@ export async function runScoreQueueTestSuite(): Promise<TestSuiteSummary> {
   });
 
   // Bug fix #2: re-keying flushes the queue (no cross-match leakage).
-  await run('queue isolation: ensureKey flushes pending items', 'Queue', async () => {
+  await run('TEST_QUEUE_REKEY_FLUSH', 'queue isolation: ensureKey flushes pending items', 'Queue', async () => {
     let releaseEvent!: () => void;
     const hang = new Promise<void>((resolve) => {
       releaseEvent = resolve;
@@ -171,7 +171,7 @@ export async function runScoreQueueTestSuite(): Promise<TestSuiteSummary> {
   });
 
   // Bug fix #3a: retryable failure keeps the item and retries the SAME eventId.
-  await run('queue retry: network error retries the SAME eventId with backoff', 'Queue', async () => {
+  await run('TEST_QUEUE_RETRY_SAME_EVENTID', 'queue retry: network error retries the SAME eventId with backoff', 'Queue', async () => {
     let attempts = 0;
     const eventIds: string[] = [];
     const env = makeQueueEnv({
@@ -201,7 +201,7 @@ export async function runScoreQueueTestSuite(): Promise<TestSuiteSummary> {
 
   // Bug fix #3b: server 4xx drops the head AND all later items, then
   // reconciles and reports the rejection once.
-  await run('queue rejection: 4xx cascade + reconcile + rejection message', 'Queue', async () => {
+  await run('TEST_QUEUE_REJECTION_4XX_CASCADE', 'queue rejection: 4xx cascade + reconcile + rejection message', 'Queue', async () => {
     const env = makeQueueEnv({
       sendEvent: async () => {
         throw ERR(422);
@@ -223,7 +223,7 @@ export async function runScoreQueueTestSuite(): Promise<TestSuiteSummary> {
   });
 
   // A drained flush calls reconcile('drained') exactly once.
-  await run('queue drained: reconcile runs once after the queue empties', 'Queue', async () => {
+  await run('TEST_QUEUE_DRAINED_RECONCILE_ONCE', 'queue drained: reconcile runs once after the queue empties', 'Queue', async () => {
     const env = makeQueueEnv();
     env.queue.enqueueEvent({ type: 'TOSS' });
     env.queue.enqueueEvent({ type: 'TURN_START' });
@@ -233,7 +233,7 @@ export async function runScoreQueueTestSuite(): Promise<TestSuiteSummary> {
   });
 
   // Event ids are unique and shape-stable (server dedupe depends on them).
-  await run('queue ids: newScoreEventId unique + shaped', 'Queue', async () => {
+  await run('TEST_QUEUE_EVENT_ID_SHAPE', 'queue ids: newScoreEventId unique + shaped', 'Queue', async () => {
     const a = newScoreEventId();
     const b = newScoreEventId();
     if (a === b) throw new Error('ids must be unique');
@@ -241,15 +241,26 @@ export async function runScoreQueueTestSuite(): Promise<TestSuiteSummary> {
   });
 
   // Bug fix #4 surface: pendingCount/isBlocked + the offline chip label.
-  await run('queue guards: pendingCount/isBlocked expose waiting state', 'Queue', async () => {
+  // The waiting state engages SYNCHRONOUSLY on enqueue (an event is pending
+  // from that instant, even before its send attempts a network call), and
+  // clears once the send settles. "pendingCount" is read into fresh, plainly
+  // typed locals before each comparison so the checks compare real runtime
+  // values instead of control-flow-narrowed literals.
+  await run('TEST_QUEUE_GUARD_PENDING_STATE', 'queue guards: pendingCount/isBlocked expose waiting state', 'Queue', async () => {
     const env = makeQueueEnv();
-    if (env.queue.isBlocked || env.queue.pendingCount !== 0) {
+    const freshCount: number = env.queue.pendingCount;
+    if (env.queue.isBlocked || freshCount !== 0) {
       throw new Error('fresh queue should be clear');
     }
     env.queue.enqueueEvent({ type: 'TURN_RESUME' });
+    const waitingCount: number = env.queue.pendingCount;
+    if (!env.queue.isBlocked || waitingCount !== 1) {
+      throw new Error(`expected the guard engaged with 1 pending item right after enqueue, got isBlocked=${env.queue.isBlocked} pendingCount=${waitingCount}`);
+    }
     await tick();
-    if (!env.queue.isBlocked || env.queue.pendingCount !== 1) {
-      throw new Error(`expected 1 pending item, got ${env.queue.pendingCount}`);
+    const settledCount: number = env.queue.pendingCount;
+    if (env.queue.isBlocked || settledCount !== 0) {
+      throw new Error(`queue did not clear after the send settled (pendingCount=${settledCount})`);
     }
     const label = offlineChipLabel(2);
     if (!label.includes('2') || !label.toLowerCase().includes('waiting')) {
@@ -259,7 +270,7 @@ export async function runScoreQueueTestSuite(): Promise<TestSuiteSummary> {
 
   // Bug fix #5 gate input: after a drain the queue reports drained state the
   // host needs (empty + not in flight + reconcile done).
-  await run('queue drained state: empty + not in flight', 'Queue', async () => {
+  await run('TEST_QUEUE_DRAINED_STATE_IDLE', 'queue drained state: empty + not in flight', 'Queue', async () => {
     const env = makeQueueEnv();
     env.queue.enqueueEvent({ type: 'MANUAL_DECISION' });
     await tick();

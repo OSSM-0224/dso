@@ -21,7 +21,8 @@ export const Header: React.FC = () => {
 
   const isParticipant = role === 'participant';
   const isOnTournaments = pathname === '/dashboard' || pathname.startsWith('/tournaments');
-  const isOnTeams = pathname.startsWith('/teams');
+const isOnTeams = pathname.startsWith('/teams');
+  const isOnPlayers = pathname.startsWith('/players');
   const isOnSchoolAccounts = pathname.startsWith('/school-accounts');
   const isOnHistory = pathname.startsWith('/past-champions');
   const isOnTesting = pathname.startsWith('/engine-tests');
@@ -88,6 +89,9 @@ export const Header: React.FC = () => {
               </Link>
               <Link href="/teams" className={linkCls(isOnTeams)}>
                 {t("Teams & schools")}
+              </Link>
+              <Link href="/players" className={linkCls(isOnPlayers)}>
+                {t("Players management")}
               </Link>
               <Link href="/school-accounts" className={linkCls(isOnSchoolAccounts)}>
                 {t("School accounts")}

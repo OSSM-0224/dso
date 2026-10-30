@@ -1,7 +1,7 @@
-import 'server-only';
-import mongoose, { Model, Schema } from 'mongoose';
-import { connectDatabase } from '../config/db.ts';
-import { dbStore } from './memoryStore.ts';
+import "server-only";
+import mongoose, { Model, Schema } from "mongoose";
+import { connectDatabase } from "../config/db.ts";
+import { dbStore } from "./memoryStore.ts";
 import {
   AcknowledgementDoc,
   AuditLogDoc,
@@ -16,7 +16,8 @@ import {
   TeamDoc,
   TournamentDoc,
   UserDoc,
-} from '../../shared/types.ts';
+  PlayerDoc,
+} from "../../shared/types.ts";
 
 interface BaseDoc {
   id: string;
@@ -32,8 +33,11 @@ function getModel(collection: string): Model<any> {
   if (!model) {
     model = mongoose.model(
       collection,
-      new Schema({ _id: { type: String } }, { strict: false, versionKey: false, timestamps: false }),
-      collection
+      new Schema(
+        { _id: { type: String } },
+        { strict: false, versionKey: false, timestamps: false },
+      ),
+      collection,
     ) as unknown as Model<any>;
   }
 
@@ -43,19 +47,22 @@ function getModel(collection: string): Model<any> {
 
 function fromMongo<T extends BaseDoc>(raw: Record<string, unknown>): T {
   const { _id, ...rest } = raw;
-  return { ...rest, id: (rest.id as string | undefined) ?? (String(_id) as string) } as T;
+  return {
+    ...rest,
+    id: (rest.id as string | undefined) ?? (String(_id) as string),
+  } as T;
 }
 
 function valueAtPath(value: unknown, path: string): unknown {
-  return path.split('.').reduce<unknown>((current, key) => {
-    if (!current || typeof current !== 'object') return undefined;
+  return path.split(".").reduce<unknown>((current, key) => {
+    if (!current || typeof current !== "object") return undefined;
     return (current as Record<string, unknown>)[key];
   }, value);
 }
 
 function matchesFilter<T>(doc: T, filter: Record<string, unknown>): boolean {
   return Object.entries(filter).every(
-    ([path, expected]) => valueAtPath(doc, path) === expected
+    ([path, expected]) => valueAtPath(doc, path) === expected,
   );
 }
 
@@ -79,7 +86,7 @@ export interface DocIndexSpec {
 export class DocCollection<T extends BaseDoc> {
   constructor(
     private readonly collectionName: string,
-    private readonly memory: () => Map<string, T>
+    private readonly memory: () => Map<string, T>,
   ) {}
 
   private async useMongo(): Promise<boolean> {
@@ -104,7 +111,9 @@ export class DocCollection<T extends BaseDoc> {
 
   async findWhere(filter: Record<string, unknown>): Promise<T[]> {
     if (!(await this.useMongo())) {
-      return Array.from(this.memory().values()).filter((doc) => matchesFilter(doc, filter));
+      return Array.from(this.memory().values()).filter((doc) =>
+        matchesFilter(doc, filter),
+      );
     }
     const docs = await getModel(this.collectionName).find(filter).lean();
     return docs.map((doc) => fromMongo<T>(doc as Record<string, unknown>));
@@ -112,7 +121,11 @@ export class DocCollection<T extends BaseDoc> {
 
   async findOneWhere(filter: Record<string, unknown>): Promise<T | null> {
     if (!(await this.useMongo())) {
-      return Array.from(this.memory().values()).find((doc) => matchesFilter(doc, filter)) ?? null;
+      return (
+        Array.from(this.memory().values()).find((doc) =>
+          matchesFilter(doc, filter),
+        ) ?? null
+      );
     }
     const doc = await getModel(this.collectionName).findOne(filter).lean();
     return doc ? fromMongo<T>(doc as Record<string, unknown>) : null;
@@ -126,7 +139,7 @@ export class DocCollection<T extends BaseDoc> {
     await getModel(this.collectionName).replaceOne(
       { _id: doc.id },
       { ...doc, _id: doc.id },
-      { upsert: true }
+      { upsert: true },
     );
     return doc;
   }
@@ -141,7 +154,7 @@ export class DocCollection<T extends BaseDoc> {
     const result = await getModel(this.collectionName).updateOne(
       { _id: doc.id },
       { $setOnInsert: { ...doc, _id: doc.id } },
-      { upsert: true }
+      { upsert: true },
     );
     return (result.upsertedCount ?? 0) > 0;
   }
@@ -155,7 +168,7 @@ export class DocCollection<T extends BaseDoc> {
       } catch (err) {
         console.warn(
           `[Database]: Could not create index on ${this.collectionName}:`,
-          err instanceof Error ? err.message : String(err)
+          err instanceof Error ? err.message : String(err),
         );
       }
     }
@@ -179,26 +192,45 @@ export class DocCollection<T extends BaseDoc> {
 }
 
 export const collections = {
-  schools: new DocCollection<SchoolDoc>('schools', () => dbStore.schools),
-  teams: new DocCollection<TeamDoc>('teams', () => dbStore.teams),
-  tournaments: new DocCollection<TournamentDoc>('tournaments', () => dbStore.tournaments),
-  matches: new DocCollection<MatchDoc>('matches', () => dbStore.matches),
+  schools: new DocCollection<SchoolDoc>("schools", () => dbStore.schools),
+  teams: new DocCollection<TeamDoc>("teams", () => dbStore.teams),
+  tournaments: new DocCollection<TournamentDoc>(
+    "tournaments",
+    () => dbStore.tournaments,
+  ),
+  players: new DocCollection<PlayerDoc>("players", () => dbStore.players),
+  matches: new DocCollection<MatchDoc>("matches", () => dbStore.matches),
   fixtureSnapshots: new DocCollection<FixtureSnapshotDoc>(
-    'fixtureSnapshots',
-    () => dbStore.fixtureSnapshots
+    "fixtureSnapshots",
+    () => dbStore.fixtureSnapshots,
   ),
   pastTournaments: new DocCollection<PastTournamentDoc>(
-    'pastTournaments',
-    () => dbStore.pastTournaments
+    "pastTournaments",
+    () => dbStore.pastTournaments,
   ),
-  enrollments: new DocCollection<EnrollmentDoc>('enrollments', () => dbStore.enrollments),
-  auditLogs: new DocCollection<AuditLogDoc>('auditLogs', () => dbStore.auditLogs),
-  users: new DocCollection<UserDoc>('users', () => dbStore.users),
-  notifications: new DocCollection<NotificationDoc>('notifications', () => dbStore.notifications),
+  enrollments: new DocCollection<EnrollmentDoc>(
+    "enrollments",
+    () => dbStore.enrollments,
+  ),
+  auditLogs: new DocCollection<AuditLogDoc>(
+    "auditLogs",
+    () => dbStore.auditLogs,
+  ),
+  users: new DocCollection<UserDoc>("users", () => dbStore.users),
+  notifications: new DocCollection<NotificationDoc>(
+    "notifications",
+    () => dbStore.notifications,
+  ),
   acknowledgements: new DocCollection<AcknowledgementDoc>(
-    'acknowledgements',
-    () => dbStore.acknowledgements
+    "acknowledgements",
+    () => dbStore.acknowledgements,
   ),
-  matchScores: new DocCollection<MatchScoreDoc>('matchScores', () => dbStore.matchScores),
-  scoreEvents: new DocCollection<ScoreEventDoc>('scoreEvents', () => dbStore.scoreEvents),
+  matchScores: new DocCollection<MatchScoreDoc>(
+    "matchScores",
+    () => dbStore.matchScores,
+  ),
+  scoreEvents: new DocCollection<ScoreEventDoc>(
+    "scoreEvents",
+    () => dbStore.scoreEvents,
+  ),
 };

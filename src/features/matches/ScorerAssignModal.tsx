@@ -52,11 +52,11 @@ export const ScorerAssignModal: React.FC<ScorerAssignModalProps> = ({
         if (!cancelled) setError(err.message || 'Failed to load scorer accounts');
       }
 
-      // Current assignment comes from the scoring console detail endpoint
-      // (legacy alias resolves the match's tournament). It 403/404s for
-      // draft tournaments — that's fine, assignment itself is still possible.
+      // Current assignment comes from the tournament-scoped scoring detail
+      // endpoint (the CORS-isolated console GET). It 403/404s for draft
+      // tournaments — that's fine, assignment itself is still possible.
       try {
-        const detail = await api.scoring.legacy.getMatch(match.id);
+        const detail = await api.scoring.getMatch(match.tournamentId, match.id);
         if (cancelled) return;
         setCurrentNames(detail.scorerNames || []);
         setSelected(new Set(detail.scorerIds || []));

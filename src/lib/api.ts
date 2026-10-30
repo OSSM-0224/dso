@@ -17,12 +17,19 @@ import {
   TournamentScorerRoster,
   UserRole,
   UserSession,
-} from '@/shared/types.ts';
-import { TestSuiteSummary } from '@/shared/types.ts';
-import { CsvImportReport, CsvImportRow } from '@/shared/types.ts';
+  PlayerDoc,
+} from "@/shared/types.ts";
+import { TestSuiteSummary } from "@/shared/types.ts";
+import { CsvImportReport, CsvImportRow } from "@/shared/types.ts";
 
-const ROLE_KEY = 'dso_auth_role';
-const VALID_ROLES: UserRole[] = ['admin', 'organizer', 'scorer', 'viewer', 'participant'];
+const ROLE_KEY = "dso_auth_role";
+const VALID_ROLES: UserRole[] = [
+  "admin",
+  "organizer",
+  "scorer",
+  "viewer",
+  "participant",
+];
 
 // Sessions are now httpOnly cookies issued by the API routes
 // (see src/server/auth/session.ts). The client only mirrors the role so the
@@ -32,31 +39,34 @@ export function setStoredSession(role: UserRole) {
 }
 
 export function getStoredRole(): UserRole {
-  if (typeof window === 'undefined') return 'organizer';
+  if (typeof window === "undefined") return "organizer";
   const stored = localStorage.getItem(ROLE_KEY) as UserRole | null;
   if (stored && VALID_ROLES.includes(stored)) return stored;
   if (stored) {
     // Only call this inside effects (never during render/hydration).
     localStorage.removeItem(ROLE_KEY);
   }
-  return 'organizer';
+  return "organizer";
 }
 
 export function clearStoredSession() {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   localStorage.removeItem(ROLE_KEY);
 }
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> {
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
 
   const res = await fetch(`/api${endpoint}`, {
     ...options,
     headers,
-    credentials: 'same-origin',
+    credentials: "same-origin",
   });
 
   const json = await res.json();
@@ -64,7 +74,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     // Attach the HTTP status so transport-level classifiers
     // (ScoreEventQueue bug fix #3) can distinguish 4xx rejections (drop +
     // reconcile) from retryable network/5xx failures (retry with backoff).
-    const err = new Error(json.error || `Request failed with status ${res.status}`) as Error & {
+    const err = new Error(
+      json.error || `Request failed with status ${res.status}`,
+    ) as Error & {
       status?: number;
     };
     err.status = res.status;
@@ -78,58 +90,64 @@ export const api = {
   // Auth
   auth: {
     switchRole: (role: UserRole) =>
-      request<{ user: UserSession; token: string }>('/auth/session', {
-        method: 'POST',
+      request<{ user: UserSession; token: string }>("/auth/session", {
+        method: "POST",
         body: JSON.stringify({ role }),
       }),
     login: (identifier: string, password: string) =>
-      request<{ user: UserSession; token: string; mustChangePassword: boolean }>('/auth/login', {
-        method: 'POST',
+      request<{
+        user: UserSession;
+        token: string;
+        mustChangePassword: boolean;
+      }>("/auth/login", {
+        method: "POST",
         body: JSON.stringify({ identifier, password }),
       }),
     changePassword: (newPassword: string, currentPassword?: string) =>
-      request<{ user: UserSession; token: string }>('/auth/change-password', {
-        method: 'POST',
+      request<{ user: UserSession; token: string }>("/auth/change-password", {
+        method: "POST",
         body: JSON.stringify({ newPassword, currentPassword }),
       }),
     logout: () =>
-      request<{ signedOut: boolean }>('/auth/logout', {
-        method: 'POST',
+      request<{ signedOut: boolean }>("/auth/logout", {
+        method: "POST",
       }),
-    getMe: () => request<UserSession>('/auth/me'),
+    getMe: () => request<UserSession>("/auth/me"),
   },
 
   // Tournaments
   tournaments: {
-    list: () => request<TournamentDoc[]>('/tournaments'),
+    list: () => request<TournamentDoc[]>("/tournaments"),
     get: (id: string) =>
-      request<TournamentDoc & { snapshot?: FixtureSnapshotDoc }>('/tournaments/' + id),
+      request<TournamentDoc & { snapshot?: FixtureSnapshotDoc }>(
+        "/tournaments/" + id,
+      ),
     create: (data: {
       name: string;
       sport?: string;
       format?: string;
       ageGroup: string;
-      gender: 'boys' | 'girls';
+      gender: "boys" | "girls";
       year: number;
       championLookbackYears?: number;
       teams?: string[];
     }) =>
-      request<TournamentDoc>('/tournaments', {
-        method: 'POST',
+      request<TournamentDoc>("/tournaments", {
+        method: "POST",
         body: JSON.stringify(data),
       }),
     delete: (id: string) =>
       request<{ success: boolean }>(`/tournaments/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       }),
     updateTeams: (id: string, teams: string[]) =>
       request<TournamentDoc>(`/tournaments/${id}/teams`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ teams }),
       }),
     updateStrongTeams: (id: string, strongTeams: string[]) =>
       request<TournamentDoc>(`/tournaments/${id}/strong-teams`, {
-        method: 'PUT',
+        method: "PUT",
         body: JSON.stringify({ strongTeams }),
       }),
     getRecentChampions: (id: string) =>
@@ -148,49 +166,57 @@ export const api = {
         snapshot: FixtureSnapshotDoc;
         tournamentStatus: string;
       }>(`/tournaments/${id}/fixtures/generate`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ seed }),
       }),
-    swapFixtures: (id: string, teamAId: string, teamBId: string, force: boolean = false) =>
+    swapFixtures: (
+      id: string,
+      teamAId: string,
+      teamBId: string,
+      force: boolean = false,
+    ) =>
       request<{
         matches: MatchDoc[];
         warnings: string[];
       }>(`/tournaments/${id}/fixtures/swap`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ teamAId, teamBId, force }),
       }),
     publish: (id: string) =>
       request<TournamentDoc>(`/tournaments/${id}/fixtures/publish`, {
-        method: 'POST',
+        method: "POST",
       }),
-    getMatches: (id: string) => request<MatchDoc[]>(`/tournaments/${id}/matches`),
-    getAuditLog: (id: string) => request<AuditLogDoc[]>(`/tournaments/${id}/audit-log`),
-    getEnrollments: (id: string) => request<EnrollmentDoc[]>(`/tournaments/${id}/enrollments`),
+    getMatches: (id: string) =>
+      request<MatchDoc[]>(`/tournaments/${id}/matches`),
+    getAuditLog: (id: string) =>
+      request<AuditLogDoc[]>(`/tournaments/${id}/audit-log`),
+    getEnrollments: (id: string) =>
+      request<EnrollmentDoc[]>(`/tournaments/${id}/enrollments`),
     enrollTeams: (id: string, teamIds: string[]) =>
       request<{ enrollments: EnrollmentDoc[]; tournament: TournamentDoc }>(
         `/tournaments/${id}/enrollments`,
         {
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify({ teamIds }),
-        }
+        },
       ),
     withdrawTeam: (id: string, teamId: string) =>
       request<{ enrollments: EnrollmentDoc[]; tournament: TournamentDoc }>(
         `/tournaments/${id}/enrollments/${teamId}`,
         {
-          method: 'DELETE',
-        }
+          method: "DELETE",
+        },
       ),
     lockEnrollment: (id: string) =>
       request<TournamentDoc>(`/tournaments/${id}/enrollments/lock`, {
-        method: 'POST',
+        method: "POST",
       }),
     unlockEnrollment: (id: string) =>
       request<{ tournament: TournamentDoc; warning?: string }>(
         `/tournaments/${id}/enrollments/unlock`,
         {
-          method: 'POST',
-        }
+          method: "POST",
+        },
       ),
   },
 
@@ -205,52 +231,57 @@ export const api = {
           teamBScore?: number | string;
           details?: string;
         };
-      }
+      },
     ) =>
       request<{
         match: MatchDoc;
         nextMatch: MatchDoc | null;
         tournamentCompleted: boolean;
       }>(`/matches/${matchId}/result`, {
-        method: 'PUT',
+        method: "PUT",
         body: JSON.stringify(data),
       }),
     updateSchedule: (
       matchId: string,
-      data: { scheduledAt?: string | null; venue?: string | null }
+      data: { scheduledAt?: string | null; venue?: string | null },
     ) =>
       request<MatchDoc>(`/matches/${matchId}/schedule`, {
-        method: 'PUT',
+        method: "PUT",
         body: JSON.stringify(data),
       }),
   },
 
   // Schools
   schools: {
-    list: () => request<SchoolDoc[]>('/schools'),
+    list: () => request<SchoolDoc[]>("/schools"),
     create: (data: { name: string; mediums: string[] }) =>
-      request<SchoolDoc>('/schools', {
-        method: 'POST',
+      request<SchoolDoc>("/schools", {
+        method: "POST",
         body: JSON.stringify(data),
       }),
     update: (id: string, data: Partial<{ name: string; mediums: string[] }>) =>
       request<SchoolDoc>(`/schools/${id}`, {
-        method: 'PUT',
+        method: "PUT",
         body: JSON.stringify(data),
       }),
     delete: (id: string) =>
       request<{ success: boolean }>(`/schools/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       }),
   },
 
   // Teams
   teams: {
-    list: (filter: { tournamentId: string; ageGroup?: string; gender?: string; schoolId?: string }) => {
+    list: (filter: {
+      tournamentId: string;
+      ageGroup?: string;
+      gender?: string;
+      schoolId?: string;
+    }) => {
       const params = new URLSearchParams({ tournamentId: filter.tournamentId });
-      if (filter.ageGroup) params.append('ageGroup', filter.ageGroup);
-      if (filter.gender) params.append('gender', filter.gender);
-      if (filter.schoolId) params.append('schoolId', filter.schoolId);
+      if (filter.ageGroup) params.append("ageGroup", filter.ageGroup);
+      if (filter.gender) params.append("gender", filter.gender);
+      if (filter.schoolId) params.append("schoolId", filter.schoolId);
       return request<TeamDoc[]>(`/teams?${params.toString()}`);
     },
     create: (data: {
@@ -259,49 +290,53 @@ export const api = {
       schoolId: string;
       medium: string;
       ageGroup: string;
-      gender: 'boys' | 'girls';
+      gender: "boys" | "girls";
       isActive?: boolean;
     }) =>
-      request<TeamDoc>('/teams', {
-        method: 'POST',
+      request<TeamDoc>("/teams", {
+        method: "POST",
         body: JSON.stringify(data),
       }),
     update: (id: string, data: Partial<TeamDoc>) =>
       request<TeamDoc>(`/teams/${id}`, {
-        method: 'PUT',
+        method: "PUT",
         body: JSON.stringify(data),
       }),
     delete: (id: string) =>
       request<{ success: boolean }>(`/teams/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       }),
-    importCsv: (tournamentId: string, rows: CsvImportRow[], commit: boolean = false) =>
-      request<CsvImportReport>('/teams/import', {
-        method: 'POST',
+    importCsv: (
+      tournamentId: string,
+      rows: CsvImportRow[],
+      commit: boolean = false,
+    ) =>
+      request<CsvImportReport>("/teams/import", {
+        method: "POST",
         body: JSON.stringify({ tournamentId, rows, commit }),
       }),
   },
 
   // Past Tournaments (History for Season 1)
   pastTournaments: {
-    list: () => request<PastTournamentDoc[]>('/past-tournaments'),
+    list: () => request<PastTournamentDoc[]>("/past-tournaments"),
     create: (data: {
       name: string;
       sport: string;
       ageGroup: string;
-      gender: 'boys' | 'girls';
+      gender: "boys" | "girls";
       year: number;
       winnerTeamId?: string;
       winnerTeamName: string;
       schoolName: string;
     }) =>
-      request<PastTournamentDoc>('/past-tournaments', {
-        method: 'POST',
+      request<PastTournamentDoc>("/past-tournaments", {
+        method: "POST",
         body: JSON.stringify(data),
       }),
     delete: (id: string) =>
       request<{ success: boolean }>(`/past-tournaments/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       }),
   },
 
@@ -316,14 +351,14 @@ export const api = {
       }>(`/public/tournaments/${id}`),
 
     getMatchScore: (matchId: string, version?: number) => {
-      const q = version !== undefined ? `?version=${version}` : '';
+      const q = version !== undefined ? `?version=${version}` : "";
       return request<MatchScorePollDto>(`/public/matches/${matchId}/score${q}`);
     },
   },
 
   // Tests
   tests: {
-    run: () => request<TestSuiteSummary>('/tests/run'),
+    run: () => request<TestSuiteSummary>("/tests/run"),
   },
 
   // Admin Participant Accounts
@@ -345,7 +380,7 @@ export const api = {
             createdAt: string;
             acknowledgementCount: number;
           }>
-        >('/admin/participants'),
+        >("/admin/participants"),
       create: (data: {
         schoolId: string;
         name: string;
@@ -365,51 +400,61 @@ export const api = {
           mustChangePassword: boolean;
           isActive: boolean;
           temporaryPassword?: string;
-        }>('/admin/participants', {
-          method: 'POST',
+        }>("/admin/participants", {
+          method: "POST",
           body: JSON.stringify(data),
         }),
       resetPassword: (id: string, newTemporaryPassword: string) =>
         request<{
           success: boolean;
           message: string;
-          data: { id: string; schoolCode: string; newTemporaryPassword: string };
+          data: {
+            id: string;
+            schoolCode: string;
+            newTemporaryPassword: string;
+          };
         }>(`/admin/participants/${id}/reset-password`, {
-          method: 'PUT',
+          method: "PUT",
           body: JSON.stringify({ newTemporaryPassword }),
         }),
       toggleStatus: (id: string, isActive: boolean) =>
-        request<{ id: string; isActive: boolean }>(`/admin/participants/${id}/status`, {
-          method: 'PUT',
-          body: JSON.stringify({ isActive }),
-        }),
-
+        request<{ id: string; isActive: boolean }>(
+          `/admin/participants/${id}/status`,
+          {
+            method: "PUT",
+            body: JSON.stringify({ isActive }),
+          },
+        ),
     },
 
     // LIVE SCORER admin (assignment of scorers to matches)
     scorers: {
-      list: () => request<ScorerCandidate[]>('/admin/scorers'),
+      list: () => request<ScorerCandidate[]>("/admin/scorers"),
       // Tournament-level roster ("Scorers" tab in the tournament detail screen).
       getTournamentScorers: (tournamentId: string) =>
-        request<TournamentScorerRoster>(`/admin/tournaments/${tournamentId}/scorers`),
-      setTournamentScorers: (tournamentId: string, scorerIds: string[]) =>
-        request<{ tournamentId: string; scorerIds: string[]; scorerNames: string[] }>(
+        request<TournamentScorerRoster>(
           `/admin/tournaments/${tournamentId}/scorers`,
-          {
-            method: 'PUT',
-            body: JSON.stringify({ scorerIds }),
-          }
         ),
+      setTournamentScorers: (tournamentId: string, scorerIds: string[]) =>
+        request<{
+          tournamentId: string;
+          scorerIds: string[];
+          scorerNames: string[];
+        }>(`/admin/tournaments/${tournamentId}/scorers`, {
+          method: "PUT",
+          body: JSON.stringify({ scorerIds }),
+        }),
     },
     matches: {
       setScorers: (matchId: string, scorerIds: string[]) =>
-        request<{ matchId: string; scorerIds: string[]; scorerNames: string[] }>(
-          `/admin/matches/${matchId}/scorers`,
-          {
-            method: 'PUT',
-            body: JSON.stringify({ scorerIds }),
-          }
-        ),
+        request<{
+          matchId: string;
+          scorerIds: string[];
+          scorerNames: string[];
+        }>(`/admin/matches/${matchId}/scorers`, {
+          method: "PUT",
+          body: JSON.stringify({ scorerIds }),
+        }),
     },
   },
 
@@ -419,36 +464,52 @@ export const api = {
   scoring: {
     /** GET /api/scoring/tournaments — picker (assigned tournaments only for scorers). */
     scoringTournaments: () =>
-      request<ScoringTournamentSummary[]>('/scoring/tournaments'),
+      request<ScoringTournamentSummary[]>("/scoring/tournaments"),
 
     /** GET /api/scoring/tournaments/:tournamentId/matches — hub list. */
     tournamentMatches: (tournamentId: string) =>
-      request<{ tournament: ScoringTournamentSummary; matches: ScoringMatchListItem[] }>(
-        `/scoring/tournaments/${tournamentId}/matches`
-      ),
+      request<{
+        tournament: ScoringTournamentSummary;
+        matches: ScoringMatchListItem[];
+      }>(`/scoring/tournaments/${tournamentId}/matches`),
 
     /** GET .../matches/:matchId — console detail. */
     getMatch: (tournamentId: string, matchId: string) =>
-      request<ScoringMatchDetail>(`/scoring/tournaments/${tournamentId}/matches/${matchId}`),
+      request<ScoringMatchDetail>(
+        `/scoring/tournaments/${tournamentId}/matches/${matchId}`,
+      ),
 
     /** POST .../matches/:matchId — create (or resume) the scoring session. */
     ensureScore: (tournamentId: string, matchId: string) =>
-      request<MatchScoreViewDto>(`/scoring/tournaments/${tournamentId}/matches/${matchId}`, {
-        method: 'POST',
-      }),
+      request<MatchScoreViewDto>(
+        `/scoring/tournaments/${tournamentId}/matches/${matchId}`,
+        {
+          method: "POST",
+        },
+      ),
 
     /** POST .../matches/:matchId/events — append one validated event. */
-    appendEvent: (tournamentId: string, matchId: string, event: Record<string, unknown>) =>
-      request<MatchScoreViewDto>(`/scoring/tournaments/${tournamentId}/matches/${matchId}/events`, {
-        method: 'POST',
-        body: JSON.stringify(event),
-      }),
+    appendEvent: (
+      tournamentId: string,
+      matchId: string,
+      event: Record<string, unknown>,
+    ) =>
+      request<MatchScoreViewDto>(
+        `/scoring/tournaments/${tournamentId}/matches/${matchId}/events`,
+        {
+          method: "POST",
+          body: JSON.stringify(event),
+        },
+      ),
 
     /** POST .../matches/:matchId/undo — VOID the last actionable event. */
     undo: (tournamentId: string, matchId: string) =>
-      request<MatchScoreViewDto>(`/scoring/tournaments/${tournamentId}/matches/${matchId}/undo`, {
-        method: 'POST',
-      }),
+      request<MatchScoreViewDto>(
+        `/scoring/tournaments/${tournamentId}/matches/${matchId}/undo`,
+        {
+          method: "POST",
+        },
+      ),
 
     /** POST .../matches/:matchId/complete — finalize through recordResult. */
     complete: (tournamentId: string, matchId: string) =>
@@ -458,56 +519,71 @@ export const api = {
         tournamentCompleted: boolean;
         score: MatchScoreViewDto;
       }>(`/scoring/tournaments/${tournamentId}/matches/${matchId}/complete`, {
-        method: 'POST',
+        method: "POST",
       }),
 
     /** POST .../matches/:matchId/override-winner — MANUAL_DECISION path. */
-    overrideWinner: (tournamentId: string, matchId: string, data: { winnerTeamId: string; reason: string }) =>
+    overrideWinner: (
+      tournamentId: string,
+      matchId: string,
+      data: { winnerTeamId: string; reason: string },
+    ) =>
       request<{
         match: MatchDoc;
         nextMatch: MatchDoc | null;
         tournamentCompleted: boolean;
         score: MatchScoreViewDto | null;
-      }>(`/scoring/tournaments/${tournamentId}/matches/${matchId}/override-winner`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+      }>(
+        `/scoring/tournaments/${tournamentId}/matches/${matchId}/override-winner`,
+        {
+          method: "POST",
+          body: JSON.stringify(data),
+        },
+      ),
 
     /** STAFF-ONLY organizer overview — matches grouped by tournament. */
     organizerOverview: () =>
-      request<OrganizerOverviewGroup[]>('/scoring/overview'),
+      request<OrganizerOverviewGroup[]>("/scoring/overview"),
 
     /**
      * @deprecated Legacy aliases kept for the TEMP-LOGIN scaffolding and old
      * links. The deprecated server routes resolve the tournament and delegate.
      */
-    myMatches: () => request<ScoringMatchListItem[]>('/scoring/my-matches'),
+    myMatches: () => request<ScoringMatchListItem[]>("/scoring/my-matches"),
     legacy: {
-      getMatch: (id: string) => request<ScoringMatchDetail>(`/scoring/matches/${id}`),
+      getMatch: (id: string) =>
+        request<ScoringMatchDetail>(`/scoring/matches/${id}`),
       ensureScore: (id: string) =>
-        request<MatchScoreViewDto>(`/scoring/matches/${id}`, { method: 'POST' }),
+        request<MatchScoreViewDto>(`/scoring/matches/${id}`, {
+          method: "POST",
+        }),
       appendEvent: (id: string, event: Record<string, unknown>) =>
         request<MatchScoreViewDto>(`/scoring/matches/${id}/events`, {
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify(event),
         }),
       undo: (id: string) =>
-        request<MatchScoreViewDto>(`/scoring/matches/${id}/undo`, { method: 'POST' }),
+        request<MatchScoreViewDto>(`/scoring/matches/${id}/undo`, {
+          method: "POST",
+        }),
       complete: (id: string) =>
         request<{
           match: MatchDoc;
           nextMatch: MatchDoc | null;
           tournamentCompleted: boolean;
           score: MatchScoreViewDto;
-        }>(`/scoring/matches/${id}/complete`, { method: 'POST' }),
-      overrideWinner: (id: string, data: { winnerTeamId: string; reason: string }) =>
+        }>(`/scoring/matches/${id}/complete`, { method: "POST" }),
+      overrideWinner: (
+        id: string,
+        data: { winnerTeamId: string; reason: string },
+      ) =>
         request<{
           match: MatchDoc;
           nextMatch: MatchDoc | null;
           tournamentCompleted: boolean;
           score: MatchScoreViewDto | null;
         }>(`/scoring/matches/${id}/override-winner`, {
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify(data),
         }),
     },
@@ -548,14 +624,18 @@ export const api = {
           ageGroup: string;
           gender: string;
         }>;
-      }>('/my/dashboard'),
+      }>("/my/dashboard"),
 
-    getMatches: (params?: { tournamentId?: string; teamId?: string; status?: string }) => {
+    getMatches: (params?: {
+      tournamentId?: string;
+      teamId?: string;
+      status?: string;
+    }) => {
       const q = new URLSearchParams();
-      if (params?.tournamentId) q.append('tournamentId', params.tournamentId);
-      if (params?.teamId) q.append('teamId', params.teamId);
-      if (params?.status) q.append('status', params.status);
-      const queryStr = q.toString() ? `?${q.toString()}` : '';
+      if (params?.tournamentId) q.append("tournamentId", params.tournamentId);
+      if (params?.teamId) q.append("teamId", params.teamId);
+      if (params?.status) q.append("status", params.status);
+      const queryStr = q.toString() ? `?${q.toString()}` : "";
       return request<any[]>(`/my/matches${queryStr}`);
     },
 
@@ -599,7 +679,7 @@ export const api = {
             ageGroup: string;
             gender: string;
           };
-          overallStatus: 'active' | 'eliminated' | 'champion' | 'winner';
+          overallStatus: "active" | "eliminated" | "champion" | "winner";
           rounds: Array<{
             round: number;
             roundName: string;
@@ -620,17 +700,20 @@ export const api = {
       request<{
         notifications: any[];
         unreadCount: number;
-      }>('/my/notifications'),
+      }>("/my/notifications"),
 
     markNotificationRead: (id: string) =>
       request<any>(`/my/notifications/${id}/read`, {
-        method: 'PUT',
+        method: "PUT",
       }),
 
     markAllNotificationsRead: () =>
-      request<{ success: boolean; count: number }>('/my/notifications/read-all', {
-        method: 'PUT',
-      }),
+      request<{ success: boolean; count: number }>(
+        "/my/notifications/read-all",
+        {
+          method: "PUT",
+        },
+      ),
 
     acknowledgeMatch: (id: string) =>
       request<{
@@ -638,7 +721,7 @@ export const api = {
         message: string;
         data: any;
       }>(`/my/matches/${id}/acknowledge`, {
-        method: 'POST',
+        method: "POST",
       }),
 
     getCalendarDownloadUrl: (matchId: string) => {
@@ -647,7 +730,7 @@ export const api = {
 
     // Live score polling for the signed-in school (version short-circuit)
     getMatchScore: (matchId: string, version?: number) => {
-      const q = version !== undefined ? `?version=${version}` : '';
+      const q = version !== undefined ? `?version=${version}` : "";
       return request<MatchScorePollDto>(`/my/matches/${matchId}/score${q}`);
     },
   },

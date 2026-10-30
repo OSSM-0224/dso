@@ -94,7 +94,6 @@ export class ScoreEventQueue {
   private flushRunning = false;
   private cancelBackoff: (() => void) | null = null;
   private disposed = false;
-
   private state: ScoreQueueState = {
     queued: [],
     inFlight: false,
@@ -192,7 +191,7 @@ export class ScoreEventQueue {
    * in flight the undo waits behind them (and the UI disables the button via
    * `canUndo`), so it can never void an older event first.
    */
-  enqueueUndo(payload = {}): void {
+  enqueueUndo(payload: unknown = {}): void {
     this.assertActive();
     this.push({
       kind: 'undo',
@@ -333,8 +332,8 @@ function defaultSchedule(fn: () => void, delayMs: number): () => void {
     : (globalThis.setTimeout.bind(globalThis) as (fn: () => void, ms: number) => unknown);
   const clearer = isBrowser
     ? window.clearTimeout.bind(window)
-    : (globalThis.clearTimeout.bind(globalThis) as (id: unknown) => void);
-  const id = setter(fn, delayMs);
+    : (globalThis.clearTimeout.bind(globalThis) as (id: never) => void);
+  const id = setter(fn, delayMs) as never;
   return () => clearer(id);
 }
 

@@ -27,6 +27,8 @@ export type ScoreQueueApi = {
   enqueueUndo: (payload?: unknown) => void;
   undo: (payload?: unknown) => void;
   queuedCount: number;
+  /** Alias of `queuedCount` (spec wording). */
+  pendingCount: number;
   queued: Array<ScoreQueueItem>;
   isQueueEmpty: boolean;
   inFlight: boolean;
@@ -156,6 +158,7 @@ export function useScoreEventQueue(options: UseScoreEventQueueOptions): ScoreQue
     enqueueUndo,
     undo: enqueueUndo,
     queuedCount,
+    pendingCount: queuedCount,
     queued: snapshot.queued,
     isQueueEmpty: queuedCount === 0,
     inFlight: snapshot.inFlight,

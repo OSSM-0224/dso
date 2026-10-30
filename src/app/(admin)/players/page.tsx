@@ -10,3 +10,4 @@ export default function PlayersPage() {
 
   return <PlayersScreen canWrite={canWrite} user={user} />;
 }
+

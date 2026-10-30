@@ -305,6 +305,7 @@ export const TournamentsListScreen: React.FC<TournamentsListScreenProps> = ({
                   <option value="volleyball">
                     {t("Volleyball (Modular plug-in)")}
                   </option>
+                  <option value="sepakTakraw">{t("Sepak Takraw")}</option>
                 </select>
               </div>
 

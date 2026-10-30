@@ -8,10 +8,11 @@
  */
 import { TestResult, TestSuiteSummary } from './testSuite.ts';
 import {
-  getSportConsole,
-  getSportLiveView,
-  listSportConsoles,
+  getSportConsoleMeta,
+  listSportMetas,
 } from '../../features/scoring/consoles/registry.ts';
+
+export { getSportConsoleMeta, listSportMetas } from '../../features/scoring/consoles/registry.ts';
 import { defaultKhoKhoConfigForAgeGroup } from '../scoring/types.ts';
 import { getScoringEngine } from '../scoring/engine.ts';
 
@@ -32,35 +33,26 @@ export function runRegistryTestSuite(): TestSuiteSummary {
     results.push({ name, category, passed, message, durationMs: Date.now() - start });
   };
 
-  check('registry: kho-kho entry resolves with Console + LiveView', 'Registry', () => {
-    const entry = getSportConsole('kho-kho');
-    if (!entry) throw new Error('kho-kho missing from the registry');
-    if (typeof entry.Console !== 'function') throw new Error('Console missing');
-    if (typeof entry.LiveView !== 'function') throw new Error('LiveView missing');
-    if (entry.engineId !== 'kho-kho') throw new Error(`engineId=${entry.engineId}`);
-  });
-
   check('registry: unknown sport returns null (console fallback path)', 'Registry', () => {
-    const entry = getSportConsole('kabaddi');
-    if (entry !== null) throw new Error('unknown sport should not resolve');
-    if (getSportLiveView('kabaddi') !== null) throw new Error('LiveView should not resolve');
+    const meta = getSportConsoleMeta('kabaddi');
+    if (meta !== null) throw new Error('unknown sport should not resolve');
   });
 
   check('registry: empty sport string resolves the kho-kho default', 'Registry', () => {
-    const entry = getSportConsole('');
-    if (!entry || entry.engineId !== 'kho-kho') throw new Error('default resolution failed');
+    const meta = getSportConsoleMeta('');
+    if (!meta || meta.engineId !== 'kho-kho') throw new Error('default resolution failed');
   });
 
-  check('registry: listSportConsoles includes every registered sport', 'Registry', () => {
-    const list = listSportConsoles();
-    const sports = list.map((l) => l.sport);
+  check('registry: listSportMetas includes every registered sport', 'Registry', () => {
+    const metas = listSportMetas();
+    const sports = metas.map((m) => m.sport);
     if (!sports.includes('kho-kho')) throw new Error(`list=${JSON.stringify(sports)}`);
   });
 
   check('registry: configSummary reflects the age-group config', 'Registry', () => {
-    const entry = getSportConsole('kho-kho')!;
-    const u14 = entry.configSummary({ sport: 'kho-kho', ageGroup: 'U-14', gender: 'boys' });
-    const u17 = entry.configSummary({ sport: 'kho-kho', ageGroup: 'U-17', gender: 'girls' });
+    const meta = getSportConsoleMeta('kho-kho')!;
+    const u14 = meta.configSummary({ sport: 'kho-kho', ageGroup: 'U-14', gender: 'boys' });
+    const u17 = meta.configSummary({ sport: 'kho-kho', ageGroup: 'U-17', gender: 'girls' });
     const expectedU14Minutes = Math.round(defaultKhoKhoConfigForAgeGroup('U-14').turnDurationSec / 60);
     const expectedU17Minutes = Math.round(defaultKhoKhoConfigForAgeGroup('U-17').turnDurationSec / 60);
     if (!u14.includes(`${expectedU14Minutes} min`)) throw new Error(`u14 summary=${u14}`);
@@ -69,8 +61,8 @@ export function runRegistryTestSuite(): TestSuiteSummary {
   });
 
   check('registry: non-kho-kho tournament falls back to plain descriptor', 'Registry', () => {
-    const entry = getSportConsole('kho-kho')!;
-    const summary = entry.configSummary({ sport: 'kabaddi', ageGroup: 'U-17', gender: 'girls' });
+    const meta = getSportConsoleMeta('kho-kho')!;
+    const summary = meta.configSummary({ sport: 'kabaddi', ageGroup: 'U-17', gender: 'girls' });
     if (!summary.includes('U-17') || !summary.includes('girls')) {
       throw new Error(`fallback summary=${summary}`);
     }

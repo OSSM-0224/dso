@@ -16,7 +16,7 @@ import { useAuth } from '@/context/AuthContext.tsx';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { ScorerLoginCard } from './ScorerLoginCard.tsx';
-import { getSportConsole } from './consoles/registry.ts';
+import { getSportConsoleMeta } from './consoles/registry.ts';
 
 const STATUS_CHIP: Record<string, { label: string; className: string }> = {
   ongoing: {
@@ -152,7 +152,7 @@ export const ScorerTournamentsPicker: React.FC = () => {
             label: tournament.status,
             className: 'border-hairline bg-surface text-ink',
           };
-          const consoleEntry = getSportConsole(tournament.sport);
+            const consoleEntry = getSportConsoleMeta(tournament.sport);
           return (
             <li key={tournament.id}>
               <Link

@@ -15,7 +15,7 @@ import { useAuth } from '@/context/AuthContext.tsx';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { ScorerLoginCard } from './ScorerLoginCard.tsx';
-import { getSportConsole } from './consoles/registry.ts';
+import { getSportConsoleMeta } from './consoles/registry.ts';
 
 const btnGhost =
   'inline-flex items-center justify-center gap-1.5 rounded-[6px] border border-hairline bg-surface px-3 py-2 text-xs font-semibold text-ink transition-colors duration-200 hover:border-faint';
@@ -166,7 +166,7 @@ export const ScoringTournamentHub: React.FC<{ tournamentId: string }> = ({ tourn
   }
 
   const isReadOnly = tournament.isReadOnly;
-  const consoleEntry = getSportConsole(tournament.sport);
+  const consoleEntry = getSportConsoleMeta(tournament.sport);
   const rounds = Array.from(new Set((matches ?? []).map((m) => m.roundName)));
 
   const GROUP_TITLE: Record<GroupKey, string> = {

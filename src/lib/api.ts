@@ -61,7 +61,14 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   const json = await res.json();
   if (!res.ok || !json.success) {
-    throw new Error(json.error || `Request failed with status ${res.status}`);
+    // Attach the HTTP status so transport-level classifiers
+    // (ScoreEventQueue bug fix #3) can distinguish 4xx rejections (drop +
+    // reconcile) from retryable network/5xx failures (retry with backoff).
+    const err = new Error(json.error || `Request failed with status ${res.status}`) as Error & {
+      status?: number;
+    };
+    err.status = res.status;
+    throw err;
   }
 
   return json.data as T;

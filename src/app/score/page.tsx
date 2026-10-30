@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { ScorerConsoleEntry } from '@/features/scoring/ScorerConsoleEntry.tsx';
+import { ScorerTournamentsPicker } from '@/features/scoring/ScorerTournamentsPicker.tsx';
 
-export default function ScoreConsolePage() {
-  return <ScorerConsoleEntry />;
+export default function ScorePickerPage() {
+  return <ScorerTournamentsPicker />;
 }

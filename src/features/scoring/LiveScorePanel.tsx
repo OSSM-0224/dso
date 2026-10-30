@@ -1,17 +1,58 @@
 'use client';
 
 /**
- * Wiring between useLiveScore and LiveScoreCard for the two reader surfaces:
+ * Wiring between useLiveScore and the registry LIVE VIEW for the two reader
+ * surfaces:
  * - MyMatchLiveScore   → participant portal (cookie-authenticated, school-scoped)
  * - PublicMatchLiveScore → public bracket page (no auth)
  * Both render nothing until a score exists (none yet / access denied), so the
  * cards appear only when a scorer session is actually live or archived.
+ * The LiveView component is resolved from the sport REGISTRY via
+ * `score.scoreboard.sport` (spec §2) — never imported per-sport directly.
  */
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { api } from '@/lib/api.ts';
 import { useLiveScore } from '@/hooks/useLiveScore.ts';
+import type { MatchDoc, MatchScoreViewDto } from '@/shared/types.ts';
+import { getSportLiveView } from './consoles/registry.ts';
 import { LiveScoreCard } from './LiveScoreCard.tsx';
+
+/** Minimal match stub — reader LiveViews only need stable keys/titles. */
+const matchStubFor = (matchId: string): MatchDoc => ({ id: matchId }) as unknown as MatchDoc;
+
+/** Registry dispatch: falls back to the generic card for unknown sports. */
+function LiveViewRenderer({
+  score,
+  matchId,
+  snapshotAt,
+  stale,
+  title,
+  className,
+}: {
+  score: MatchScoreViewDto;
+  matchId: string;
+  snapshotAt: number;
+  stale: boolean;
+  title?: string;
+  className?: string;
+}) {
+  const LiveView = useMemo(
+    () => getSportLiveView(score?.scoreboard?.sport ?? 'kho-kho') ?? LiveScoreCard,
+    [score?.scoreboard?.sport]
+  );
+  return (
+    <div className={className}>
+      <LiveView
+        match={matchStubFor(matchId)}
+        score={score}
+        snapshotAt={snapshotAt}
+        stale={stale}
+        title={title}
+      />
+    </div>
+  );
+}
 
 interface MyMatchLiveScoreProps {
   matchId: string;
@@ -31,13 +72,14 @@ export const MyMatchLiveScore: React.FC<MyMatchLiveScoreProps> = ({ matchId, ena
     pollIntervalMs: 5000,
   });
 
-  if (!score) return null;
+  if (!score || !('scoreboard' in score)) return null;
   return (
-    <LiveScoreCard
+    <LiveViewRenderer
       score={score}
+      matchId={matchId}
       snapshotAt={snapshotAt}
-      title={title}
       stale={status === 'error' && !!error}
+      title={title}
       className={className}
     />
   );
@@ -59,13 +101,14 @@ export const PublicMatchLiveScore: React.FC<PublicMatchLiveScoreProps> = ({ matc
     pollIntervalMs: 5000,
   });
 
-  if (!score) return null;
+  if (!score || !('scoreboard' in score)) return null;
   return (
-    <LiveScoreCard
+    <LiveViewRenderer
       score={score}
+      matchId={matchId}
       snapshotAt={snapshotAt}
-      title={title}
       stale={status === 'error' && !!error}
+      title={title}
       className={className}
     />
   );

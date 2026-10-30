@@ -17,12 +17,12 @@ export const ToastBanner: React.FC<{
   return (
     <div className={`flex items-center justify-between gap-2 rounded-[8px] px-3 py-2 text-xs font-medium ${toneClass}`}>
       <div className="flex items-center gap-1.5">
-        <Icon name={tone === 'error' ? 'circleAlert' : tone === 'success' ? 'circleCheck' : 'info'} size="sm" />
+        <Icon name={tone === 'error' ? 'circleAlert' : tone === 'success' ? 'circleCheck' : 'circleInfo'} size="sm" />
         <span>{text}</span>
       </div>
       {onDismiss ? (
         <button type="button" onClick={onDismiss} className="rounded-full p-1">
-          <Icon name="x" size="xs" />
+          <Icon name="xmark" size="xs" />
         </button>
       ) : null}
     </div>

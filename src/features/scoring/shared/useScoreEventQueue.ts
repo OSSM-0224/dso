@@ -35,8 +35,8 @@ export type ScoreQueueApi = {
   clearLastError: () => void;
   /** Extra gate (e.g. engine says nothing to undo) AND the queue drained. */
   canUndo: boolean;
-  getCanUndo;
-  hasPending;
+  getCanUndo: () => boolean;
+  hasPending: boolean;
   isBlocked: boolean;
   flush: () => Promise<void>;
   flushRef: () => Promise<void>;

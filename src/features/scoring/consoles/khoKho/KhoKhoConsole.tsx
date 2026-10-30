@@ -16,7 +16,6 @@ import Link from 'next/link';
 
 import type {
   KhoKhoNextAction,
-  KhoKhoScoreEvent,
   KhoKhoTurnSummary,
 } from '@/shared/scoring/types';
 import { PAUSE_REMINDER_MS } from '@/shared/scoring/types';

@@ -19,6 +19,7 @@ import { PlayerStats, PlayerStatsData } from "./PlayerStats.tsx";
 import { PlayerTable } from "./PlayerTable.tsx";
 import { PlayerFormModal } from "./PlayerFormModal.tsx";
 import { PlayerDeleteDialog } from "./PlayerDeleteDialog.tsx";
+import { PlayerCsvImportModal } from "./PlayerCsvImportModal.tsx";
 
 interface PlayersScreenProps {
   user: UserSession | null;
@@ -46,6 +47,7 @@ export const PlayersScreen: React.FC<PlayersScreenProps> = ({
   const [tournaments, setTournaments] = useState<TournamentDoc[]>([]);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<PlayerDoc | null>(null);
   const [deletingPlayer, setDeletingPlayer] = useState<PlayerDoc | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -270,12 +272,20 @@ export const PlayersScreen: React.FC<PlayersScreenProps> = ({
 
         <div className="flex flex-wrap items-center gap-2">
           {canWrite && (
-            <button
-              onClick={handleOpenAdd}
-              className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg shadow-sm"
-            >
-              {t("+ Add Player")}
-            </button>
+            <>
+              <button
+                onClick={() => setIsImportOpen(true)}
+                className="px-3.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-medium rounded-lg shadow-sm"
+              >
+                {t("Import CSV")}
+              </button>
+              <button
+                onClick={handleOpenAdd}
+                className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg shadow-sm"
+              >
+                {t("+ Add Player")}
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -382,6 +392,22 @@ export const PlayersScreen: React.FC<PlayersScreenProps> = ({
           teamName={teamNameById.get(deletingPlayer.teamId)}
           onClose={() => setDeletingPlayer(null)}
           onConfirm={handleDeleteConfirm}
+        />
+      )}
+
+      {isImportOpen && (
+        <PlayerCsvImportModal
+          isOpen={isImportOpen}
+          teams={teams}
+          onClose={() => setIsImportOpen(false)}
+          onSuccess={(createdCount) => {
+            flash(
+              t("Successfully imported {count} player(s)!", {
+                count: createdCount,
+              }),
+            );
+            reloadPlayers();
+          }}
         />
       )}
     </div>

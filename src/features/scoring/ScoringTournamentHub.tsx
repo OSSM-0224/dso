@@ -52,12 +52,14 @@ const GROUP_ORDER: GroupKey[] = ['live', 'today', 'upcoming', 'done'];
 export const ScoringTournamentHub: React.FC<{ tournamentId: string }> = ({ tournamentId }) => {
   const { t } = useI18n();
   const { isLoading: authLoading, canScore } = useAuth();
+  const router = useRouter();
 
   const [tournament, setTournament] = useState<ScoringTournamentSummary | null>(null);
   const [matches, setMatches] = useState<ScoringMatchListItem[] | null>(null);
   const [needsLogin, setNeedsLogin] = useState(false);
   const [notAssigned, setNotAssigned] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resolvingLegacy, setResolvingLegacy] = useState(false);
   const [roundFilter, setRoundFilter] = useState<string>('all');
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -74,15 +76,33 @@ export const ScoringTournamentHub: React.FC<{ tournamentId: string }> = ({ tourn
       const message = err instanceof Error ? err.message : String(err);
       if (/not assigned to this match/i.test(message)) {
         setNotAssigned(true);
-      } else if (/Authentication required|Access denied|401|403/i.test(message)) {
-        setNeedsLogin(true);
-      } else if (/not found/i.test(message)) {
-        setError(message);
-      } else {
-        setError(message);
+        return;
       }
+      if (/Authentication required|Access denied|401|403/i.test(message)) {
+        setNeedsLogin(true);
+        return;
+      }
+      // LEGACY LINK (/score/:matchId — Next 16 removed that dynamic segment
+      // as ambiguous). A bare deep link now lands here as `tournamentId`; on
+      // "not found", try resolving it as a legacy match id through the
+      // scorer's own match list and upgrade to the tournament-scoped console.
+      if (/not found/i.test(message)) {
+        setResolvingLegacy(true);
+        try {
+          const mine = await api.scoring.myMatches();
+          const legacy = mine.find((m) => m.matchId === tournamentId);
+          if (legacy) {
+            router.replace(`/score/${legacy.tournamentId}/${legacy.matchId}`);
+            return;
+          }
+        } catch {
+          // fall through to the plain error screen
+        }
+        setResolvingLegacy(false);
+      }
+      setError(message);
     }
-  }, [canScore, tournamentId]);
+  }, [canScore, tournamentId, router]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -139,6 +159,15 @@ export const ScoringTournamentHub: React.FC<{ tournamentId: string }> = ({ tourn
           <Icon name="arrowLeft" size="sm" />
           {t('Back to tournament picker')}
         </Link>
+      </div>
+    );
+  }
+
+  if (resolvingLegacy) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted">
+        <Icon name="spinner" size="md" spin />
+        {t('Opening the scoring console…')}
       </div>
     );
   }

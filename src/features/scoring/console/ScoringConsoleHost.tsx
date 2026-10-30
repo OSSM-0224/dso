@@ -40,7 +40,7 @@ import {
   getSportConsole,
   type SportConsoleProps,
   type SportConsoleRegistryEntry,
-} from '@/features/scoring/consoles/registry.ts';
+} from '@/features/scoring/consoles/registryComponents.ts';
 
 const btnGhost =
   'flex items-center justify-center gap-1.5 rounded-[6px] border border-hairline bg-surface px-3 py-2 text-xs font-semibold text-ink transition-colors duration-200 hover:border-faint disabled:opacity-45';

@@ -2,8 +2,11 @@
 import 'dotenv/config';
 import { runFixtureEngineTestSuite, TestSuiteSummary } from '../../shared/tests/testSuite.ts';
 import { runScoringEngineTestSuite } from '../../shared/tests/scoringTestSuite.ts';
+import { runScoreQueueTestSuite } from '../../shared/tests/scoreQueueTestSuite.ts';
+import { runRegistryTestSuite } from '../../shared/tests/registryTestSuite.ts';
 import { runParticipantAccessTestSuite } from './participantAccessTestSuite.ts';
 import { runScoringAccessTestSuite } from './scoringAccessTestSuite.ts';
+import { runScoringScopingTestSuite } from './scoringScopingTestSuite.ts';
 
 async function main() {
   // Tests must run against the isolated in-memory store, never a real cluster.
@@ -11,15 +14,28 @@ async function main() {
 
   const engineSummary = runFixtureEngineTestSuite();
   const scoringSummary = runScoringEngineTestSuite();
+  const registrySummary = runRegistryTestSuite();
+  const scoreQueueSummary = await runScoreQueueTestSuite();
   const participantSummary = await runParticipantAccessTestSuite();
   const scoringAccessSummary = await runScoringAccessTestSuite();
+  const scoringScopingSummary = await runScoringScopingTestSuite();
+
+  const summaries = [
+    engineSummary,
+    scoringSummary,
+    registrySummary,
+    scoreQueueSummary,
+    participantSummary,
+    scoringAccessSummary,
+    scoringScopingSummary,
+  ];
 
   const combined: TestSuiteSummary = {
-    total: engineSummary.total + scoringSummary.total + participantSummary.total + scoringAccessSummary.total,
-    passed: engineSummary.passed + scoringSummary.passed + participantSummary.passed + scoringAccessSummary.passed,
-    failed: engineSummary.failed + scoringSummary.failed + participantSummary.failed + scoringAccessSummary.failed,
-    durationMs: engineSummary.durationMs + scoringSummary.durationMs + participantSummary.durationMs + scoringAccessSummary.durationMs,
-    results: [...engineSummary.results, ...scoringSummary.results, ...participantSummary.results, ...scoringAccessSummary.results],
+    total: summaries.reduce((acc, s) => acc + s.total, 0),
+    passed: summaries.reduce((acc, s) => acc + s.passed, 0),
+    failed: summaries.reduce((acc, s) => acc + s.failed, 0),
+    durationMs: summaries.reduce((acc, s) => acc + s.durationMs, 0),
+    results: summaries.flatMap((s) => s.results),
   };
 
   for (const r of combined.results) {

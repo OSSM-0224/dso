@@ -15,7 +15,7 @@ import React, { useCallback, useMemo } from 'react';
 import { api } from '@/lib/api.ts';
 import { useLiveScore } from '@/hooks/useLiveScore.ts';
 import type { MatchDoc, MatchScoreViewDto } from '@/shared/types.ts';
-import { getSportLiveView } from './consoles/registry.ts';
+import { getSportLiveView } from './consoles/registryComponents.ts';
 import { LiveScoreCard } from './LiveScoreCard.tsx';
 
 /** Minimal match stub — reader LiveViews only need stable keys/titles. */

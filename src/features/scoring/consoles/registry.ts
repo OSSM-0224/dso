@@ -1,26 +1,26 @@
-'use client';
-
 /**
- * SPORT-PLUGGABLE console registry.
+ * SPORT-PLUGGABLE console registry — PURE METADATA (no component imports).
  *
- * Maps `tournament.sport` -> { engineId, Console, LiveView, configSummary }.
- * The scoring console host (`ScoringConsoleHost`) resolves the Console here;
- * hub cards and the school/public live panels resolve the LiveView here.
- * An unknown/unsupported sport returns `null` from `getSportConsole` so the
- * host can render the friendly "not available yet" screen.
+ * Maps `tournament.sport` -> { engineId, configSummary }. Client components
+ * are wired in `registryComponents.ts` ('use client') so this module stays
+ * importable in server-side unit tests (importing the real Console would
+ * pull `next/link`, which is NOT loadable under the `react-server` Node
+ * condition that the test runner uses).
+ *
+ * The console host + reader panels resolve the actual Console/LiveView via
+ * `registryComponents.ts`; hub cards and the picker use the pure metadata.
  *
  * How to add a new sport (full checklist in README):
- *   1. engine strategy in src/shared/scoring  2. config schema
- *   3. Console component  4. LiveView component  5. registry entry  6. tests
+ *   1. engine strategy in src/shared/scoring
+ *   2. config schema
+ *   3. Console component    4. LiveView component
+ *   5. registry entry here   6. registryComponents entry
+ *   7. tests
  */
-import type { ComponentType } from 'react';
-
-import type { MatchScoreViewDto, MatchDoc, ScoringMatchDetail } from '@/shared/types.ts';
 import type { KhoKhoScoringConfig } from '@/shared/scoring/types.ts';
 import { defaultKhoKhoConfigForAgeGroup, type ScoringAgeGroup } from '@/shared/scoring/types.ts';
 
-import { KhoKhoConsole } from './khoKho/KhoKhoConsole';
-import { KhoKhoLiveView } from './khoKho/KhoKhoLiveView';
+import type { MatchScoreViewDto, MatchDoc, ScoringMatchDetail } from '@/shared/types.ts';
 
 /** Common tournament info handed to every console (never a full TeamDoc). */
 export type SportConsoleTournament = {
@@ -91,28 +91,24 @@ export type SportLiveViewProps = {
   isReadOnly?: boolean;
 };
 
-export type SportConsoleRegistryEntry = {
+/** Pure metadata entry (server-test safe; no React components attached). */
+export type SportConsoleMetaEntry = {
   /** Shared engine id used by BOTH the server service and the client replay. */
   engineId: string;
-  Console: ComponentType<SportConsoleProps>;
-  LiveView: ComponentType<SportLiveViewProps>;
   /** One-line rule summary for the hub header (per-tournament config). */
-  configSummary: (tournament: TournamentScorerRosterOrTournament) => string;
+  configSummary: (tournament: SportConsoleTournamentLike) => string;
 };
 
-// Minimal structural tournament type so the registry stays decoupled from the
-// full admin-only TournamentDoc.
-type TournamentScorerRosterOrTournament = {
+/** Minimal structural tournament type (decoupled from the admin TournamentDoc). */
+export type SportConsoleTournamentLike = {
   sport: string;
   ageGroup: string;
   gender: string;
 };
 
-const registry: Record<string, SportConsoleRegistryEntry> = {
+const metaRegistry: Record<string, SportConsoleMetaEntry> = {
   'kho-kho': {
     engineId: 'kho-kho',
-    Console: KhoKhoConsole,
-    LiveView: KhoKhoLiveView,
     configSummary: (t) => {
       if (t.sport !== 'kho-kho') return `${t.ageGroup} · ${t.gender}`;
       const cfg: KhoKhoScoringConfig = defaultKhoKhoConfigForAgeGroup(t.ageGroup as ScoringAgeGroup);
@@ -121,17 +117,11 @@ const registry: Record<string, SportConsoleRegistryEntry> = {
   },
 };
 
-export function getSportConsole(sport: string): SportConsoleRegistryEntry | null {
-  if (!sport) return registry['kho-kho'] ?? null;
-  return registry[sport] ?? null;
+export function getSportConsoleMeta(sport: string): SportConsoleMetaEntry | null {
+  if (!sport) return metaRegistry['kho-kho'] ?? null;
+  return metaRegistry[sport] ?? null;
 }
 
-export function getSportLiveView(sport: string): ComponentType<SportLiveViewProps> | null {
-  return getSportConsole(sport)?.LiveView ?? null;
+export function listSportMetas(): Array<{ sport: string; entry: SportConsoleMetaEntry }> {
+  return Object.entries(metaRegistry).map(([sport, entry]) => ({ sport, entry }));
 }
-
-export function listSportConsoles(): Array<{ sport: string; entry: SportConsoleRegistryEntry }> {
-  return Object.entries(registry).map(([sport, entry]) => ({ sport, entry }));
-}
-
-export { KhoKhoConsole, KhoKhoLiveView };

@@ -306,6 +306,149 @@ export async function runScoreQueueTestSuite(): Promise<TestSuiteSummary> {
     }
   });
 
+  // 401 — session expired mid-scoring: the queue PAUSES and keeps ALL events,
+  // sends nothing and reports no rejection; resume() re-flushes the SAME
+  // items with the SAME eventIds (of which the server dedupe on eventId is
+  // the backbone of safe re-delivery).
+  await run('TEST_QUEUE_401_PAUSE_KEEP_ALL', 'queue auth pause: 401 holds ALL events; resume re-sends the same eventIds', 'Queue', async () => {
+    let attempts = 0;
+    const deliveredIds: string[] = [];
+    const env = makeQueueEnv({
+      sendEvent: async (item) => {
+        attempts += 1;
+        if (attempts === 1) throw ERR(401);
+        deliveredIds.push(item.eventId);
+        return { ok: true };
+      },
+    });
+
+    const idA = env.queue.enqueueEvent({ type: 'TOSS' });
+    await tick(); // attempt 1 fails with 401 -> the queue pauses
+    const idB = env.queue.enqueueEvent({ type: 'TURN_START' });
+    await tick(); // WHILE PAUSED nothing is sent: B is simply held
+
+    const heldCount: number = env.queue.pendingCount;
+    if (heldCount !== 2) {
+      throw new Error(`401 must keep BOTH events, got pendingCount=${heldCount}`);
+    }
+    if (!env.queue.authPaused) throw new Error('queue is not in the auth-paused state');
+    if (env.queue.inFlight) throw new Error('nothing must be sent while paused');
+    if (env.rejected.length !== 0) {
+      throw new Error(`401 must NOT trigger onRejected, got ${env.rejected.length}`);
+    }
+    if (env.reconciles.length !== 0) {
+      throw new Error(`401 must NOT reconcile, got ${env.reconciles.length}`);
+    }
+
+    env.queue.resume(); // session restored -> drain with the same eventIds
+    await tick();
+
+    const resumedIds = new Set(deliveredIds);
+    if (deliveredIds.length !== 2) {
+      throw new Error(`resume should deliver both events once, got ${JSON.stringify(deliveredIds)}`);
+    }
+    if (!resumedIds.has(idA) || !resumedIds.has(idB)) {
+      throw new Error(`resume must reuse the original eventIds, got ${JSON.stringify(deliveredIds)}`);
+    }
+    if (env.queue.authPaused) throw new Error('authPaused did not clear on resume');
+    if (env.queue.pendingCount !== 0) throw new Error('queue did not drain after resume');
+    if (!env.reconciles.some((r) => r.reason === 'drained')) {
+      throw new Error('no drained reconcile after resume');
+    }
+  });
+
+  // 408 / 429 / 5xx are RETRYABLE: the item is kept and the SAME eventId is
+  // retried with backoff until it succeeds (server dedupes on eventId).
+  await run('TEST_QUEUE_RETRYABLE_408_429_5XX', 'queue retry: 408, 429, 500, 503 retry the SAME eventId with backoff', 'Queue', async () => {
+    const retryableStatuses = [408, 429, 500, 503];
+    let attempts = 0;
+    const sentIds: string[] = [];
+    const env = makeQueueEnv({
+      sendEvent: async (item) => {
+        if (attempts < retryableStatuses.length) {
+          const status = retryableStatuses[attempts];
+          attempts += 1;
+          throw ERR(status);
+        }
+        attempts += 1;
+        sentIds.push(item.eventId);
+        return { ok: true };
+      },
+    });
+
+    const eventId = env.queue.enqueueEvent({ type: 'DISMISSAL' }, 'ev-fixed-retry-1');
+    const backoffSequence = Math.max(1, retryableStatuses.length * 4);
+    for (let round = 0; round < backoffSequence; round += 1) {
+      await tick();
+      env.fireTimers();
+    }
+    await tick();
+
+    if (sentIds.length !== 1) {
+      throw new Error(`expected the final successful send once, got ${sentIds.length} deliveries: ${JSON.stringify(sentIds)}`);
+    }
+    if (sentIds[0] !== eventId) {
+      throw new Error(`retries must keep the SAME eventId, got ${sentIds[0]} vs ${eventId}`);
+    }
+    if (env.rejected.length !== 0) {
+      throw new Error(`retryable statuses must not drop the event, onRejected=${env.rejected.length}`);
+    }
+    if (!env.reconciles.some((r) => r.reason === 'drained')) {
+      throw new Error('no drained reconcile after the retry succeeded');
+    }
+  });
+
+  // LATE RETRY: an event that comes back after an offline period keeps its
+  // ORIGINAL payload verbatim — the same eventId AND the same clientAtMs on
+  // every attempt (the server clamps timestamps by eventId, so a re-stamped
+  // payload would corrupt the clock math; engine tests separately prove a
+  // duplicate eventId can never double-score).
+  await run('TEST_QUEUE_LATE_RETRY_PRESERVES', 'queue late retry: payload (eventId + clientAtMs) preserved verbatim across retries', 'Queue', async () => {
+    const deliveries: Array<{ eventId: string; clientAtMs?: number }> = [];
+    let fails = 1;
+    const env = makeQueueEnv({
+      sendEvent: async (item) => {
+        const payload = item.payload as { clientAtMs?: number };
+        deliveries.push({ eventId: item.eventId, clientAtMs: payload.clientAtMs });
+        if (fails > 0) {
+          fails -= 1;
+          throw ERR(503);
+        }
+        return { ok: true };
+      },
+    });
+
+    const FROZEN_CLIENT_AT_MS = 42_000;
+    const lateId = env.queue.enqueueEvent(
+      { type: 'DISMISSAL', clientAtMs: FROZEN_CLIENT_AT_MS, atMs: FROZEN_CLIENT_AT_MS },
+      'ev-late-retry-1'
+    );
+    await tick(); // first attempt fails (offline)
+    env.fireTimers(); // backoff fires
+    await tick(); // retry succeeds
+
+    // The duplicate id question is answered one level up (engine dedupe) but
+    // the queue must also never rewrite a client-supplied event id — enqueue
+    // a SECOND event with the SAME id and confirm it is forwarded as-is.
+    env.queue.enqueueEvent({ type: 'DISMISSAL', clientAtMs: FROZEN_CLIENT_AT_MS }, lateId);
+    await tick();
+
+    if (deliveries.length !== 3) {
+      throw new Error(`expected 3 send attempts (retry + duplicate), got ${deliveries.length}`);
+    }
+    for (const seen of deliveries) {
+      if (seen.eventId !== 'ev-late-retry-1') {
+        throw new Error(`eventId rewritten by the queue: ${JSON.stringify(seen)}`);
+      }
+      if (seen.clientAtMs !== FROZEN_CLIENT_AT_MS) {
+        throw new Error(`clientAtMs re-stamped by the queue: ${JSON.stringify(seen)}`);
+      }
+    }
+    if (!env.reconciles.some((r) => r.reason === 'drained')) {
+      throw new Error('no drained reconcile after the queue settled');
+    }
+  });
+
   const total = results.length;
   const passed = results.filter((r) => r.passed).length;
   return {

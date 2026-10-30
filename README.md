@@ -240,8 +240,9 @@ public watch the match update in near-real-time.
 
 - `/score` — list of scoreable matches (published/ongoing tournaments, both teams decided, not a bye).
   Scorers see only their assigned matches; admins/organizers see everything. Inline login gate for staff.
-- `/score/[matchId]` — full-screen standalone console (outside the admin route group; page-level
-  `canScore` gate). Every visible prompt is driven by the **server-built scoreboard** (`nextAction`):
+- `/score/[tournamentId]/[matchId]` — full-screen standalone console (outside the admin route group;
+  page-level `canScore` gate). Every visible prompt is driven by the **server-built scoreboard**
+  (`nextAction`):
   1. **Toss** (first-innings and extra-innings rounds) → Start turn
   2. **Turn panel** — giant server-authoritative timer, current batch, chaser, live points
   3. **Event buttons** — DISMISSAL (Tagged out / Out of bounds / Late entry, +1 pt), FOUL, PAUSE, RESUME, TURN_END (all-out / timer-expired hints, or manual with reason)
@@ -309,9 +310,52 @@ Published fixture list (`/tournaments/[id]` -> Match Schedule List) per real mat
   re-advances the bracket from that point (finals re-crown the champion) and is audit-logged with the
   previous winner.
 
-### 6. Tests (70 total)
+### 6. Tests (94 total)
 
 - `scoringTestSuite.ts` — 37 engine cases (toss, turn lifecycle, clock, pause/resume, dismissals,
   all-out, follow-on, extra innings, sudden death, manual decision, undo/void).
 - `scoringAccessTestSuite.ts` — 5 authorization cases: scorer-scope enforcement, wrong-school 403s,
   viewer 403, DTO secrecy (no scorer identity), and polling version short-circuit.
+- `scoringScopingTestSuite.ts` — tournament-scoped scoring: hole management, event append through the
+  real `MatchScoreEngine`, undo void semantics, cross-tournament isolation.
+- `scoreQueueTestSuite.ts` — offline-first `ScoreEventQueue`: FIFO execution, backoff retries
+  (408 / 429 / 5xx), 401 pause keeps ALL events and `resume()` re-sends the same `eventId`s,
+  late-retry payload preservation (`eventId` + original `clientAtMs`), 4xx cascade drop.
+
+---
+
+## How to add a new sport (sport-pluggable scoring)
+
+Kho-Kho is a registered sport; any further sport hooks into the same console shell, route registry
+and API without touching the shared host. The registry is `src/features/scoring/shared/registry.ts`
+(id-based, fanned out to `registryComponents.ts` for lazy component loading) — every entry is served
+through `getSportConsole()` and `getSportConsoleMeta()`.
+
+1. **Event + DTO types** in `src/shared/scoring/matchScoring.ts`: the engine state type, the
+   discriminated event union, and the scoreboard view built by the server. Only the scoring DTO has
+   to stay whitelisted through `sanitizeMatchScoreDto` (keep `recordedBy` stripped).
+2. **Engine implementation** in `src/shared/scoring/<sport>/`:
+   - `MatchScoringFactory`-style state: a factory for the session core, deterministic action
+     handlers for every event in the union, auditability (each event persisted with `what` in
+     `ScoreEventDoc`), and a `getScoreboard(state, now)` — **all timestamps server-authoritative,
+     monotonic and clamped** (same no-client-trust rule as Kho-Kho).
+   - The engine must stay pure (no database, no fetch) so its tests run in `runTests.ts`.
+3. **Server service** in `src/server/services/scoringService.ts`: extend the scoring session lifecycle
+   (create/start/append/undo/complete) to dispatch per sport id — the row storage and the
+   tournament scoping (a console lives at `/score/[tournamentId]/[matchId]`) stay identical for
+   every sport. Keep undo = VOID + version bump semantics (the queue's reconcile depends on it).
+4. **Console component** in `src/features/scoring/<sport>/` implementing `SportConsoleProps`
+   (server `MatchScoreState` events + `sendEvent`, `sendUndo`, `canUndo`, pending queue count). Use
+   `ScoringConsoleHost.tsx` as the shared shell (offline queue chip, `authPaused` "held" chip, 401
+   redirect, fault banner, undo handling) and never manage the offline queue yourself: send
+   unconditionally and let `ScoreEventQueue` + headers/cookies decide the fate of events.
+5. **Live view component** in `src/features/scoring/<sport>/` implementing `SportLiveViewProps`
+   (read-only surface consumed by `useLiveScore`/`LiveScorePanel`) for the school and public readers.
+6. **Register the sport id**: add the entry in the registry with its `Console` and `LiveView`
+   accessors. The score hub picker, `LiveScorePanel` and the reader surfaces resolve via the
+   registry — no other UI or route changes are needed.
+7. **Tests**: add `<sport>ScoringTestSuite.ts` next to `scoringScopingTestSuite.ts` following the
+   same pattern (engine determinism, undo/void convention, cross-tournament scoping) and a
+   `scoreQueue`-style suite only if the sport's semantics differ. Register the suite in
+   `src/server/tests/runTests.ts` and `src/app/api/tests/run/route.ts`. Run `npx tsc --noEmit`,
+   `npm test` and `npm run build` (commands above).

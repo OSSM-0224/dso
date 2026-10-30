@@ -82,9 +82,10 @@ export const ScoringTournamentHub: React.FC<{ tournamentId: string }> = ({ tourn
         setNeedsLogin(true);
         return;
       }
-      // LEGACY LINK (/score/:matchId — Next 16 removed that dynamic segment
-      // as ambiguous). A bare deep link now lands here as `tournamentId`; on
-      // "not found", try resolving it as a legacy match id through the
+      // LEGACY-SCORER-FALLBACK (old /score/[matchId] links, removed in Next 16
+      // because the sibling dynamic segment [/score/[tournamentId]] made the
+      // route ambiguous). A bare deep link now lands here as `tournamentId`;
+      // on "not found", try resolving it as a legacy match id through the
       // scorer's own match list and upgrade to the tournament-scoped console.
       if (/not found/i.test(message)) {
         setResolvingLegacy(true);

@@ -39,6 +39,12 @@ export interface ScoreQueueState {
   lastError: string | null;
   /** Number of items dropped by the latest 4xx rejection (null when none). */
   rejectedDroppedCount: number | null;
+  /**
+   * True after a 401: the session expired mid-scoring. NOTHING is dropped and
+   * nothing is sent while paused; `resume()` re-flushes the SAME items with
+   * the SAME eventIds once the session is restored.
+   */
+  authPaused: boolean;
 }
 
 export type ScoreQueueHandlers = {
@@ -64,13 +70,26 @@ export function newScoreEventId(): string {
   return `ev-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-/** Categorises a transport failure: 4xx = permanent rejection, else retryable. */
-export function classifyQueueFailure(err: unknown): { reject: boolean; status?: number; message: string } {
+/** 4xx statuses that are genuine business rejections (event is invalid). */
+const REJECT_STATUS = new Set([400, 403, 404, 405, 409, 410, 413, 415, 422]);
+
+/**
+ * Categorises a transport failure:
+ *  - 401                     → PAUSE (session expired): keep ALL events, send
+ *                              nothing, resume() re-flushes them unchanged.
+ *  - 400/403/404/409/422 ... → permanent rejection (drop head + dependants).
+ *  - 408 / 429 / 5xx / network → retryable: keep the item and back off; the
+ *                              server dedupes on eventId.
+ */
+export function classifyQueueFailure(err: unknown): { reject: boolean; pause: boolean; status?: number; message: string } {
   const status = (err as { status?: number } | null)?.status;
-  if (typeof status === 'number' && status >= 400 && status < 500) {
-    return { reject: true, status, message: queueMessageOf(err) };
+  if (typeof status === 'number' && status === 401) {
+    return { reject: false, pause: true, status, message: queueMessageOf(err) };
   }
-  return { reject: false, status, message: queueMessageOf(err) };
+  if (typeof status === 'number' && status >= 400 && status < 500 && REJECT_STATUS.has(status)) {
+    return { reject: true, pause: false, status, message: queueMessageOf(err) };
+  }
+  return { reject: false, pause: false, status, message: queueMessageOf(err) };
 }
 
 function queueMessageOf(err: unknown): string {
@@ -94,12 +113,14 @@ export class ScoreEventQueue {
   private flushRunning = false;
   private cancelBackoff: (() => void) | null = null;
   private disposed = false;
+  private _authPaused = false;
   private state: ScoreQueueState = {
     queued: [],
     inFlight: false,
     offline: false,
     lastError: null,
     rejectedDroppedCount: null,
+    authPaused: false,
   };
 
   private listeners = new Set<() => void>();
@@ -136,6 +157,7 @@ export class ScoreEventQueue {
       offline: this.items.length > 0,
       lastError: this.state.lastError,
       rejectedDroppedCount: this.state.rejectedDroppedCount,
+      authPaused: this._authPaused,
     };
     for (const listener of this.listeners) listener();
   }
@@ -157,6 +179,7 @@ export class ScoreEventQueue {
     this.items = [];
     this.flushRunning = false;
     this.disposed = false;
+    this._authPaused = false;
     this.key = nextKey;
     this.state = {
       queued: [],
@@ -164,6 +187,7 @@ export class ScoreEventQueue {
       offline: false,
       lastError: null,
       rejectedDroppedCount: null,
+      authPaused: false,
     };
     this.emit();
     return true;
@@ -231,6 +255,22 @@ export class ScoreEventQueue {
     return this.state.lastError;
   }
 
+  /** True while a 401 pause holds every queued event (nothing is sent). */
+  get authPaused(): boolean {
+    return this._authPaused;
+  }
+
+  /**
+   * Clears the 401 pause and re-flushes the SAME items with the SAME
+   * eventIds. Safe to call at any time; a no-op when not paused.
+   */
+  resume(): void {
+    if (!this._authPaused) return;
+    this._authPaused = false;
+    this.emit();
+    void this.flush();
+  }
+
   clearLastError(): void {
     this.state.lastError = null;
     this.emit();
@@ -240,6 +280,9 @@ export class ScoreEventQueue {
 
   async flush(): Promise<void> {
     if (this.disposed) return;
+    // While auth is paused NOTHING is sent (every item is preserved for a
+    // later resume with identical eventIds).
+    if (this._authPaused) return;
     if (this.flushRunning) return;
     if (this.items.length === 0) {
       this.emit();
@@ -271,6 +314,15 @@ export class ScoreEventQueue {
           }
         } catch (err) {
           const failure = classifyQueueFailure(err);
+          if (failure.pause) {
+            // 401 — session expired: hold EVERY queued item (head included),
+            // send nothing further, and let `resume()` re-flush them with the
+            // same eventIds after sign-in. Not a rejection: no drop, no
+            // onRejected call.
+            this._authPaused = true;
+            this.emit();
+            break;
+          }
           if (failure.reject) {
             // Bug fix #3b: a server 4xx removes the head AND every later item
             // that depended on it (later items always build on earlier

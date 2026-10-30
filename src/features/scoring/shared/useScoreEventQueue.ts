@@ -33,6 +33,10 @@ export type ScoreQueueApi = {
   isQueueEmpty: boolean;
   inFlight: boolean;
   offline: boolean;
+  /** 401 pause: true => events are being held, nothing is sent, resumeQueue() resumes. */
+  authPaused: boolean;
+  /** Clear the 401 pause (after sign-in) and re-flush the SAME eventIds. */
+  resumeQueue: () => void;
   lastError: string | null;
   clearLastError: () => void;
   /** Extra gate (e.g. engine says nothing to undo) AND the queue drained. */
@@ -163,6 +167,8 @@ export function useScoreEventQueue(options: UseScoreEventQueueOptions): ScoreQue
     isQueueEmpty: queuedCount === 0,
     inFlight: snapshot.inFlight,
     offline: queuedCount > 0,
+    authPaused: snapshot.authPaused,
+    resumeQueue: () => queue.resume(),
     lastError: snapshot.lastError,
     clearLastError: () => queue.clearLastError(),
     canUndo,

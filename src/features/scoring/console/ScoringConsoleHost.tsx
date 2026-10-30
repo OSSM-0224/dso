@@ -163,6 +163,17 @@ export const ScoringConsoleHost: React.FC<{ tournamentId: string; matchId: strin
   });
   pendingCountRef.current = queue.queuedCount;
 
+  // 401 pause release (bug fix #3c): a session expiry mid-scoring pauses the
+  // queue with ALL events intact. Sign-in path = ScorerLoginCard
+  // onSignedIn → refresh() success → needsLogin false → resume flushes the
+  // very same items with the same eventIds.
+  useEffect(() => {
+    if (queue.authPaused && !needsLogin && !notAssigned && !authLoading) {
+      queue.resumeQueue();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queue.authPaused, needsLogin, notAssigned, authLoading]);
+
   // --------------------------------------------- optimistic replay (client)
 
   /**
@@ -452,7 +463,12 @@ export const ScoringConsoleHost: React.FC<{ tournamentId: string; matchId: strin
           }
           center={<span className="text-xs font-semibold text-ink">{detail.tournament.name}</span>}
           right={
-            queue.pendingCount > 0 ? (
+            queue.authPaused ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.05em] text-amber-900">
+                <Icon name="shieldAlert" size="xs" />
+                {t('{count} event(s) held — sign in to resume', { count: queue.pendingCount })}
+              </span>
+            ) : queue.pendingCount > 0 ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.05em] text-amber-800">
                 <Icon name="circleInfo" size="xs" />
                 {t(offlineChipLabel(queue.pendingCount))}

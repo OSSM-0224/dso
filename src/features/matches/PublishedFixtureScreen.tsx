@@ -308,7 +308,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {m.status === 'live' && m.teamA && m.teamB && (
                           <Link
-                            href={`/score/${m.id}`}
+                            href={`/score/${m.tournamentId}/${m.id}`}
                             className="px-2.5 py-1 border border-emerald-300 bg-emerald-50 text-emerald-700 rounded font-medium flex items-center gap-1 hover:bg-emerald-100"
                             title={t("Open the live scoring console for this match")}
                           >

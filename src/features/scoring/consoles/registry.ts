@@ -34,6 +34,13 @@ export type SportConsoleTournament = {
 
 /** Session-level operations every console can rely on (host-provided). */
 export type SportConsoleActions = {
+  /**
+   * Queue a scoring event through the ordered event queue (bug-fix home).
+   * Returns false when the score session is not loaded yet.
+   */
+  postEvent(payload: Record<string, unknown>): boolean;
+  /** Undo the last actionable event through the SAME ordered queue. */
+  undoEvent(): void;
   /** Create (or resume) the scoring session (POST ensure). */
   startScoring(): Promise<void>;
   /** Re-read the authoritative match/score state. */
@@ -42,6 +49,15 @@ export type SportConsoleActions = {
   completeMatch(): Promise<void>;
   /** Emergency winner decision (audited on the server). */
   overrideWinner(data: { winnerTeamId: string; reason: string }): Promise<void>;
+};
+
+/** Live sync/window status of the console queue (drives Undo/Complete gating). */
+export type SportConsoleSyncStatus = {
+  pendingCount: number;
+  inFlight: boolean;
+  offline: boolean;
+  /** Queue drained AND engine allows undo. */
+  canUndo: boolean;
 };
 
 /** What the registry hands each sport's Console component. */
@@ -56,6 +72,13 @@ export type SportConsoleProps = {
   isReadOnly: boolean;
   scorerNames: string[];
   actions: SportConsoleActions;
+  sync: SportConsoleSyncStatus;
+  /** Message attached to a server 4xx rejection (dropped-count banner). */
+  fault: { message: string; droppedCount: number } | null;
+  clearFault: () => void;
+  /** Clock anchors (server-authoritative, interpolated between polls). */
+  nowTick: number;
+  snapshotAt: number;
 };
 
 /** Live summary embedded in hubs, the school portal and the public page. */

@@ -1,9 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono, Fraunces } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono, Fraunces, Inter } from "next/font/google";
 import Script from "next/script";
 import { AuthProvider } from "../context/AuthContext.tsx";
 import { LanguageProvider } from "../i18n/LanguageProvider.tsx";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
+const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 /**
  * Font Awesome Free kit. `data-auto-replace-svg="nest"` is REQUIRED: the kit
@@ -64,7 +67,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${jakartaSans.variable} ${jetbrainsMono.variable} ${fraunces.variable}`}
+      className={cn(jakartaSans.variable, jetbrainsMono.variable, fraunces.variable, "font-sans", inter.variable)}
     >
       <body
         className="bg-canvas text-ink antialiased font-sans"

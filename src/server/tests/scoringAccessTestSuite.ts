@@ -120,17 +120,15 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
     const organizer: UserSession = { id: 'org-1', name: 'Organizer', role: 'organizer' };
     const viewer: UserSession = { id: 'view-1', name: 'Viewer', role: 'viewer' };
 
-    const dto = await scoringService.ensureMatchScore(scorer, seed.match.id);
-    const tossed = await scoringService.appendEvent(
-      scorer,
-      seed.match.id,
+    const dto = await scoringService.ensureMatchScore(scorer, seed.tournament.id, seed.match.id);
+    const tossed = await scoringService.appendEvent(scorer, seed.tournament.id, seed.match.id,
       tossEvent(seed.teamA.id, 'auth1')
     );
 
     // Viewer must be refused on the writer path
     let viewerBlocked = false;
     try {
-      await scoringService.ensureMatchScore(viewer, seed.match.id);
+      await scoringService.ensureMatchScore(viewer, seed.tournament.id, seed.match.id);
     } catch (err: any) {
       viewerBlocked = err?.status === 403;
     }
@@ -138,9 +136,7 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
     // Unassigned scorer must be refused
     let unassignedBlocked = false;
     try {
-      await scoringService.appendEvent(
-        otherScorer,
-        seed.match.id,
+      await scoringService.appendEvent(otherScorer, seed.tournament.id, seed.match.id,
         tossEvent(seed.teamA.id, 'auth1b')
       );
     } catch (err: any) {
@@ -148,7 +144,7 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
     }
 
     // Organizer needs no assignment, and see-attribution stays server-side
-    const orgDto = await scoringService.ensureMatchScore(organizer, seed.match.id);
+    const orgDto = await scoringService.ensureMatchScore(organizer, seed.tournament.id, seed.match.id);
     const attributionLeaked = 'recordedBy' in (tossed.events[0] as Record<string, unknown>);
 
     const liveStatus = (await matchRepository.findById(seed.match.id))?.status === 'live';
@@ -191,9 +187,9 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
     const seed = await seedScoreableMatch('undo');
     const organizer: UserSession = { id: 'org-undo', name: 'Organizer', role: 'organizer' };
 
-    await scoringService.ensureMatchScore(organizer, seed.match.id);
-    await scoringService.appendEvent(organizer, seed.match.id, tossEvent(seed.teamA.id, 'undo'));
-    const undone = await scoringService.undoLastEvent(organizer, seed.match.id);
+    await scoringService.ensureMatchScore(organizer, seed.tournament.id, seed.match.id);
+    await scoringService.appendEvent(organizer, seed.tournament.id, seed.match.id, tossEvent(seed.teamA.id, 'undo'));
+    const undone = await scoringService.undoLastEvent(organizer, seed.tournament.id, seed.match.id);
 
     const passed =
       undone.version === 2 &&
@@ -229,8 +225,8 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
     const seed = await seedScoreableMatch('override');
     const organizer: UserSession = { id: 'org-override', name: 'Organizer', role: 'organizer' };
 
-    await scoringService.ensureMatchScore(organizer, seed.match.id);
-    const result = await scoringService.overrideWinner(organizer, seed.match.id, {
+    await scoringService.ensureMatchScore(organizer, seed.tournament.id, seed.match.id);
+    const result = await scoringService.overrideWinner(organizer, seed.tournament.id, seed.match.id, {
       winnerTeamId: seed.teamA.id,
       reason: 'Opponent team failed to report to the venue.',
     });
@@ -384,11 +380,11 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
     await matchRepository.update(seed.match.id, { scorerIds: [scorerUser.id] });
     const scorer: UserSession = { id: scorerUser.id, name: 'Scorer Poll', role: 'scorer' };
 
-    await scoringService.ensureMatchScore(scorer, seed.match.id);
+    await scoringService.ensureMatchScore(scorer, seed.tournament.id, seed.match.id);
     const school = seed.schoolA;
     const schoolIdOfParticipant = school.id;
 
-    const dto = await scoringService.appendEvent(scorer, seed.match.id, tossEvent(seed.teamA.id, 'poll'));
+    const dto = await scoringService.appendEvent(scorer, seed.tournament.id, seed.match.id, tossEvent(seed.teamA.id, 'poll'));
     const unchanged = await scoringService.getScoreForReaders(seed.match.id, dto.version, {
       schoolId: schoolIdOfParticipant,
     });
@@ -428,8 +424,8 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
     const seed = await seedScoreableMatch('idempotent');
     const organizer: UserSession = { id: 'org-idempotent', name: 'Organizer', role: 'organizer' };
 
-    await scoringService.ensureMatchScore(organizer, seed.match.id);
-    const afterToss = await scoringService.appendEvent(organizer, seed.match.id, {
+    await scoringService.ensureMatchScore(organizer, seed.tournament.id, seed.match.id);
+    const afterToss = await scoringService.appendEvent(organizer, seed.tournament.id, seed.match.id, {
       ...tossEvent(seed.teamA.id, 'idem'),
       clientAtMs: 0,
     });
@@ -439,14 +435,10 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
       atMs: 0,
       type: 'TURN_START',
     };
-    const afterTurnStart = await scoringService.appendEvent(
-      organizer,
-      seed.match.id,
+    const afterTurnStart = await scoringService.appendEvent(organizer, seed.tournament.id, seed.match.id,
       { ...turnStart, clientAtMs: 0 }
     );
-    const duplicateTurnStart = await scoringService.appendEvent(
-      organizer,
-      seed.match.id,
+    const duplicateTurnStart = await scoringService.appendEvent(organizer, seed.tournament.id, seed.match.id,
       { ...turnStart, clientAtMs: 0 }
     );
 
@@ -456,14 +448,10 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
       type: 'DISMISSAL',
       dismissalType: 'TAG',
     };
-    const afterDismissal = await scoringService.appendEvent(
-      organizer,
-      seed.match.id,
+    const afterDismissal = await scoringService.appendEvent(organizer, seed.tournament.id, seed.match.id,
       { ...dismissal, clientAtMs: Number.MAX_SAFE_INTEGER }
     );
-    const duplicateDismissal = await scoringService.appendEvent(
-      organizer,
-      seed.match.id,
+    const duplicateDismissal = await scoringService.appendEvent(organizer, seed.tournament.id, seed.match.id,
       { ...dismissal, clientAtMs: Number.MAX_SAFE_INTEGER }
     );
 
@@ -527,3 +515,4 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
     results,
   };
 }
+

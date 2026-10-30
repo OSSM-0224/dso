@@ -227,6 +227,22 @@ export interface MatchScoreViewDto {
 /** Response of a polling GET with an up-to-date ?version= check attached. */
 export type MatchScorePollDto = MatchScoreViewDto | { changed: false; version: number };
 
+/** Console detail payload of the tournament-scoped scoring GET. */
+export interface ScoringMatchDetail {
+  match: MatchDoc;
+  tournament: {
+    id: string;
+    name: string;
+    sport: string;
+    status: TournamentStatus;
+    ageGroup: string;
+    gender: string;
+  };
+  scorerIds: string[];
+  scorerNames: string[];
+  score: MatchScoreViewDto | null;
+}
+
 /** A scorer account available for match assignment (admin picker). */
 export interface ScorerCandidate {
   id: string;
@@ -236,8 +252,7 @@ export interface ScorerCandidate {
 }
 
 /** One row of the scorer's "my matches" console list. */
-export interface ScoringMatchListItem {
-  matchId: string;
+export interface ScoringMatchListItem {  matchId: string;
   tournamentId: string;
   tournamentName: string;
   tournamentStatus: TournamentStatus;

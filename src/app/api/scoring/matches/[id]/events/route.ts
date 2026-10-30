@@ -7,7 +7,9 @@ interface Ctx {
   params: Promise<{ id: string }>;
 }
 
-// POST /api/scoring/matches/:id/events - append one validated scoring event
+// @deprecated POST /api/scoring/matches/:id/events - legacy alias that resolves
+// the tournament and delegates. Prefer
+// /api/scoring/tournaments/:tournamentId/matches/:matchId/events.
 export async function POST(req: Request, ctx: Ctx) {
   const timing = new ServerTiming();
   return handler(async () => {
@@ -21,7 +23,7 @@ export async function POST(req: Request, ctx: Ctx) {
     timing.measure('body', bodyStart);
 
     const scoreStart = timing.now();
-    const score = await scoringController.appendEvent(user, id, body);
+    const score = await scoringController.legacyAppendEvent(user, id, body);
     timing.measure('scoring', scoreStart);
 
     return ok(score, 200, timing);

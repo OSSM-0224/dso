@@ -7,8 +7,9 @@ interface Ctx {
   params: Promise<{ id: string }>;
 }
 
-// POST /api/scoring/matches/:id/complete - finalize the match result through the
-// existing matchService.recordResult pipeline (advance, champion, notify, audit).
+// @deprecated POST /api/scoring/matches/:id/complete - legacy alias that
+// resolves the tournament and delegates. Prefer
+// /api/scoring/tournaments/:tournamentId/matches/:matchId/complete.
 export async function POST(_req: Request, ctx: Ctx) {
   const timing = new ServerTiming();
   return handler(async () => {
@@ -18,7 +19,7 @@ export async function POST(_req: Request, ctx: Ctx) {
 
     const { id } = await ctx.params;
     const scoreStart = timing.now();
-    const result = await scoringController.complete(user, id);
+    const result = await scoringController.legacyComplete(user, id);
     timing.measure('scoring', scoreStart);
 
     return ok(result, 200, timing);

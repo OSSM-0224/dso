@@ -5,12 +5,16 @@ import {
   MatchDoc,
   MatchScorePollDto,
   MatchScoreViewDto,
+  OrganizerOverviewGroup,
   PastTournamentDoc,
   SchoolDoc,
   ScorerCandidate,
+  ScoringMatchDetail,
   ScoringMatchListItem,
+  ScoringTournamentSummary,
   TeamDoc,
   TournamentDoc,
+  TournamentScorerRoster,
   UserRole,
   UserSession,
 } from '@/shared/types.ts';
@@ -378,6 +382,17 @@ export const api = {
     // LIVE SCORER admin (assignment of scorers to matches)
     scorers: {
       list: () => request<ScorerCandidate[]>('/admin/scorers'),
+      // Tournament-level roster ("Scorers" tab in the tournament detail screen).
+      getTournamentScorers: (tournamentId: string) =>
+        request<TournamentScorerRoster>(`/admin/tournaments/${tournamentId}/scorers`),
+      setTournamentScorers: (tournamentId: string, scorerIds: string[]) =>
+        request<{ tournamentId: string; scorerIds: string[]; scorerNames: string[] }>(
+          `/admin/tournaments/${tournamentId}/scorers`,
+          {
+            method: 'PUT',
+            body: JSON.stringify({ scorerIds }),
+          }
+        ),
     },
     matches: {
       setScorers: (matchId: string, scorerIds: string[]) =>
@@ -391,50 +406,104 @@ export const api = {
     },
   },
 
-  // LIVE SCORER Console (staff only; scorers limited to assigned matches)
+  // LIVE SCORER Console (staff + assigned scorers)
+  // Tournament-scoped API (picker / hub / console). Every scoring query is
+  // bound to a tournamentId so matches never mix across tournaments.
   scoring: {
-    myMatches: () => request<ScoringMatchListItem[]>('/scoring/my-matches'),
-    getMatch: (id: string) =>
-      request<{
-        match: MatchDoc;
-        tournament: {
-          id: string;
-          name: string;
-          sport: string;
-          status: string;
-          ageGroup: string;
-          gender: string;
-        };
-        scorerIds: string[];
-        scorerNames: string[];
-        score: MatchScoreViewDto | null;
-      }>(`/scoring/matches/${id}`),
-    ensureScore: (id: string) =>
-      request<MatchScoreViewDto>(`/scoring/matches/${id}`, { method: 'POST' }),
-    appendEvent: (id: string, event: Record<string, unknown>) =>
-      request<MatchScoreViewDto>(`/scoring/matches/${id}/events`, {
+    /** GET /api/scoring/tournaments — picker (assigned tournaments only for scorers). */
+    scoringTournaments: () =>
+      request<ScoringTournamentSummary[]>('/scoring/tournaments'),
+
+    /** GET /api/scoring/tournaments/:tournamentId/matches — hub list. */
+    tournamentMatches: (tournamentId: string) =>
+      request<{ tournament: ScoringTournamentSummary; matches: ScoringMatchListItem[] }>(
+        `/scoring/tournaments/${tournamentId}/matches`
+      ),
+
+    /** GET .../matches/:matchId — console detail. */
+    getMatch: (tournamentId: string, matchId: string) =>
+      request<ScoringMatchDetail>(`/scoring/tournaments/${tournamentId}/matches/${matchId}`),
+
+    /** POST .../matches/:matchId — create (or resume) the scoring session. */
+    ensureScore: (tournamentId: string, matchId: string) =>
+      request<MatchScoreViewDto>(`/scoring/tournaments/${tournamentId}/matches/${matchId}`, {
+        method: 'POST',
+      }),
+
+    /** POST .../matches/:matchId/events — append one validated event. */
+    appendEvent: (tournamentId: string, matchId: string, event: Record<string, unknown>) =>
+      request<MatchScoreViewDto>(`/scoring/tournaments/${tournamentId}/matches/${matchId}/events`, {
         method: 'POST',
         body: JSON.stringify(event),
       }),
-    undo: (id: string) =>
-      request<MatchScoreViewDto>(`/scoring/matches/${id}/undo`, { method: 'POST' }),
-    complete: (id: string) =>
+
+    /** POST .../matches/:matchId/undo — VOID the last actionable event. */
+    undo: (tournamentId: string, matchId: string) =>
+      request<MatchScoreViewDto>(`/scoring/tournaments/${tournamentId}/matches/${matchId}/undo`, {
+        method: 'POST',
+      }),
+
+    /** POST .../matches/:matchId/complete — finalize through recordResult. */
+    complete: (tournamentId: string, matchId: string) =>
       request<{
         match: MatchDoc;
         nextMatch: MatchDoc | null;
         tournamentCompleted: boolean;
         score: MatchScoreViewDto;
-      }>(`/scoring/matches/${id}/complete`, { method: 'POST' }),
-    overrideWinner: (id: string, data: { winnerTeamId: string; reason: string }) =>
+      }>(`/scoring/tournaments/${tournamentId}/matches/${matchId}/complete`, {
+        method: 'POST',
+      }),
+
+    /** POST .../matches/:matchId/override-winner — MANUAL_DECISION path. */
+    overrideWinner: (tournamentId: string, matchId: string, data: { winnerTeamId: string; reason: string }) =>
       request<{
         match: MatchDoc;
         nextMatch: MatchDoc | null;
         tournamentCompleted: boolean;
         score: MatchScoreViewDto | null;
-      }>(`/scoring/matches/${id}/override-winner`, {
+      }>(`/scoring/tournaments/${tournamentId}/matches/${matchId}/override-winner`, {
         method: 'POST',
         body: JSON.stringify(data),
       }),
+
+    /** STAFF-ONLY organizer overview — matches grouped by tournament. */
+    organizerOverview: () =>
+      request<OrganizerOverviewGroup[]>('/scoring/overview'),
+
+    /**
+     * @deprecated Legacy aliases kept for the TEMP-LOGIN scaffolding and old
+     * links. The deprecated server routes resolve the tournament and delegate.
+     */
+    myMatches: () => request<ScoringMatchListItem[]>('/scoring/my-matches'),
+    legacy: {
+      getMatch: (id: string) => request<ScoringMatchDetail>(`/scoring/matches/${id}`),
+      ensureScore: (id: string) =>
+        request<MatchScoreViewDto>(`/scoring/matches/${id}`, { method: 'POST' }),
+      appendEvent: (id: string, event: Record<string, unknown>) =>
+        request<MatchScoreViewDto>(`/scoring/matches/${id}/events`, {
+          method: 'POST',
+          body: JSON.stringify(event),
+        }),
+      undo: (id: string) =>
+        request<MatchScoreViewDto>(`/scoring/matches/${id}/undo`, { method: 'POST' }),
+      complete: (id: string) =>
+        request<{
+          match: MatchDoc;
+          nextMatch: MatchDoc | null;
+          tournamentCompleted: boolean;
+          score: MatchScoreViewDto;
+        }>(`/scoring/matches/${id}/complete`, { method: 'POST' }),
+      overrideWinner: (id: string, data: { winnerTeamId: string; reason: string }) =>
+        request<{
+          match: MatchDoc;
+          nextMatch: MatchDoc | null;
+          tournamentCompleted: boolean;
+          score: MatchScoreViewDto | null;
+        }>(`/scoring/matches/${id}/override-winner`, {
+          method: 'POST',
+          body: JSON.stringify(data),
+        }),
+    },
   },
 
   // Participant "My Matches" Portal (Server derives schoolId strictly from session)

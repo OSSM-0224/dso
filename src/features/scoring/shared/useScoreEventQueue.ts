@@ -1,210 +1,175 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+/**
+ * React binding for the tournament-scoped score event queue.
+ *
+ * The hook binds ONE queue instance to the `tournamentId:matchId` pair:
+ * - the queue is created/rekeyed when the pair changes (bug fix #2), so no
+ *   React state or pending events are ever reused across matches or
+ *   tournaments;
+ * - `beforeunload` and the returned navigation guard block leaving while the
+ *   queue is not empty (bug fix #4);
+ * - all queue logic (undo ordering, retry/backoff, 4xx rejection cascade)
+ *   lives in ScoreEventQueue (see scoreEventQueue.ts).
+ */
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import {
+  ScoreEventQueue,
+  ScoreQueueItem,
+  ScoreQueueState,
+  newScoreEventId,
+} from './scoreEventQueue';
 
-export type QueuedEvent<T = unknown> = {
-  eventId: string;
-  event: T;
-  attempts: number;
-  enqueuedAt: number;
-};
-
-export type QueueState = {
-  queued: QueuedEvent[];
+export type ScoreQueueApi = {
+  /** Enqueue a scoring event (optimistic UI must be applied by the caller). */
+  enqueueEvent: (event: unknown, eventId?: string) => string;
+  /** Enqueue an undo through the SAME ordered queue (bug fix #1). */
+  enqueueUndo: (payload?: unknown) => void;
+  undo: (payload?: unknown) => void;
+  queuedCount: number;
+  queued: Array<ScoreQueueItem>;
+  isQueueEmpty: boolean;
   inFlight: boolean;
   offline: boolean;
   lastError: string | null;
+  clearLastError: () => void;
+  /** Extra gate (e.g. engine says nothing to undo) AND the queue drained. */
   canUndo: boolean;
+  getCanUndo;
+  hasPending;
+  isBlocked: boolean;
+  flush: () => Promise<void>;
+  flushRef: () => Promise<void>;
+  /** Tracks the latest state via a subscription (React-friendly). */
+  state: () => ScoreQueueState;
+  /** Latest snapshot object (for non-hook consumers/tests). */
+  snapshot: ScoreQueueState;
+  queueRef: () => ScoreEventQueue;
 };
 
-export type UseScoreEventQueueOptions<T> = {
+export type UseScoreEventQueueOptions = {
   tournamentId: string;
   matchId: string;
-  sendEvent: (event: T) => Promise<unknown>;
-  onReconcile: () => Promise<void> | void;
+  sendEvent: (event: unknown, eventId: string) => Promise<unknown>;
+  sendUndo?: (payload: unknown) => Promise<unknown>;
+  onReconcile: (ctx: { reason: 'rejected' | 'drained' }) => Promise<void> | void;
   onRejected: (message: string, droppedCount: number) => void;
+  /** Optional engine gate: queue-drained AND this true => undo allowed. */
   getCanUndo?: () => boolean;
-  isUndoEvent?: (event: T) => boolean;
   maxBackoffMs?: number;
 };
 
-const backoff = (attempt: number, max = 5000) => {
-  const base = Math.min(max, 250 * Math.pow(2, Math.max(0, attempt - 1)));
-  const jitter = Math.random() * 150;
-  return base + jitter;
-};
+export function useScoreEventQueue(options: UseScoreEventQueueOptions): ScoreQueueApi {
+  const { tournamentId, matchId } = options;
 
-export function useScoreEventQueue<T = unknown>(options: UseScoreEventQueueOptions<T>) {
-  const {
-    tournamentId,
-    matchId,
-    sendEvent,
-    onReconcile,
-    onRejected,
-    getCanUndo,
-    isUndoEvent,
-    maxBackoffMs = 5000,
-  } = options;
-
-  const [state, setState] = useState<QueueState>({
-    queued: [],
-    inFlight: false,
-    offline: false,
-    lastError: null,
-    canUndo: true,
+  // Latest handler each render (stable queue instance, fresh closures).
+  const handlersRef = useRef({
+    sendEvent: options.sendEvent,
+    sendUndo: options.sendUndo,
+    onReconcile: options.onReconcile,
+    onRejected: options.onRejected,
+    getCanUndo: options.getCanUndo,
   });
+  handlersRef.current.sendEvent = options.sendEvent;
+  handlersRef.current.sendUndo = options.sendUndo;
+  handlersRef.current.onReconcile = options.onReconcile;
+  handlersRef.current.onRejected = options.onRejected;
+  handlersRef.current.getCanUndo = options.getCanUndo;
 
-  const queueRef = useRef<QueuedEvent<T>[]>([]);
-  const flushingRef = useRef(false);
-  const keyRef = useRef<string>(`${tournamentId}:${matchId}`);
-  const retryTimerRef = useRef<number | null>(null);
+  const key = `${tournamentId}:${matchId}`;
+  const stateRef = useRef<ScoreQueueState | null>(null);
 
-  const updateState = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      queued: queueRef.current.slice(),
-      offline: queueRef.current.length > 0,
-      canUndo: getCanUndo ? getCanUndo() && queueRef.current.length === 0 && !flushingRef.current : queueRef.current.length === 0 && !flushingRef.current,
-    }));
-  }, [getCanUndo]);
-
-  const clearTimers = useCallback(() => {
-    if (retryTimerRef.current != null) {
-      window.clearTimeout(retryTimerRef.current);
-      retryTimerRef.current = null;
-    }
-  }, []);
-
-  const resetForMatch = useCallback(() => {
-    const newKey = `${tournamentId}:${matchId}`;
-    if (keyRef.current !== newKey) {
-      queueRef.current = [];
-      flushingRef.current = false;
-      clearTimers();
-      keyRef.current = newKey;
-      setState({
-        queued: [],
-        inFlight: false,
-        offline: false,
-        lastError: null,
-        canUndo: getCanUndo ? getCanUndo() : true,
-      });
-    }
-  }, [tournamentId, matchId, clearTimers, getCanUndo]);
-
-  useEffect(() => {
-    resetForMatch();
-  }, [resetForMatch]);
-
-  const enqueue = useCallback((event: T, eventId?: string) => {
-    const id = eventId || `ev-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-    const item: QueuedEvent<T> = {
-      eventId: id,
-      event,
-      attempts: 0,
-      enqueuedAt: Date.now(),
-    };
-    queueRef.current = [...queueRef.current, item];
-    updateState();
-    // trigger flush
-    void flush();
-  }, []);
-
-  const flush = useCallback(async () => {
-    if (flushingRef.current) return;
-    if (queueRef.current.length === 0) {
-      flushingRef.current = false;
-      updateState();
-      return;
-    }
-    flushingRef.current = true;
-    setState((prev) => ({ ...prev, inFlight: true, offline: queueRef.current.length > 0 }));
-    try {
-      while (queueRef.current.length > 0) {
-        const head = queueRef.current[0];
-        try {
-          await sendEvent(head.event);
-          // success - remove head
-          queueRef.current = queueRef.current.slice(1);
-          updateState();
-        } catch (err: any) {
-          const message = err instanceof Error ? err.message : String(err);
-          const status = err?.status;
-          if (typeof status === 'number' && status >= 400 && status < 500) {
-            // Rejection: drop this event and every later queued event that depended on it
-            // If it's an undo or affects ordering, drop from head onward? "drop every later queued event that depended on it"
-            // Conservative: drop all queued events on 4xx rejection to be safe and refresh authoritative state
-            const droppedCount = queueRef.current.length;
-            queueRef.current = [];
-            updateState();
-            setState((prev) => ({ ...prev, lastError: message, inFlight: false, offline: false }));
-            onRejected(message.replace(/^[A-Z_]+:\s*/, '') || message, droppedCount);
-            await onReconcile();
-            break;
-          } else {
-            // Network/server error - retry same eventId with backoff, do NOT drop
-            head.attempts += 1;
-            setState((prev) => ({ ...prev, lastError: message, offline: true, inFlight: false }));
-            clearTimers();
-            const delay = backoff(head.attempts, maxBackoffMs);
-            retryTimerRef.current = window.setTimeout(() => {
-              retryTimerRef.current = null;
-              flushingRef.current = false;
-              void flush();
-            }, delay) as unknown as number;
-            break;
+  // One queue per mount, rekeyed on (tournamentId, matchId) change.
+  const queue = useMemo(() => {
+    const q = new ScoreEventQueue(
+      {
+        sendEvent: async (item) => {
+          const res = await handlersRef.current.sendEvent(item.payload as unknown, item.eventId);
+          return res;
+        },
+        sendUndo: async (item) => {
+          if (handlersRef.current.sendUndo) {
+            return handlersRef.current.sendUndo(item.payload as unknown);
           }
-        }
-      }
-    } finally {
-      if (queueRef.current.length === 0) {
-        flushingRef.current = false;
-        setState((prev) => ({ ...prev, inFlight: false, offline: false }));
-        updateState();
-      } else {
-        flushingRef.current = false;
-        setState((prev) => ({ ...prev, inFlight: false }));
-        updateState();
-      }
-    }
-  }, [sendEvent, onRejected, onReconcile, clearTimers, maxBackoffMs, updateState]);
+          throw new Error('Undo is not wired up for this console.');
+        },
+        onReconcile: (ctx) => Promise.resolve(handlersRef.current.onReconcile(ctx)),
+        onRejected: (message, droppedCount) => handlersRef.current.onRejected(message, droppedCount),
+      },
+      key,
+      { maxBackoffMs: options.maxBackoffMs }
+    );
+    return q;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const undo = useCallback(() => {
-    // Undo must go through the same ordered queue or stay disabled until the queue is drained
-    if (queueRef.current.length > 0) {
-      // disabled while queue not drained
-      return;
-    }
-    if (getCanUndo && !getCanUndo()) return;
-    // caller is responsible for enqueuing undo through queue if needed; this hook enforces ordering
-  }, [getCanUndo]);
-
-  const hasPending = queueRef.current.length > 0;
-
+  // Bug fix #2 — contamination guard: rekey flushes the queue whenever the
+  // (tournamentId, matchId) pair changes (covers param changes after remounts).
   useEffect(() => {
+    queue.ensureKey(key);
+    return () => {
+      queue.dispose();
+    };
+  }, [queue, key]);
+
+  const snapshot = useSyncExternalStore(
+    queue.subscribe,
+    () => {
+      const next = queue.getSnapshot();
+      stateRef.current = next;
+      return next;
+    },
+    () => queue.getSnapshot()
+  );
+
+  const enqueueEvent = useCallback(
+    (event: unknown, eventId?: string) => queue.enqueueEvent(event, eventId ?? newScoreEventId()),
+    [queue]
+  );
+  const enqueueUndo = useCallback((payload?: unknown) => queue.enqueueUndo(payload), [queue]);
+
+  const getCanUndo = useCallback(
+    () => handlersRef.current.getCanUndo ? handlersRef.current.getCanUndo() : true,
+    []
+  );
+
+  // Bug fix #4 — block leaving with pending events.
+  useEffect(() => {
+    if (snapshot.queued.length === 0) return;
+
     const handler = (e: BeforeUnloadEvent) => {
-      if (queueRef.current.length > 0) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
+      e.preventDefault();
+      e.returnValue = '';
     };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
-  }, []);
+  }, [snapshot.queued.length]);
 
-  useEffect(() => {
-    return () => {
-      clearTimers();
-    };
-  }, [clearTimers]);
+  // Release resources on unmount.
+  useEffect(() => () => queue.dispose(), [queue]);
+
+  const canUndo = snapshot.queued.length === 0 && !snapshot.inFlight && getCanUndo();
+  const queuedCount = snapshot.queued.length;
 
   return {
-    enqueue,
-    flush,
-    undo,
-    state,
-    hasPending,
-    queueLength: queueRef.current.length,
-    isQueueEmpty: queueRef.current.length === 0,
+    enqueueEvent,
+    enqueueUndo,
+    undo: enqueueUndo,
+    queuedCount,
+    queued: snapshot.queued,
+    isQueueEmpty: queuedCount === 0,
+    inFlight: snapshot.inFlight,
+    offline: queuedCount > 0,
+    lastError: snapshot.lastError,
+    clearLastError: () => queue.clearLastError(),
+    canUndo,
+    getCanUndo,
+    hasPending: queuedCount > 0,
+    isBlocked: queuedCount > 0,
+    flush: () => queue.flush(),
+    flushRef: () => queue.flush(),
+    state: () => snapshot,
+    snapshot,
+    queueRef: () => queue,
   };
 }

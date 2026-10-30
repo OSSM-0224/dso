@@ -7,7 +7,9 @@ interface Ctx {
   params: Promise<{ id: string }>;
 }
 
-// POST /api/scoring/matches/:id/undo - VOID the last actionable scoring event
+// @deprecated POST /api/scoring/matches/:id/undo - legacy alias that resolves
+// the tournament and delegates. Prefer
+// /api/scoring/tournaments/:tournamentId/matches/:matchId/undo.
 export async function POST(_req: Request, ctx: Ctx) {
   const timing = new ServerTiming();
   return handler(async () => {
@@ -17,7 +19,7 @@ export async function POST(_req: Request, ctx: Ctx) {
 
     const { id } = await ctx.params;
     const scoreStart = timing.now();
-    const score = await scoringController.undo(user, id);
+    const score = await scoringController.legacyUndo(user, id);
     timing.measure('scoring', scoreStart);
 
     return ok(score, 200, timing);

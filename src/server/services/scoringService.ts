@@ -797,6 +797,236 @@ class ScoringService {
   }
 
   // ------------------------------------------------------------------
+  // TOURNAMENT-SCOPED scoring hub (picker / hub / organizer overview)
+  // ------------------------------------------------------------------
+
+  /**
+   * GET /api/scoring/tournaments — picker payload. Scorers get ONLY the
+   * tournaments they are assigned to (tournament-level roster, with the
+   * legacy per-match fallback); admins/organizers get every scoreable one.
+   */
+  async listScoringTournaments(user: UserSession): Promise<ScoringTournamentSummary[]> {
+    const isStaff = user.role === 'admin' || user.role === 'organizer';
+    const summaries: ScoringTournamentSummary[] = [];
+
+    for (const tournament of await tournamentRepository.findAll()) {
+      if (isStaff) {
+        if (!(SCOREABLE_TOURNAMENT_STATUSES as readonly string[]).includes(tournament.status)) continue;
+        const matches = await matchRepository.findByTournamentId(tournament.id);
+        summaries.push(this.tournamentSummary(tournament, matches));
+        continue;
+      }
+
+      if (user.role !== 'scorer') {
+        throw new ApiError(403, `Access denied. Role "${user.role}" has no scoring console.`);
+      }
+      if (!await this.scorerAssignedToTournament(user, tournament)) continue;
+      if (!(SCOREABLE_TOURNAMENT_STATUSES as readonly string[]).includes(tournament.status)) continue;
+      const matches = await matchRepository.findByTournamentId(tournament.id);
+      summaries.push(this.tournamentSummary(tournament, matches));
+    }
+
+    return summaries;
+  }
+
+  /** True when a scorer may READ the hub of this tournament. */
+  private assertTournamentReadable(user: UserSession, tournament: TournamentDoc, matches: MatchDoc[]): void {
+    if (user.role === 'admin' || user.role === 'organizer') return;
+    if (user.role === 'scorer') {
+      const tournamentScorers = Array.isArray(tournament.scorerIds) ? tournament.scorerIds : [];
+      if (tournamentScorers.includes(user.id)) return;
+      // Legacy fallback before migration: per-match assignment.
+      if (matches.some((m) => Array.isArray(m.scorerIds) && m.scorerIds.includes(user.id))) return;
+      throw new ApiError(403, SCORER_NOT_ASSIGNED_MESSAGE);
+    }
+    throw new ApiError(403, `Access denied. Role "${user.role}" has no scoring console.`);
+  }
+
+  /**
+   * GET /api/scoring/tournaments/:tournamentId/matches — hub list. Returns
+   * ONLY this tournament's matches (all statuses; the hub groups them into
+   * Live / Today / Upcoming / Completed). Writes are separately rejected for
+   * completed tournaments inside assertScoreableMatch.
+   */
+  async listTournamentMatches(user: UserSession, tournamentId: string): Promise<{
+    tournament: ScoringTournamentSummary;
+    matches: ScoringMatchListItem[];
+  }> {
+    const tournament = await tournamentRepository.findById(tournamentId);
+    if (!tournament) throw new ApiError(404, 'Tournament not found');
+
+    const matches = await matchRepository.findByTournamentId(tournamentId);
+    this.assertTournamentReadable(user, tournament, matches);
+
+    const allUsers = await userRepository.findAll();
+    const scoreByMatchId = new Map(
+      (await matchScoreRepository.findByTournamentId(tournamentId)).map((d) => [d.matchId, d])
+    );
+    const tournamentScorers = Array.isArray(tournament.scorerIds) ? tournament.scorerIds : [];
+    const scorerTournamentAssigned = tournamentScorers.includes(user.id);
+
+    const items: ScoringMatchListItem[] = [];
+    for (const match of matches) {
+      if (match.isBye) continue;
+      if (!match.teamA || !match.teamB) continue;
+
+      if (user.role === 'scorer') {
+        if (scorerTournamentAssigned) {
+          // Optional per-match narrowing within the tournament.
+          if (Array.isArray(match.scorerIds) && match.scorerIds.length > 0 && !match.scorerIds.includes(user.id)) {
+            continue;
+          }
+        } else if (!match.scorerIds?.includes(user.id)) {
+          continue;
+        }
+      }
+
+      const scoreDoc = scoreByMatchId.get(match.id);
+      items.push({
+        matchId: match.id,
+        tournamentId: tournament.id,
+        tournamentName: tournament.name,
+        tournamentStatus: tournament.status,
+        sport: tournament.sport,
+        ageGroup: tournament.ageGroup,
+        gender: tournament.gender,
+        round: match.round,
+        matchNumber: match.matchNumber,
+        roundName: match.roundName,
+        scheduledAt: match.scheduledAt,
+        venue: match.venue,
+        teamA: match.teamA,
+        teamB: match.teamB,
+        hasScore: !!scoreDoc,
+        scoreVersion: scoreDoc?.version ?? 0,
+        scorerNames: (match.scorerIds || [])
+          .map((id) => allUsers.find((u) => u.id === id)?.name || 'Unknown scorer')
+          .filter(Boolean),
+      });
+    }
+
+    items.sort((a, b) => a.matchNumber - b.matchNumber);
+    return { tournament: this.tournamentSummary(tournament, matches), matches: items };
+  }
+
+  /** Staff-only: live/scoreable matches of EVERY tournament, grouped. */
+  async getOrganizerOverview(user: UserSession): Promise<OrganizerOverviewGroup[]> {
+    if (user.role !== 'admin' && user.role !== 'organizer') {
+      throw new ApiError(403, `Access denied. Role "${user.role}" has no organizer overview.`);
+    }
+
+    const allUsers = await userRepository.findAll();
+    const groups: OrganizerOverviewGroup[] = [];
+
+    for (const tournament of await tournamentRepository.findAll()) {
+      const isScoreable = (SCOREABLE_TOURNAMENT_STATUSES as readonly string[]).includes(tournament.status);
+      const matches = await matchRepository.findByTournamentId(tournament.id);
+      const scoreByMatchId = new Map(
+        (await matchScoreRepository.findByTournamentId(tournament.id)).map((d) => [d.matchId, d])
+      );
+
+      const items: ScoringMatchListItem[] = [];
+      for (const match of matches) {
+        if (match.isBye) continue;
+        if (!match.teamA || !match.teamB) continue;
+        if (match.status !== 'upcoming' && match.status !== 'live') continue;
+
+        const scoreDoc = scoreByMatchId.get(match.id);
+        items.push({
+          matchId: match.id,
+          tournamentId: tournament.id,
+          tournamentName: tournament.name,
+          tournamentStatus: tournament.status,
+          sport: tournament.sport,
+          ageGroup: tournament.ageGroup,
+          gender: tournament.gender,
+          round: match.round,
+          matchNumber: match.matchNumber,
+          roundName: match.roundName,
+          scheduledAt: match.scheduledAt,
+          venue: match.venue,
+          teamA: match.teamA,
+          teamB: match.teamB,
+          hasScore: !!scoreDoc,
+          scoreVersion: scoreDoc?.version ?? 0,
+          scorerNames: (match.scorerIds || [])
+            .map((id) => allUsers.find((u) => u.id === id)?.name || 'Unknown scorer')
+            .filter(Boolean),
+        });
+      }
+
+      if (!isScoreable && items.length === 0) continue;
+      groups.push({ tournament: this.tournamentSummary(tournament, matches), matches: items });
+    }
+
+    return groups;
+  }
+
+  /** Server component helper for the legacy /score/:matchId redirect. */
+  async resolveMatchTournamentId(matchId: string): Promise<string | null> {
+    const match = await matchRepository.findById(matchId);
+    return match ? match.tournamentId : null;
+  }
+
+  /** Admin/organizer: view a tournament's scorer roster + candidate pool. */
+  async getTournamentScorers(admin: UserSession, tournamentId: string): Promise<TournamentScorerRoster> {
+    if (admin.role !== 'admin' && admin.role !== 'organizer') {
+      throw new ApiError(403, `Access denied. Role "${admin.role}" cannot manage scorer assignments.`);
+    }
+
+    const tournament = await tournamentRepository.findById(tournamentId);
+    if (!tournament) throw new ApiError(404, 'Tournament not found');
+
+    const scorerIds = Array.isArray(tournament.scorerIds) ? tournament.scorerIds : [];
+    const allUsers = await userRepository.findAll();
+    const scorerNames = scorerIds.map((id) => allUsers.find((u) => u.id === id)?.name || 'Unknown scorer');
+    const candidates = await this.listScorerCandidates(admin);
+
+    return { tournamentId, scorerIds, scorerNames, candidates };
+  }
+
+  /** Admin/organizer: assign or replace the tournament scorer roster. */
+  async setTournamentScorers(admin: UserSession, tournamentId: string, scorerIds: string[]) {
+    if (admin.role !== 'admin' && admin.role !== 'organizer') {
+      throw new ApiError(403, `Access denied. Role "${admin.role}" cannot manage scorer assignments.`);
+    }
+
+    const tournament = await tournamentRepository.findById(tournamentId);
+    if (!tournament) throw new ApiError(404, 'Tournament not found');
+
+    const uniqueIds = Array.from(new Set(scorerIds));
+    for (const id of uniqueIds) {
+      const user = await userRepository.findById(id);
+      if (!user) throw new ApiError(400, `Scorer id "${id}" does not exist.`);
+      if (user.role !== 'scorer') {
+        throw new ApiError(400, `User "${user.name}" (${id}) does not have the scorer role.`);
+      }
+    }
+
+    await tournamentRepository.update(tournamentId, { scorerIds: uniqueIds });
+
+    const scorerNames: string[] = [];
+    for (const id of uniqueIds) {
+      const user = await userRepository.findById(id);
+      scorerNames.push(user?.name || id);
+    }
+
+    await auditLogRepository.create({
+      tournamentId,
+      who: admin.name,
+      role: admin.role,
+      what: 'assign_scorers',
+      before: { scorerIds: Array.isArray(tournament.scorerIds) ? tournament.scorerIds : [] },
+      after: { scorerIds: uniqueIds },
+      details: `Assigned tournament scorers for "${tournament.name}": ${
+        scorerNames.length > 0 ? scorerNames.join(', ') : '(none)'
+      }`,
+    });
+
+    return { tournamentId, scorerIds: uniqueIds, scorerNames };
+  }
+
+  // ------------------------------------------------------------------
   // Read endpoints (participants + public, never include scorer identity)
   // ------------------------------------------------------------------
 

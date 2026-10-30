@@ -7,8 +7,9 @@ interface Ctx {
   params: Promise<{ id: string }>;
 }
 
-// POST /api/scoring/matches/:id/override-winner - manual winner decision with
-// mandatory reason; bypasses the undo-able event flow (admin correction).
+// @deprecated POST /api/scoring/matches/:id/override-winner - legacy alias that
+// resolves the tournament and delegates. Prefer
+// /api/scoring/tournaments/:tournamentId/matches/:matchId/override-winner.
 export async function POST(req: Request, ctx: Ctx) {
   const timing = new ServerTiming();
   return handler(async () => {
@@ -22,7 +23,7 @@ export async function POST(req: Request, ctx: Ctx) {
     timing.measure('body', bodyStart);
 
     const scoreStart = timing.now();
-    const result = await scoringController.overrideWinner(user, id, body);
+    const result = await scoringController.legacyOverrideWinner(user, id, body);
     timing.measure('scoring', scoreStart);
 
     return ok(result, 200, timing);

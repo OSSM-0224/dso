@@ -286,7 +286,9 @@ export async function runScoringScopingTestSuite(): Promise<TestSuiteSummary> {
         tossEvent(t1.teamA.id, 'u1') as unknown as Record<string, unknown>
       );
       const undone = await scoringService.undoLastEvent(scorer, t1.tournament.id, t1.match.id);
-      const undoneOk = undone.version === appended.version - 1;
+      // Undo appends an audit-trail VOID event: the version BUMPS (matches the
+      // engine + TEST_SCORING_UNDO_VOID semantics).
+      const undoneOk = undone.version === appended.version + 1;
 
       let undoScoped = false;
       try {

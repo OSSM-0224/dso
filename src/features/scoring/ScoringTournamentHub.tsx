@@ -8,6 +8,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { api } from '@/lib/api.ts';
 import type { ScoringMatchListItem, ScoringTournamentSummary } from '@/shared/types.ts';

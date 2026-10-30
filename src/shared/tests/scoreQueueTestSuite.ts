@@ -112,15 +112,24 @@ export async function runScoreQueueTestSuite(): Promise<TestSuiteSummary> {
   };
 
   // Bug fix #1: undo orders AFTER a still-in-flight event (never races ahead).
+  // Delivery order is recorded by the real handlers themselves: the custom
+  // event sender must still be observable, otherwise the ordering assertion
+  // would compare against an empty/one-sided log.
   await run('TEST_QUEUE_UNDO_FIFO_ORDER', 'queue FIFO: undo waits behind an in-flight event', 'Queue', async () => {
     let releaseEvent!: () => void;
     const hang = new Promise<void>((resolve) => {
       releaseEvent = resolve;
     });
+    const deliveryKinds: Array<'event' | 'undo'> = [];
 
     const env = makeQueueEnv({
       sendEvent: async () => {
         await hang;
+        deliveryKinds.push('event');
+        return { ok: true };
+      },
+      sendUndo: async () => {
+        deliveryKinds.push('undo');
         return { ok: true };
       },
     });
@@ -133,11 +142,11 @@ export async function runScoreQueueTestSuite(): Promise<TestSuiteSummary> {
     releaseEvent();
     await tick();
 
-    if (env.sent.length !== 2) {
-      throw new Error(`expected 2 sends, got ${JSON.stringify(env.sent)}`);
+    if (deliveryKinds.length !== 2) {
+      throw new Error(`expected 2 deliveries (event then undo), got ${JSON.stringify(deliveryKinds)}`);
     }
-    if (env.sent[0].kind !== 'event' || env.sent[1].kind !== 'undo') {
-      throw new Error(`ordering wrong: ${JSON.stringify(env.sent.map((s) => s.kind))}`);
+    if (deliveryKinds[0] !== 'event' || deliveryKinds[1] !== 'undo') {
+      throw new Error(`ordering wrong: ${JSON.stringify(deliveryKinds)}`);
     }
   });
 
@@ -199,20 +208,38 @@ export async function runScoreQueueTestSuite(): Promise<TestSuiteSummary> {
     }
   });
 
-  // Bug fix #3b: server 4xx drops the head AND all later items, then
-  // reconciles and reports the rejection once.
+  // Bug fix #3b: a server 4xx drops the head AND all later queued items in a
+  // SINGLE rejection, then reconciles. The later event must be queued WHILE
+  // the head is still in flight — only then do the two items share fate
+  // (later items build on earlier optimistic state).
   await run('TEST_QUEUE_REJECTION_4XX_CASCADE', 'queue rejection: 4xx cascade + reconcile + rejection message', 'Queue', async () => {
+    let failInFlight!: (err: unknown) => void;
+    const gatedSend = new Promise<never>((_, reject) => {
+      failInFlight = reject;
+    });
     const env = makeQueueEnv({
       sendEvent: async () => {
-        throw ERR(422);
+        await gatedSend;
+        return { ok: true };
       },
     });
-    env.queue.enqueueEvent({ type: 'DISMISSAL' });
-    await tick(); // first item fails
-    env.queue.enqueueEvent({ type: 'DISMISSAL' });
+
+    env.queue.enqueueEvent({ type: 'DISMISSAL' }); // head hangs in flight
+    await tick();
+    env.queue.enqueueEvent({ type: 'DISMISSAL' }); // second item queued BEHIND it
+    await tick();
+    const queuedState: number = env.queue.pendingCount;
+    // The in-flight head is NOT yet confirmed (it is removed only once its
+    // send resolves), so it and the queued item are BOTH unconfirmed here.
+    if (!env.queue.inFlight || queuedState !== 2) {
+      throw new Error(`expected the head in flight + 1 queued item (2 unconfirmed), got inFlight=${env.queue.inFlight} pending=${queuedState}`);
+    }
+
+    failInFlight(ERR(422)); // the in-flight head now receives a 4xx
     await tick();
 
-    if (env.queue.pendingCount !== 0) throw new Error('4xx should drop ALL items');
+    const postCascadeCount: number = env.queue.pendingCount;
+    if (postCascadeCount !== 0) throw new Error('4xx should drop ALL items');
     if (env.rejected.length !== 1) throw new Error(`onRejected called ${env.rejected.length} times`);
     if (env.rejected[0].droppedCount !== 2) {
       throw new Error(`droppedCount=${env.rejected[0].droppedCount}, expected 2`);

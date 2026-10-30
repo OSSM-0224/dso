@@ -18,6 +18,7 @@ import {
   UserRole,
   UserSession,
   PlayerDoc,
+  PlayerCsvImportReport,
 } from "@/shared/types.ts";
 import { TestSuiteSummary } from "@/shared/types.ts";
 import { CsvImportReport, CsvImportRow } from "@/shared/types.ts";
@@ -370,6 +371,22 @@ export const api = {
     delete: (id: string) =>
       request<{ message: string }>(`/players/${id}`, {
         method: "DELETE",
+      }),
+
+    importCsv: (
+      teamId: string,
+      rows: Array<{
+        name: string;
+        jerseyNumber?: number;
+        dateOfBirth?: string;
+        gender?: "boys" | "girls";
+        ageGroup?: string;
+      }>,
+      commit: boolean = false,
+    ) =>
+      request<PlayerCsvImportReport>("/players/import", {
+        method: "POST",
+        body: JSON.stringify({ teamId, rows, commit }),
       }),
   },
 

@@ -453,3 +453,39 @@ export interface CsvImportReport {
   committed?: boolean;
   createdCount?: number;
 }
+
+/* ---- Player CSV bulk import (targets exactly one team) ---- */
+
+export interface PlayerCsvRow {
+  /** Required — full player name. */
+  name: string;
+  /** Optional — unique inside the target team. */
+  jerseyNumber?: number;
+  /** Optional — ISO date string (yyyy-mm-dd). */
+  dateOfBirth?: string;
+  /** Optional — derived from the team when omitted. */
+  gender?: "boys" | "girls";
+  /** Optional — derived from the team when omitted. */
+  ageGroup?: string;
+}
+
+export interface PlayerCsvValidationItem {
+  rowIndex: number;
+  data: PlayerCsvRow;
+  status: "valid" | "duplicate" | "error";
+  errors: string[];
+  warnings: string[];
+  duplicateOf?: "csv" | "database";
+}
+
+export interface PlayerCsvImportReport {
+  teamId: string;
+  teamName: string;
+  totalRows: number;
+  validCount: number;
+  duplicateCount: number;
+  errorCount: number;
+  items: PlayerCsvValidationItem[];
+  committed?: boolean;
+  createdCount?: number;
+}

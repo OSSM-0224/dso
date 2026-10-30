@@ -106,6 +106,20 @@ export const bulkImportTeamsSchema = z.object({
   commit: z.boolean().optional().default(false),
 });
 
+export const bulkImportPlayersSchema = z.object({
+  teamId: z.string().min(1, "Team ID is required"),
+  rows: z.array(
+    z.object({
+      name: z.string().min(1, "Player name is required"),
+      jerseyNumber: z.number().int().positive().optional(),
+      dateOfBirth: z.string().optional(),
+      gender: z.enum(["boys", "girls"]).optional(),
+      ageGroup: z.string().optional(),
+    }),
+  ),
+  commit: z.boolean().optional().default(false),
+});
+
 export const createParticipantSchema = z.object({
   schoolId: z.string().min(1, "School ID is required"),
   name: z.string().min(2, "Contact / Representative name is required"),

@@ -8,6 +8,7 @@ import { playerService } from "../services/playerServices";
 import {
   createPlayerSchema,
   updatePlayerSchema,
+  bulkImportPlayersSchema,
 } from "../validations/schemas.ts";
 import { requireSchoolOwnerOrAdmin } from "../auth/guards.ts";
 
@@ -108,5 +109,35 @@ export const playerController = {
     await requireSchoolOwnerOrAdmin(user, existing.schoolId);
 
     return playerService.delete(id);
+  },
+
+  /**
+   * CSV bulk import for ONE team (preview with commit=false, import with
+   * commit=true). Ownership of the team's school is enforced before either
+   * step, so a coach can never validate (and thereby inspect rows of) a
+   * team that is not theirs.
+   */
+  async importAndValidate(user: UserSession, body: unknown) {
+    const parsed = bulkImportPlayersSchema.parse(body);
+
+    const team = await teamRepository.findById(parsed.teamId);
+
+    if (!team) {
+      throw new ApiError(404, "Team not found");
+    }
+
+    await requireSchoolOwnerOrAdmin(user, team.schoolId);
+
+    return playerService.validateAndImportCsv(
+      parsed.rows as {
+        name: string;
+        jerseyNumber?: number;
+        dateOfBirth?: string;
+        gender?: "boys" | "girls";
+        ageGroup?: string;
+      }[],
+      parsed.teamId,
+      parsed.commit,
+    );
   },
 };

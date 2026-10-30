@@ -151,7 +151,7 @@ export const PlayersScreen: React.FC<PlayersScreenProps> = ({
   }, [players, teams]);
 
   const teamTournamentById = useMemo(() => {
-    const map = new Map<string, string>();
+    const map = new Map<string, string | null>();
     for (const team of teams) map.set(team.id, team.tournamentId);
     return map;
   }, [teams]);

@@ -6,11 +6,17 @@ import { api } from '@/lib/api.ts';
 import { useAuth } from '@/context/AuthContext.tsx';
 import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { MatchDetailModal } from './MatchDetailModal.tsx';
+import { PlayersScreen } from '../players/PlayersScreen.tsx';
 
 interface ParticipantPortalScreenProps {
   onOpenPublicBracket?: (tournamentId: string) => void;
   /** Deep-link support for the /school/* Next.js routes (default 'dashboard'). */
-  initialTab?: 'dashboard' | 'schedule' | 'bracket' | 'notifications';
+  initialTab?:
+    | 'dashboard'
+    | 'players'
+    | 'schedule'
+    | 'bracket'
+    | 'notifications';
   /** Auto-open the detail modal for this match id (used by /school/matches/[id]). */
   openMatchId?: string | null;
 }
@@ -22,7 +28,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
 }) => {
   const { user, signOut } = useAuth();
   const { t } = useI18n();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'schedule' | 'bracket' | 'notifications'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'players' | 'schedule' | 'bracket' | 'notifications'>(initialTab);
 
   // Dashboard Data
   const [dashboardData, setDashboardData] = useState<any | null>(null);
@@ -280,6 +286,16 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
             }`}
           >
             {t("Dashboard")}
+          </button>
+          <button
+            onClick={() => setActiveTab('players')}
+            className={`px-3.5 py-2 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
+              activeTab === 'players'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            {t("Players")}
           </button>
           <button
             onClick={() => setActiveTab('schedule')}
@@ -549,7 +565,12 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
         </div>
       )}
 
-      {/* TAB 2: MY SCHEDULE */}
+      {/* TAB 2: PLAYERS */}
+      {activeTab === 'players' && (
+        <PlayersScreen user={user} canWrite={true} />
+      )}
+
+      {/* TAB 3: MY SCHEDULE */}
       {activeTab === 'schedule' && (
         <div className="space-y-4">
           {/* Filter Bar */}

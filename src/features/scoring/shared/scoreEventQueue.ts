@@ -172,13 +172,18 @@ export class ScoreEventQueue {
    * Bug fix #2: re-keying (tournament/match change) removes every queued item
    * and cancels pending retries so state from one match can never bleed into
    * another. Returns true when the key actually changed.
+   *
+   * The hook calls this in an effect setup, which also runs after React's
+   * StrictMode simulated unmount (cleanup sets `disposed`, remount re-runs
+   * setup with the SAME key). Reviving must therefore happen unconditionally;
+   * only the state flush is gated on an actual key change.
    */
   ensureKey(nextKey: string): boolean {
+    this.disposed = false;
     if (nextKey === this.key) return false;
     this.cancelPendingBackoff();
     this.items = [];
     this.flushRunning = false;
-    this.disposed = false;
     this._authPaused = false;
     this.key = nextKey;
     this.state = {

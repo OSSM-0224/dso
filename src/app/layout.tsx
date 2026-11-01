@@ -68,11 +68,14 @@ export default function RootLayout({
     <html
       lang="en"
       className={cn(jakartaSans.variable, jetbrainsMono.variable, fraunces.variable, "font-sans", inter.variable)}
+      suppressHydrationWarning
     >
       {/* Progressive-enhancement flag: entrance animations (.rise/.reveal) are
           gated on this class, so content is fully visible when JS is disabled
           or fails — animations only run when js-ready exists. Runs inline so
-          the class is present before first paint (no stuck opacity states). */}
+          the class is present before first paint (no stuck opacity states).
+          Deliberately mutates <html> before hydration, hence
+          suppressHydrationWarning above. */}
       <script
         dangerouslySetInnerHTML={{
           __html: "document.documentElement.classList.add('js-ready')",

@@ -179,6 +179,24 @@ export async function runScoreQueueTestSuite(): Promise<TestSuiteSummary> {
     if (env.sent.length !== 0) throw new Error('dropped item still delivered');
   });
 
+  // StrictMode double-mount: dispose() runs in an effect cleanup, then the
+  // remount effect calls ensureKey(SAME key). Revival must not depend on the
+  // key changing — otherwise every later enqueue throws 'is disposed'.
+  await run('TEST_QUEUE_REVIVE_SAME_KEY', 'queue lifecycle: ensureKey with the same key revives after dispose', 'Queue', async () => {
+    const env = makeQueueEnv();
+
+    env.queue.enqueueEvent({ type: 'DISMISSAL' });
+    await tick();
+    env.queue.dispose();
+    const revived = env.queue.ensureKey(env.queue.isolationKey);
+
+    if (revived) throw new Error('same-key ensureKey must report no change');
+    env.queue.enqueueEvent({ type: 'TIE' });
+    await tick();
+
+    if (env.sent.length === 0) throw new Error('revived queue stopped delivering events');
+  });
+
   // Bug fix #3a: retryable failure keeps the item and retries the SAME eventId.
   await run('TEST_QUEUE_RETRY_SAME_EVENTID', 'queue retry: network error retries the SAME eventId with backoff', 'Queue', async () => {
     let attempts = 0;

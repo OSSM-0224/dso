@@ -19,6 +19,8 @@
  */
 import type { KhoKhoScoringConfig } from '@/shared/scoring/types.ts';
 import { defaultKhoKhoConfigForAgeGroup, type ScoringAgeGroup } from '@/shared/scoring/types.ts';
+import type { SepakTakrawScoringConfig } from '@/shared/scoring/sports/sepakTakraw/types.ts';
+import { defaultSepakTakrawConfigForAgeGroup } from '@/shared/scoring/sports/sepakTakraw/types.ts';
 
 import type { MatchScoreViewDto, MatchDoc, ScoringMatchDetail } from '@/shared/types.ts';
 
@@ -113,6 +115,14 @@ const metaRegistry: Record<string, SportConsoleMetaEntry> = {
       if (t.sport !== 'kho-kho') return `${t.ageGroup} · ${t.gender}`;
       const cfg: KhoKhoScoringConfig = defaultKhoKhoConfigForAgeGroup(t.ageGroup as ScoringAgeGroup);
       return `${t.ageGroup} · ${t.gender} · ${Math.round(cfg.turnDurationSec / 60)} min turns · ${cfg.pointsPerOut} pt/out`;
+    },
+  },
+  'sepak-takraw': {
+    engineId: 'sepak-takraw',
+    configSummary: (t) => {
+      if (t.sport !== 'sepak-takraw') return `${t.ageGroup} · ${t.gender}`;
+      const cfg: SepakTakrawScoringConfig = defaultSepakTakrawConfigForAgeGroup(t.ageGroup as ScoringAgeGroup);
+      return `${t.ageGroup} · ${t.gender} · Best of ${cfg.bestOf} · ${cfg.setPoints}-pt sets`;
     },
   },
 };

@@ -16,6 +16,7 @@ import {
   listSportMetas,
 } from '../../features/scoring/consoles/registry.ts';
 import { defaultKhoKhoConfigForAgeGroup } from '../scoring/types.ts';
+import { defaultSepakTakrawConfigForAgeGroup } from '../scoring/sports/sepakTakraw/types.ts';
 import { getScoringEngine, listSupportedScoringSports } from '../scoring/engine.ts';
 
 export function runRegistryTestSuite(): TestSuiteSummary {
@@ -49,6 +50,7 @@ export function runRegistryTestSuite(): TestSuiteSummary {
     const metaList = listSportMetas();
     const sports = metaList.map((m) => m.sport);
     if (!sports.includes('kho-kho')) throw new Error(`list=${JSON.stringify(sports)}`);
+    if (!sports.includes('sepak-takraw')) throw new Error(`list=${JSON.stringify(sports)}`);
   });
 
   check('TEST_REGISTRY_CONFIG_SUMMARY_AGE_GROUP', 'registry: configSummary reflects the age-group config', 'Registry', () => {
@@ -60,6 +62,16 @@ export function runRegistryTestSuite(): TestSuiteSummary {
     if (!u14.includes(`${expectedU14Minutes} min`)) throw new Error(`u14 summary=${u14}`);
     if (!u17.includes(`${expectedU17Minutes} min`)) throw new Error(`u17 summary=${u17}`);
     if (u14 === u17) throw new Error('summaries must differ per age group');
+  });
+
+  check('TEST_REGISTRY_SEPAK_CONFIG_SUMMARY', 'registry: sepak-takraw configSummary reflects its engine config', 'Registry', () => {
+    const meta = getSportConsoleMeta('sepak-takraw');
+    if (!meta) throw new Error('sepak-takraw missing from the meta registry');
+    if (meta.engineId !== 'sepak-takraw') throw new Error(`engineId=${meta.engineId}`);
+    const cfg = defaultSepakTakrawConfigForAgeGroup('U-17');
+    const summary = meta.configSummary({ sport: 'sepak-takraw', ageGroup: 'U-17', gender: 'girls' });
+    if (!summary.includes(`Best of ${cfg.bestOf}`)) throw new Error(`summary=${summary}`);
+    if (!summary.includes(`${cfg.setPoints}-pt`)) throw new Error(`summary=${summary}`);
   });
 
   check('TEST_REGISTRY_FALLBACK_DESCRIPTOR', 'registry: non-kho-kho tournament falls back to plain descriptor', 'Registry', () => {
@@ -146,29 +158,31 @@ export async function runRegistryComponentTestSuite(): Promise<TestSuiteSummary>
   if (mod) {
     let problems: string[] = [];
     try {
-      const entry = mod.getSportConsole('kho-kho');
-      const unknown = mod.getSportConsole('kabaddi');
-      const live = mod.getSportLiveView('kho-kho');
-      if (!entry) {
-        problems.push('kho-kho missing from the component registry');
-      } else {
-        if (typeof entry.Console !== 'function') problems.push('Console missing');
-        if (typeof entry.LiveView !== 'function') problems.push('LiveView missing');
-        if (entry.engineId !== 'kho-kho') problems.push(`engineId=${entry.engineId}`);
+      for (const sport of ['kho-kho', 'sepak-takraw'] as const) {
+        const entry = mod.getSportConsole(sport);
+        const live = mod.getSportLiveView(sport);
+        if (!entry) {
+          problems.push(`${sport} missing from the component registry`);
+        } else {
+          if (typeof entry.Console !== 'function') problems.push(`${sport} Console missing`);
+          if (typeof entry.LiveView !== 'function') problems.push(`${sport} LiveView missing`);
+          if (entry.engineId !== sport) problems.push(`${sport} engineId=${entry.engineId}`);
+        }
+        if (typeof live !== 'function') problems.push(`${sport} getSportLiveView did not resolve`);
       }
+      const unknown = mod.getSportConsole('kabaddi');
       if (unknown !== null) problems.push('unknown sport resolved unexpectedly');
-      if (typeof live !== 'function') problems.push('getSportLiveView did not resolve');
     } catch (err) {
       problems = [err instanceof Error ? err.message : String(err)];
     }
     const passed = problems.length === 0;
     results.push({
       id: 'TEST_REGISTRY_COMPONENTS_RESOLVE',
-      name: 'registry components: kho-kho Console + LiveView resolve, unknown sport null',
+      name: 'registry components: registered sports Console + LiveView resolve, unknown sport null',
       category: 'Registry',
       passed,
       message: passed
-        ? 'Component registry resolved kho-kho Console + LiveView; unknown sport returned null.'
+        ? 'Component registry resolved kho-kho + sepak-takraw Console/LiveView pairs; unknown sport returned null.'
         : problems.join('; '),
       durationMs: Date.now() - start,
     });

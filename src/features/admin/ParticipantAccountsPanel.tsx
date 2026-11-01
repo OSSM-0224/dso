@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
@@ -383,7 +383,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
               </div>
               <button aria-label={t('Close')}
                 onClick={() => setShowCreateModal(false)}
-                className="text-white/80 hover:text-white"
+                className="text-white"
               >
                 <Icon name="xmark" size="sm" align-middle />
               </button>
@@ -518,7 +518,7 @@ export const ParticipantAccountsPanel: React.FC<ParticipantAccountsPanelProps> =
               </div>
               <button aria-label={t('Close')}
                 onClick={() => setShowResetModal(false)}
-                className="text-white/80 hover:text-white"
+                className="text-white"
               >
                 <Icon name="xmark" size="sm" align-middle />
               </button>

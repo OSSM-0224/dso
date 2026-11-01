@@ -15,6 +15,7 @@ export class FixtureEngineRegistry {
     this.registerCustom('kho-kho', 'single-elimination', singleElimination);
     this.registerCustom('kabaddi', 'single-elimination', singleElimination);
     this.registerCustom('volleyball', 'single-elimination', singleElimination);
+    this.registerCustom('sepaktakraw', 'single-elimination', singleElimination);
     this.registerCustom('*', 'single-elimination', singleElimination);
     this.registerCustom('*', 'knockout', singleElimination);
 

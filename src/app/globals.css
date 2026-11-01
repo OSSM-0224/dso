@@ -6,29 +6,32 @@
 
 /* ────────────────────────────────────────────────────────────────
    DSO Navi Mumbai · Design tokens
-   Warm monochrome + one deep sporty green accent.
-   Re-theme the whole app from this one place.
+   All solid colors. Rule: --color-accent-soft is a FILL only.
+
+   IMPORTANT: --color-accent and --color-muted are NOT defined in
+   @theme here. They come from the @theme inline block below
+   (var(--accent) / var(--muted)), and the real values live in :root.
+   Defining them twice caused the pale-mint / invisible text bug.
    ──────────────────────────────────────────────────────────────── */
 @theme {
   /* Surfaces */
-  --color-canvas: #faf9f7;
+  --color-canvas: #fafaf7;
   --color-surface: #ffffff;
-  --color-hairline: #e8e6e1;
+  --color-hairline: #e6e8e2;
+  --color-line: #cbd2c9; /* bracket connectors / structural lines */
 
-  /* Breakpoints (for consistent mobile-first usage) */
+  /* Breakpoints */
   --breakpoint-xs: 375px;
 
-  /* Ink */
-  --color-ink: #171613;
-  --color-muted: #78766f;
-  --color-faint: #a6a49c;
+  /* Ink — all text tokens are SOLID */
+  --color-ink: #111814;   /* primary text */
+  --color-faint: #6b766f; /* eyebrow, round labels, match IDs, captions */
 
-  /* Single accent — deep sporty green (primary actions, live status, current round) */
-  --color-accent: #1e5c38;
-  --color-accent-strong: #164a2d;
-  --color-accent-soft: #eaf1ec;
+  /* Accent helpers (accent itself comes from :root --accent) */
+  --color-accent-strong: #184a33;
+  --color-accent-soft: #e3f1e9; /* FILL only, never text */
 
-  /* Muted status tints (desaturated pastels only) */
+  /* Muted status tints */
   --color-blue-soft: #e8f1f7;
   --color-blue-text: #1f6c9f;
   --color-red-soft: #f9ecec;
@@ -36,31 +39,25 @@
   --color-green-soft: #edf3ec;
   --color-green-text: #346538;
   --color-sand-soft: #f7f2e7;
-  --color-sand-text: #956400;
+  --color-sand-text: #7d5600;
 
-  /* Radii: crisp controls, softer containers */
+  /* Radii */
   --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 12px;
 
-  /* Shadows: practically flat — one diffuse resting shadow, one raise */
-  --shadow-rest: 0 1px 2px rgba(23, 22, 19, 0.04);
-  --shadow-raise: 0 2px 12px rgba(23, 22, 19, 0.06);
+  /* Shadows */
+  --shadow-rest: 0 1px 2px rgba(17, 24, 20, 0.04);
+  --shadow-raise: 0 2px 12px rgba(17, 24, 20, 0.06);
 
-  /* Type families (wired from next/font variables) */
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  /* Type families */
   --font-serif: var(--font-fraunces), Georgia, serif;
   --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, monospace;
 }
 
 body {
-  /* Subtle warm grain so screens don't feel digitally flat */
-  background-image: radial-gradient(rgba(23, 22, 19, 0.015) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(17, 24, 20, 0.015) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
-/* Hairline focus ring everywhere (keyboard accessibility) */
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
@@ -76,13 +73,42 @@ body {
   }
 }
 
+/* ────────────────────────────────────────────────────────────────
+   Entrance motion — guaranteed to complete.
+   ──────────────────────────────────────────────────────────────── */
+@keyframes dso-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes dso-reveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html.js-ready .rise {
+    animation: dso-rise 400ms cubic-bezier(0.25, 0.6, 0.3, 1) both;
+  }
+  html.js-ready .rise-1 { animation-delay: 60ms; }
+  html.js-ready .rise-2 { animation-delay: 140ms; }
+  html.js-ready .rise-3 { animation-delay: 220ms; }
+
+  @supports (animation-timeline: view()) {
+    html.js-ready .reveal {
+      animation: dso-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 28%;
+    }
+  }
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -124,38 +150,41 @@ html {
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --background: #fafaf7;
+  --foreground: #111814;
+  --card: #ffffff;
+  --card-foreground: #111814;
+  --popover: #ffffff;
+  --popover-foreground: #111814;
+  /* Brand accent — deep forest green */
+  --primary: #1f5c3f;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f2ee;
+  --secondary-foreground: #111814;
+  /* "muted" = secondary TEXT colour (nav links, subtitle, checklist) */
+  --muted: #4a554e;
+  --muted-foreground: #4a554e;
+  /* "accent" = deep green (text-accent, bg-accent + white text) */
+  --accent: #1f5c3f;
+  --accent-foreground: #ffffff;
+  --destructive: #9f2f2d;
+  --border: #e6e8e2;
+  --input: #e6e8e2;
+  --ring: #1f5c3f;
+  --chart-1: #1f5c3f;
+  --chart-2: #4a554e;
+  --chart-3: #6b766f;
+  --chart-4: #9fb3a8;
+  --chart-5: #e3f1e9;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #111814;
+  --sidebar-primary: #1f5c3f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e3f1e9;
+  --sidebar-accent-foreground: #184a33;
+  --sidebar-border: #e6e8e2;
+  --sidebar-ring: #1f5c3f;
 }
 
 .dark {
@@ -169,10 +198,10 @@ html {
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
+  --muted: oklch(0.708 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --accent: #6faa8d;
+  --accent-foreground: #111814;
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
@@ -184,8 +213,8 @@ html {
   --chart-5: oklch(0.269 0 0);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: #6faa8d;
+  --sidebar-primary-foreground: #111814;
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);

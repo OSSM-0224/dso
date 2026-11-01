@@ -10,7 +10,7 @@ const MatchCard: React.FC<{
   away: string;
 }> = ({ label, home, away }) => (
   <div className="flex flex-col justify-center rounded-[7px] border border-hairline bg-canvas/60 px-2.5 py-2">
-    <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-muted">
+    <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-faint">
       {label}
     </p>
     <div className="mt-1.5 space-y-1">
@@ -38,7 +38,7 @@ export const BracketDiagram: React.FC = () => {
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
             {t("Draw structure")}
           </p>
           <p className="mt-1 text-[13px] font-semibold text-ink">
@@ -53,11 +53,11 @@ export const BracketDiagram: React.FC = () => {
 
       <div className="mt-5 w-full max-w-full touch-pan-x overflow-x-auto overscroll-x-contain pb-1 -mx-2 sm:mx-0 px-2 sm:px-0">
         <div className="min-w-[420px] sm:min-w-[460px] lg:min-w-0">
-          <div className="grid grid-cols-[1.2fr_0.95fr_0.8fr_0.7fr] gap-2 border-b border-hairline pb-2">
+          <div className="grid grid-cols-[1.2fr_0.95fr_0.8fr_0.7fr] gap-2 border-b border-line pb-2">
             {['Quarter-final', 'Semi-final', 'Final', 'Champion'].map((round) => (
               <p
                 key={round}
-                className="font-mono text-[8px] uppercase tracking-[0.13em] text-muted"
+                className="font-mono text-[8px] uppercase tracking-[0.13em] text-faint"
               >
                 {t(round)}
               </p>
@@ -112,12 +112,12 @@ export const BracketDiagram: React.FC = () => {
             </div>
 
             <div className="flex items-center">
-              <div className="flex w-full flex-col items-center justify-center rounded-[9px] border border-accent/25 bg-accent-soft px-2.5 py-5 text-center">
+              <div className="flex w-full flex-col items-center justify-center rounded-[9px] border border-accent bg-accent-soft px-2.5 py-5 text-center">
                 <Icon name="trophy" size="lg" className="text-accent" />
-                <p className="mt-2 font-serif text-[15px] font-semibold leading-tight text-accent-strong">
+                <p className="mt-2 font-serif text-[15px] font-semibold leading-tight text-accent">
                   {t("Champion")}
                 </p>
-                <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.12em] text-accent-strong/80">
+                <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.12em] text-accent-strong">
                   {t("On the field")}
                 </p>
               </div>
@@ -126,7 +126,7 @@ export const BracketDiagram: React.FC = () => {
         </div>
       </div>
 
-      <p className="mt-2 text-center font-mono text-[9px] uppercase tracking-[0.12em] text-muted sm:hidden">
+      <p className="mt-2 text-center font-mono text-[9px] uppercase tracking-[0.12em] text-faint sm:hidden">
         {t("Swipe to follow the draw")}
       </p>
 
@@ -153,7 +153,7 @@ export const BracketDiagram: React.FC = () => {
         <span className="block text-[10px] font-semibold text-ink">
           {t("Fair draw verified")}
         </span>
-        <span className="block font-mono text-[8px] uppercase tracking-[0.1em] text-muted">
+        <span className="block font-mono text-[8px] uppercase tracking-[0.1em] text-faint">
           {t("Rules applied")}
         </span>
       </span>

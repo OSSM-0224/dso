@@ -47,7 +47,7 @@ export const LandingNav: React.FC = () => {
             <span className="block font-serif text-[16px] sm:text-[17px] font-semibold tracking-[-0.01em] text-ink truncate">
               DSO Navi Mumbai
             </span>
-            <span className="hidden font-mono text-[9px] uppercase tracking-[0.16em] text-muted sm:block">
+            <span className="hidden font-mono text-[9px] uppercase tracking-[0.16em] text-faint sm:block">
               {t("Official fixtures desk")}
             </span>
           </span>

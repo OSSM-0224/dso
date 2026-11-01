@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -42,9 +42,9 @@ interface LandingPageProps {
 
 const facts = [
   { label: "Format", value: "Play-in single elimination" },
-  { label: "Categories", value: "U-14 · U-17 · U-19" },
+  { label: "Categories", value: "U-14 Â· U-17 Â· U-19" },
   { label: "Draw rules", value: "Champion-aware seeding" },
-  { label: "Access", value: "Schools · scorers · public" },
+  { label: "Access", value: "Schools Â· scorers Â· public" },
 ];
 
 const roles = [
@@ -57,7 +57,7 @@ const roles = [
   {
     icon: "school" as const,
     title: "Schools",
-    body: "Follow your school’s matches, schedules, and path through the bracket.",
+    body: "Follow your schoolâ€™s matches, schedules, and path through the bracket.",
     href: "/school/login",
   },
   {
@@ -121,19 +121,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <section className="relative flex min-h-[calc(100dvh-4rem)] flex-col">
           <div className="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 items-center gap-8 px-3 py-10 sm:gap-12 sm:px-4 lg:grid-cols-2 lg:gap-14 lg:px-8">
             <div className="max-w-xl w-full min-w-0">
-              <p className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-accent">
-                {t("District Sports Office • Navi Mumbai")}
+              <p className="rise font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-faint">
+                {t("District Sports Office â€¢ Navi Mumbai")}
               </p>
-              <h1 className="mt-5 font-serif text-[1.9rem] font-semibold leading-[1.02] tracking-[-0.03em] text-ink xs:text-[2.2rem] sm:text-5xl lg:text-[3.5rem]">
+              <h1 className="rise rise-1 mt-5 font-serif text-[1.9rem] font-semibold leading-[1.02] tracking-[-0.03em] text-ink xs:text-[2.2rem] sm:text-5xl lg:text-[3.5rem]">
                 {t("A")} <span className="text-accent">{t("fair draw")}</span>,
                 <br className="hidden sm:block" /> {t("kept on the record.")}
               </h1>
-              <p className="mt-6 max-w-full text-[15px] leading-relaxed text-muted sm:max-w-[46ch] sm:text-base">
+              <p className="rise rise-2 mt-6 max-w-full text-[15px] leading-relaxed text-muted sm:max-w-[46ch] sm:text-base">
                 {t(
-                  "Balanced single-elimination fixtures, public brackets, and live scoring for Navi Mumbai’s school tournaments."
+                  "Balanced single-elimination fixtures, public brackets, and live scoring for Navi Mumbaiâ€™s school tournaments."
                 )}
               </p>
-              <div className="mt-8 flex flex-col gap-2.5 w-full max-w-full sm:flex-row sm:w-auto sm:max-w-none">
+              <div className="rise rise-3 mt-8 flex flex-col gap-2.5 w-full max-w-full sm:flex-row sm:w-auto sm:max-w-none">
                 <Link
                   href="/dashboard"
                   className="inline-flex min-h-[44px] w-full max-w-full items-center justify-center gap-2 rounded-[6px] bg-accent px-3 py-2.5 text-sm font-semibold text-white shadow-rest transition-all duration-200 hover:bg-accent-strong active:scale-[0.98] sm:w-auto sm:px-5 whitespace-nowrap"
@@ -143,14 +143,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </Link>
                 <Link
                   href="/school/login"
-                  className="inline-flex min-h-[44px] w-full max-w-full items-center justify-center gap-2 rounded-[6px] border border-hairline bg-surface px-3 py-2.5 text-sm font-semibold text-ink shadow-rest transition-all duration-200 hover:border-faint hover:bg-canvas active:scale-[0.98] sm:w-auto sm:px-5 whitespace-nowrap"
+                  className="inline-flex min-h-[44px] w-full max-w-full items-center justify-center gap-2 rounded-[6px] border border-hairline bg-surface px-3 py-2.5 text-sm font-semibold text-ink shadow-rest transition-colors duration-200 hover:border-line hover:bg-surface active:scale-[0.98] sm:w-auto sm:px-5 whitespace-nowrap"
                 >
                   {t("School sign in")}
                 </Link>
               </div>
             </div>
 
-            <div className="w-full min-w-0 xl:pt-4">
+            <div className="rise w-full min-w-0 xl:pt-4">
               <BracketDiagram />
             </div>
           </div>
@@ -162,7 +162,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   key={fact.label}
                   className="border-hairline px-4 py-4 [&:not(:first-child)]:border-t xs:[&:nth-child(even)]:border-l xs:[&:nth-child(odd)]:border-l-0 xs:[&:nth-child(n+3)]:border-t sm:[&:not(:first-child)]:border-l sm:[&:nth-child(n+3)]:border-t-0"
                 >
-                  <dt className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
+                  <dt className="font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
                     {t(fact.label)}
                   </dt>
                   <dd className="mt-1.5 text-[13px] font-medium leading-snug text-ink">
@@ -190,7 +190,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </p>
             </div>
 
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
+            <div className="reveal mt-10 grid gap-4 md:grid-cols-3">
               <article className="flex flex-col rounded-[12px] border border-hairline bg-surface p-6 shadow-rest md:col-span-2 md:row-span-2 md:p-8">
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -248,7 +248,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <h3 className="mt-5 font-serif text-xl font-semibold tracking-[-0.01em] text-ink">
                   {t("Published, not printed.")}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-ink/75">
+                <p className="mt-2 text-sm leading-relaxed text-muted">
                   {t(
                     "Share one server-rendered bracket link. It updates as results come in, on any phone."
                   )}
@@ -269,7 +269,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <h3 className="mt-5 font-serif text-xl font-semibold tracking-[-0.01em] text-accent-strong">
                   {t("Field-ready scoring.")}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-accent-strong/85">
+                <p className="mt-2 text-sm leading-relaxed text-accent-strong">
                   {t(
                     "Scorers record live events from the court. Every point is validated by the same engine."
                   )}
@@ -302,7 +302,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </p>
             </div>
 
-            <div className="mt-10 grid gap-x-10 sm:grid-cols-2">
+            <div className="reveal mt-10 grid gap-x-10 sm:grid-cols-2">
               {roles.map((role) => (
                 <Link
                   key={role.title}
@@ -342,10 +342,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               {t("From enrollment to final whistle.")}
             </h2>
 
-            <ol className="mt-10 grid gap-8 grid-cols-1 md:grid-cols-3 md:gap-6">
+            <ol className="reveal mt-10 grid gap-8 grid-cols-1 md:grid-cols-3 md:gap-6">
               {steps.map((step, index) => (
                 <li key={step.title} className="border-t border-hairline pt-5">
-                  <span className="font-serif text-[2.6rem] font-semibold leading-none tracking-[-0.04em] text-accent/80">
+                  <span className="font-serif text-[2.6rem] font-semibold leading-none tracking-[-0.04em] text-accent">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <h3 className="mt-4 text-sm font-semibold text-ink">
@@ -377,14 +377,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </p>
               </div>
               {boardMeta.length > 0 && (
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-                  {boardMeta.join(" · ")}
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-faint">
+                  {boardMeta.join(" Â· ")}
                 </p>
               )}
             </div>
 
             {hasPublicDraws ? (
-              <div className="mt-10 grid gap-4 grid-cols-1 md:grid-cols-3">
+              <div className="reveal mt-10 grid gap-4 grid-cols-1 md:grid-cols-3">
                 {tournaments.map((tournament) => (
                   <Link
                     key={tournament.id}
@@ -393,7 +393,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
-                        {tournament.sport} · {tournament.ageGroup}{" "}
+                        {tournament.sport} Â· {tournament.ageGroup}{" "}
                         {tournament.gender}
                       </span>
                       <Badge
@@ -417,7 +417,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </h3>
                     <div className="mt-6 flex items-center justify-between gap-3 border-t border-hairline pt-4 text-[11px] text-muted">
                       <span>
-                        {tournament.year} ·{" "}
+                        {tournament.year} Â·{" "}
                         {t("{count} teams", { count: tournament.teamCount })}
                       </span>
                       <span className="inline-flex items-center gap-1.5 font-semibold text-ink transition-colors group-hover:text-accent">
@@ -490,7 +490,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       </span>
                     </span>
                     <span className="hidden sm:block text-right font-mono text-[9px] uppercase tracking-[0.12em] text-muted">
-                      {champion.sport} • {champion.ageGroup} {champion.gender}
+                      {champion.sport} â€¢ {champion.ageGroup} {champion.gender}
                     </span>
                   </li>
                 ))}
@@ -507,9 +507,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <h2 className="max-w-xl font-serif text-3xl font-semibold leading-[1.08] tracking-[-0.02em] text-accent-strong sm:text-[2.35rem]">
                     {t("The next draw starts here.")}
                   </h2>
-                  <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-accent-strong/85">
+                  <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-accent-strong">
                     {t(
-                      "Open the organizer console to enroll teams and publish the season’s first bracket."
+                      "Open the organizer console to enroll teams and publish the seasonâ€™s first bracket."
                     )}
                   </p>
                 </div>
@@ -523,7 +523,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </Link>
                   <Link
                     href="/school/login"
-                    className="inline-flex min-h-[44px] w-full max-w-full items-center justify-center gap-2 rounded-[6px] border border-accent/15 bg-surface px-3 py-2.5 text-sm font-semibold text-ink shadow-rest transition-all duration-200 hover:border-accent/30 active:scale-[0.98] sm:w-auto sm:px-5 whitespace-nowrap"
+                    className="inline-flex min-h-[44px] w-full max-w-full items-center justify-center gap-2 rounded-[6px] border border-accent bg-surface px-3 py-2.5 text-sm font-semibold text-ink shadow-rest transition-colors duration-200 hover:border-accent-strong hover:bg-accent-soft active:scale-[0.98] sm:w-auto sm:px-5 whitespace-nowrap"
                   >
                     {t("School sign in")}
                   </Link>
@@ -553,7 +553,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           <div>
-            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
               {t("Explore")}
             </p>
             <ul className="mt-3 space-y-2 text-sm">
@@ -576,7 +576,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           <div>
-            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
               {t("Access")}
             </p>
             <ul className="mt-3 space-y-2 text-sm">
@@ -610,7 +610,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         <div className="border-t border-hairline px-3 py-5 text-center text-xs text-muted sm:px-4">
           {t(
-            "© {year} District Sports Office, Navi Mumbai. Built for the district’s schools.",
+            "Â© {year} District Sports Office, Navi Mumbai. Built for the districtâ€™s schools.",
             { year: new Date().getFullYear() }
           )}
         </div>

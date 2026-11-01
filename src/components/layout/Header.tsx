@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,11 +10,12 @@ import { Icon } from "@/components/ui/Icon.tsx";
 import { LanguageSwitcher } from "@/i18n/LanguageSwitcher.tsx";
 import { useI18n } from "@/i18n/LanguageProvider.tsx";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -122,9 +123,14 @@ export const Header: React.FC = () => {
       </Button>
     );
 
+    // Base UI (not Radix): closable wrappers take `render={<Link />}` instead
+    // of `asChild` — the component's children land inside the rendered Link.
     return mobile ? (
-      <SheetClose asChild key={item.href}>
-        <Link href={item.href}>{content}</Link>
+      <SheetClose
+        key={item.href}
+        render={<Link href={item.href} className="block" />}
+      >
+        {content}
       </SheetClose>
     ) : (
       <Link href={item.href} key={item.href}>
@@ -185,71 +191,79 @@ export const Header: React.FC = () => {
           {/* Staff Role Dropdown */}
           {!isParticipant && (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 gap-2 rounded-md px-3 text-xs"
-                >
-                  <span className="capitalize">{t(role)}</span>
-                  <Icon name="chevronDown" size="sm" />
-                </Button>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-2 rounded-md px-3 text-xs"
+                  />
+                }
+              >
+                <span className="capitalize">{t(role)}</span>
+                <Icon name="chevronDown" size="sm" />
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="w-64 rounded-xl">
-                <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  {t("Preview as staff")}
-                </DropdownMenuLabel>
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {t("Preview as staff")}
+                  </DropdownMenuLabel>
 
-                <DropdownMenuSeparator />
+                  <DropdownMenuSeparator />
 
-                {(
-                  [
-                    "admin",
-                    "organizer",
-                    "scorer",
-                    "viewer",
-                    "participant",
-                  ] as UserRole[]
-                ).map((r) => (
-                  <DropdownMenuItem
-                    key={r}
-                    onSelect={() => handleRoleChange(r)}
-                    className="flex cursor-pointer items-center justify-between py-2 text-sm"
-                  >
-                    <span className="capitalize">
-                      {r === "participant" ? t("Log in as school") : t(r)}
-                    </span>
+                  {(
+                    [
+                      "admin",
+                      "organizer",
+                      "scorer",
+                      "viewer",
+                      "participant",
+                    ] as UserRole[]
+                  ).map((r) => (
+                    <DropdownMenuItem
+                      key={r}
+                      onSelect={() => handleRoleChange(r)}
+                      className="flex cursor-pointer items-center justify-between py-2 text-sm"
+                    >
+                      <span className="capitalize">
+                        {r === "participant" ? t("Log in as school") : t(r)}
+                      </span>
 
-                    {r === role && (
-                      <Icon name="check" size="sm" className="text-primary" />
-                    )}
-                  </DropdownMenuItem>
-                ))}
+                      {r === role && (
+                        <Icon name="check" size="sm" className="text-primary" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuGroup>
 
                 <DropdownMenuSeparator />
 
                 {canScore && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/score" className="cursor-pointer">
-                      <Icon name="bolt" size="sm" />
-                      {t("Live scoring console")}
-                    </Link>
+                  <DropdownMenuItem
+                    render={<Link href="/score" className="cursor-pointer" />}
+                  >
+                    <Icon name="bolt" size="sm" />
+                    {t("Live scoring console")}
                   </DropdownMenuItem>
                 )}
 
-                <DropdownMenuItem asChild>
-                  <Link href="/school/login" className="cursor-pointer">
-                    <Icon name="school" size="sm" />
-                    {t("School login page")}
-                  </Link>
+                <DropdownMenuItem
+                  render={
+                    <Link href="/school/login" className="cursor-pointer" />
+                  }
+                >
+                  <Icon name="school" size="sm" />
+                  {t("School login page")}
                 </DropdownMenuItem>
 
-                <DropdownMenuItem asChild>
-                  <Link href="/engine-tests" className="cursor-pointer">
-                    <Icon name="flask" size="sm" />
-                    {t("Engine tests")}
-                  </Link>
+                <DropdownMenuItem
+                  render={
+                    <Link href="/engine-tests" className="cursor-pointer" />
+                  }
+                >
+                  <Icon name="flask" size="sm" />
+                  {t("Engine tests")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -257,15 +271,17 @@ export const Header: React.FC = () => {
 
           {/* Mobile Navigation */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 lg:hidden"
-                aria-label={t("Open navigation")}
-              >
-                <Icon name="menu" size="sm" />
-              </Button>
+            <SheetTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 lg:hidden"
+                  aria-label={t("Open navigation")}
+                />
+              }
+            >
+              <Icon name="bars" size="sm" />
             </SheetTrigger>
 
             <SheetContent side="right" className="w-[280px] sm:w-[320px] p-0">
@@ -292,29 +308,29 @@ export const Header: React.FC = () => {
                   <>
                     <div className="my-3 border-t" />
 
-                    <SheetClose asChild>
-                      <Link href="/school/login">
+                    <SheetClose
+                      render={<Link href="/school/login" className="block" />}
+                    >
+                      <Button
+                        variant="ghost"
+                        className="h-11 w-full justify-start gap-2 text-sm"
+                      >
+                        <Icon name="school" size="sm" />
+                        {t("School login page")}
+                      </Button>
+                    </SheetClose>
+
+                    {canScore && (
+                      <SheetClose
+                        render={<Link href="/score" className="block" />}
+                      >
                         <Button
                           variant="ghost"
                           className="h-11 w-full justify-start gap-2 text-sm"
                         >
-                          <Icon name="school" size="sm" />
-                          {t("School login page")}
+                          <Icon name="bolt" size="sm" />
+                          {t("Live scoring console")}
                         </Button>
-                      </Link>
-                    </SheetClose>
-
-                    {canScore && (
-                      <SheetClose asChild>
-                        <Link href="/score">
-                          <Button
-                            variant="ghost"
-                            className="h-11 w-full justify-start gap-2 text-sm"
-                          >
-                            <Icon name="bolt" size="sm" />
-                            {t("Live scoring console")}
-                          </Button>
-                        </Link>
                       </SheetClose>
                     )}
                   </>

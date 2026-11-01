@@ -60,7 +60,7 @@ export const SchoolLoginModal: React.FC<SchoolLoginModalProps> = ({
         <div className="shrink-0 bg-gradient-to-r from-indigo-700 via-indigo-600 to-indigo-800 text-white p-4 sm:p-6 relative">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-white/80 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors"
+            className="absolute top-4 right-4 text-white p-1 rounded-full hover:bg-white/10 transition-colors"
             title={t("Close")}
           >
             <Icon name="xmark" size="lg" />

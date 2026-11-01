@@ -420,6 +420,7 @@ function phaseOf(d: DerivedMatch, state: SepakTakrawScoringState): SepakTakrawPh
 }
 
 function sideChangePendingOf(d: DerivedMatch, state: SepakTakrawScoringState): boolean {
+  if (winnerOf(d, state).resolved) return false;
   const current = d.currentSet;
   if (!current || current.completed) return false;
   if (!isDecidingSet(current.setNo, state.config)) return false;
@@ -487,10 +488,11 @@ function getScoreboardInternal(state: SepakTakrawScoringState): SepakTakrawScore
     : lastSet
       ? { ...lastSet.points }
       : emptyPoints(state.teams);
-  const deuce = current
+  const liveForPlay = !!current && !winner.resolved;
+  const deuce = liveForPlay
     ? isDeuce(current.points, state.teams, targetsForSet(setNo, state.config).deuceAt)
     : false;
-  const serving: SepakTakrawServing | null = current
+  const serving: SepakTakrawServing | null = liveForPlay
     ? {
         teamId: current.serveTeamId,
         playerId: tekongOf(d, current.serveTeamId),
@@ -519,7 +521,7 @@ function getScoreboardInternal(state: SepakTakrawScoringState): SepakTakrawScore
     timeoutsUsed: current ? { ...current.timeouts } : emptyPoints(state.teams),
     sideChangePending: sideChangePendingOf(d, state),
     sideChangeConfirmed:
-      !!current && isDecidingSet(current.setNo, state.config) && current.sideChangeConfirmed,
+      liveForPlay && isDecidingSet(current.setNo, state.config) && current.sideChangeConfirmed,
     winner,
     nextAction: nextActionOf(d, state),
     activeEventCount: d.activeCount,

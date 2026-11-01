@@ -59,7 +59,7 @@ export const SEPAK_TAKRAW_FAULTS: SepakTakrawFaultDef[] = [
 
 export type SepakTakrawFaultByCategory = Record<SepakTakrawFaultCategory, SepakTakrawFaultDef[]>;
 
-export function sepaTakrawFaultsByCategory(): SepakTakrawFaultByCategory {
+export function sepakTakrawFaultsByCategory(): SepakTakrawFaultByCategory {
   return {
     service: SEPAK_TAKRAW_FAULTS.filter((f) => f.category === "service"),
     play: SEPAK_TAKRAW_FAULTS.filter((f) => f.category === "play"),

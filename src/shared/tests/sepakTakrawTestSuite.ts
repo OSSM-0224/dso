@@ -4,6 +4,7 @@
  * /api/tests/run in-browser fallback like the kho-kho suites.
  */
 import { sepakTakrawScoringEngine } from '../scoring/sports/sepakTakraw/engine.ts';
+import { SEPAK_TAKRAW_FAULTS } from '../scoring/sports/sepakTakraw/types.ts';
 import type {
   SepakTakrawFaultType,
   SepakTakrawLineupSlot,
@@ -12,6 +13,7 @@ import type {
   SepakTakrawScoreboard,
   SepakTakrawScoringConfig,
   SepakTakrawScoringState,
+  SepakTakrawStatsRow,
 } from '../scoring/sports/sepakTakraw/types.ts';
 import { ScoringRuleError } from '../scoring/types.ts';
 import { TestResult, TestSuiteSummary } from '../types.ts';
@@ -168,6 +170,53 @@ function scoreAlternatingTo(h: Harness, aTarget: number, bTarget: number): void 
       b += 1;
     }
   }
+}
+
+function toDecidingSet(h: Harness, config?: Partial<SepakTakrawScoringConfig>): void {
+  scorePoints(h, TEAM_A.id, 21);
+  h.startSet(2);
+  scorePoints(h, TEAM_B.id, 21);
+  if (config?.serveTossInDecidingSet === false) {
+    h.startSet(3);
+  } else {
+    h.toss(TEAM_A.id, 'SERVE', 3);
+    h.startSet(3);
+  }
+}
+
+function expectRuleError(fn: () => unknown, code: string): void {
+  try {
+    fn();
+  } catch (err) {
+    const actual = err instanceof ScoringRuleError ? err.code : 'UNKNOWN';
+    expect(actual === code, `expected ${code} but got ${actual}`);
+    return;
+  }
+  throw new Error(`expected ${code} but no error was thrown`);
+}
+
+function lastEventId(h: Harness): string {
+  const event = h.state.events[h.state.events.length - 1];
+  if (!event) throw new Error('no events recorded');
+  return event.eventId;
+}
+
+function eventIdOf(h: Harness, type: SepakTakrawScoreEvent['type'], occurrence = 0): string {
+  const event = h.state.events.filter((entry) => entry.type === type)[occurrence];
+  if (!event) throw new Error(`no ${type} event at index ${occurrence}`);
+  return event.eventId;
+}
+
+function statRow(h: Harness, teamId: string, playerId: string | null): SepakTakrawStatsRow {
+  const row = sepakTakrawScoringEngine
+    .getPlayerStats(h.state)
+    .find((entry) => entry.teamId === teamId && entry.playerId === playerId);
+  if (!row) throw new Error(`no stats row for ${teamId}:${playerId ?? 'unassigned'}`);
+  return row;
+}
+
+function statValue(h: Harness, teamId: string, playerId: string | null, key: string): number {
+  return statRow(h, teamId, playerId).values[key] ?? 0;
 }
 
 export function runSepakTakrawTestSuite(): TestSuiteSummary {

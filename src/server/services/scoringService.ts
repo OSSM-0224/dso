@@ -15,17 +15,17 @@ import { userRepository } from '../repositories/userRepository.ts';
 import { auditLogRepository } from '../repositories/auditLogRepository.ts';
 import { matchService } from './matchService.ts';
 import { sanitizeMatchDto, sanitizeMatchScoreDto } from '../serializers/dtoSerializers.ts';
-import { MatchDoc, MatchScoreDoc, MatchScoreViewDto, OrganizerOverviewGroup, ScoreEventDoc, ScorerCandidate, ScoringMatchListItem, ScoringTournamentSummary, TeamDoc, TournamentDoc, TournamentScorerRoster, TournamentStatus, UserSession } from '../../shared/types.ts';
+import { AnyScoringEvent, MatchDoc, MatchScoreDoc, MatchScoreViewDto, OrganizerOverviewGroup, ScoreEventDoc, ScorerCandidate, ScoringMatchListItem, ScoringTournamentSummary, TeamDoc, TournamentDoc, TournamentScorerRoster, TournamentStatus, UserSession } from '../../shared/types.ts';
 import {
   getScoringEngine,
   ScoringEngine,
 } from '../../shared/scoring/engine.ts';
 import {
-  KhoKhoScoreEvent,
   ScoringAgeGroup,
   ScoringSport,
   defaultKhoKhoConfigForAgeGroup,
 } from '../../shared/scoring/types.ts';
+import { defaultSepakTakrawConfigForAgeGroup } from '../../shared/scoring/sports/sepakTakraw/types.ts';
 
 const SCOREABLE_TOURNAMENT_STATUSES = ['published', 'ongoing'] as const;
 const READABLE_TOURNAMENT_STATUSES = ['published', 'ongoing', 'completed'] as const;
@@ -68,6 +68,8 @@ function defaultConfigForTournament(tournament: TournamentDoc): MatchScoreDoc['c
   switch (tournament.sport) {
     case 'kho-kho':
       return defaultKhoKhoConfigForAgeGroup(tournament.ageGroup as ScoringAgeGroup);
+    case 'sepak-takraw':
+      return defaultSepakTakrawConfigForAgeGroup(tournament.ageGroup as ScoringAgeGroup);
     default:
       throw new ApiError(
         400,
@@ -277,7 +279,7 @@ class ScoringService {
 
   private sanitizeIncomingEvent(
     raw: Record<string, unknown>
-  ): { event: KhoKhoScoreEvent; clientAtMs: number | null } {
+  ): { event: AnyScoringEvent; clientAtMs: number | null } {
     const clone = { ...raw } as Record<string, unknown>;
     // recordedBy is always the authenticated session - never client input.
     delete clone['recordedBy'];
@@ -288,12 +290,12 @@ class ScoringService {
       typeof rawClientAt === 'number' && Number.isFinite(rawClientAt) && rawClientAt >= 0
         ? Math.round(rawClientAt)
         : null;
-    return { event: clone as unknown as KhoKhoScoreEvent, clientAtMs };
+    return { event: clone as unknown as AnyScoringEvent, clientAtMs };
   }
 
   private async appendValidatedEvent(
     scoreDoc: MatchScoreDoc,
-    event: KhoKhoScoreEvent,
+    event: AnyScoringEvent,
     user: UserSession,
     auditWhat: 'score_event' | 'score_undo',
     match: MatchDoc,
@@ -579,7 +581,7 @@ class ScoringService {
       atMs: voidAtMs,
       type: 'VOID',
       targetEventId: target.eventId,
-    } as unknown as KhoKhoScoreEvent;
+    } as unknown as AnyScoringEvent;
 
     const appended = await this.appendValidatedEvent(
       scoreDoc,
@@ -691,7 +693,7 @@ class ScoringService {
         type: 'MANUAL_DECISION',
         winnerTeamId: criteria.winnerTeamId,
         reason: criteria.reason,
-      } as unknown as KhoKhoScoreEvent;
+      } as unknown as AnyScoringEvent;
       await this.appendValidatedEvent(
         scoreDoc,
         manualEvent,

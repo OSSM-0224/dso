@@ -2,9 +2,18 @@ import {
   KhoKhoScoreboard,
   KhoKhoScoreEvent,
   KhoKhoScoringConfig,
-  ScoringSport,
   ScoringTeamRef,
 } from "./scoring/types.ts";
+import {
+  SepakTakrawScoreboard,
+  SepakTakrawScoreEvent,
+  SepakTakrawScoringConfig,
+} from "./scoring/sports/sepakTakraw/types.ts";
+
+/** Cross-sport unions for the sport-pluggable scoring pipeline. */
+export type AnyScoringConfig = KhoKhoScoringConfig | SepakTakrawScoringConfig;
+export type AnyScoringEvent = KhoKhoScoreEvent | SepakTakrawScoreEvent;
+export type AnyScoringScoreboard = KhoKhoScoreboard | SepakTakrawScoreboard;
 
 export type UserRole =
   | "admin"
@@ -195,7 +204,7 @@ export type MatchScoreStatus = "active" | "completed";
 export interface ScoreEventDoc {
   id: string;
   matchId: string;
-  event: KhoKhoScoreEvent;
+  event: AnyScoringEvent;
   recordedBy: string;
   recordedByRole: string;
   /** Server wall-clock ISO time when the event was accepted. */
@@ -208,8 +217,8 @@ export interface MatchScoreDoc {
   id: string;
   matchId: string;
   tournamentId: string;
-  sport: string; // 'kho-kho'
-  config: KhoKhoScoringConfig;
+  sport: string; // 'kho-kho' | 'sepak-takraw'
+  config: AnyScoringConfig;
   teams: Array<ScoringTeamRef & { schoolName?: string }>;
   /** Bumped on every state change (event, undo, completion). */
   version: number;
@@ -224,7 +233,7 @@ export interface MatchScoreDoc {
 export type SanitizedScoreEvent = {
   eventId: string;
   atMs: number;
-  type: KhoKhoScoreEvent["type"];
+  type: AnyScoringEvent["type"];
 } & Record<string, unknown>;
 
 /** Live score payload returned to staff, participants, and the public view. */
@@ -238,8 +247,8 @@ export interface MatchScoreViewDto {
   winnerTeamIds: string[] | null;
   teams: Array<{ id: string; name: string; schoolName?: string }>;
   /** Scoring rules needed to replay optimistic events on the client. */
-  config: KhoKhoScoringConfig;
-  scoreboard: KhoKhoScoreboard;
+  config: AnyScoringConfig;
+  scoreboard: AnyScoringScoreboard;
   events: SanitizedScoreEvent[];
   /**
    * Server "now" on the same creation-epoch timeline as `event.atMs`.

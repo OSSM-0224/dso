@@ -1,6 +1,5 @@
 ﻿import 'server-only';
-import { MatchDoc, MatchScoreDoc, MatchScoreViewDto, NotificationDoc, ScoreEventDoc, TeamDoc, TournamentDoc } from '../../shared/types.ts';
-import { KhoKhoScoreboard } from '../../shared/scoring/types.ts';
+import { AnyScoringScoreboard, MatchDoc, MatchScoreDoc, MatchScoreViewDto, NotificationDoc, ScoreEventDoc, TeamDoc, TournamentDoc } from '../../shared/types.ts';
 
 /**
  * Whitelist serializer for Team objects sent to public or participant callers.
@@ -79,7 +78,7 @@ export function sanitizeTournamentDto(tournament: TournamentDoc): any {
  */
 export function sanitizeMatchScoreDto(
   score: MatchScoreDoc,
-  scoreboard: KhoKhoScoreboard,
+  scoreboard: AnyScoringScoreboard,
   events: ScoreEventDoc[],
   serverNowMs = Math.max(0, Date.now() - (Date.parse(score.createdAt) || 0))
 ): MatchScoreViewDto {

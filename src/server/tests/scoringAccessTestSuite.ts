@@ -40,12 +40,17 @@ function makeMatch(
   };
 }
 
-async function seedScoreableMatch(suffix: string, scorerIds: string[] = []) {
+async function seedScoreableMatch(
+  suffix: string,
+  scorerIds: string[] = [],
+  sport = 'kho-kho'
+) {
   const schoolA = await schoolRepository.create({ name: `Scorer School A (${suffix})` });
   const schoolB = await schoolRepository.create({ name: `Scorer School B (${suffix})` });
 
   const tournament = await tournamentRepository.create({
     name: `Scoring Access Test Cup ${suffix}`,
+    sport,
     ageGroup: 'U-14',
     gender: 'boys',
     year: 2026,
@@ -457,11 +462,17 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
 
     const eventCount = (dto: typeof afterDismissal, eventId: string) =>
       dto.events.filter((event) => event.eventId === eventId).length;
-    const totalAfterOne = afterDismissal.scoreboard.teams.reduce(
+    const khoKhoTeams = (dto: typeof afterDismissal) => {
+      if (dto.scoreboard.sport !== 'kho-kho') {
+        throw new Error(`expected a kho-kho scoreboard, got "${dto.scoreboard.sport}"`);
+      }
+      return dto.scoreboard.teams;
+    };
+    const totalAfterOne = khoKhoTeams(afterDismissal).reduce(
       (sum, team) => sum + team.totalPoints,
       0
     );
-    const totalAfterDuplicate = duplicateDismissal.scoreboard.teams.reduce(
+    const totalAfterDuplicate = khoKhoTeams(duplicateDismissal).reduce(
       (sum, team) => sum + team.totalPoints,
       0
     );
@@ -501,6 +512,94 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
       passed: false,
       message: `Error: ${err.message}`,
       durationMs: Date.now() - t6Start,
+    });
+  }
+
+  // Test 7: Sepak takraw uses its own engine + default config through the service.
+  const t7Start = Date.now();
+  try {
+    const seed = await seedScoreableMatch('sepak', [], 'sepak-takraw');
+    const organizer: UserSession = { id: 'org-sepak', name: 'Organizer', role: 'organizer' };
+
+    const created = await scoringService.ensureMatchScore(organizer, seed.tournament.id, seed.match.id);
+    const config = created.config;
+    const sepakConfig = 'setPoints' in config
+      ? { setPoints: config.setPoints, bestOf: config.bestOf, serveRotation: config.serveRotation }
+      : null;
+
+    const lineup = (teamId: string, prefix: string) => ({
+      eventId: `lineup-${prefix}`,
+      atMs: 0,
+      type: 'LINEUP_SET',
+      teamId,
+      onCourt: [
+        { playerId: `${prefix}-tekong`, role: 'TEKONG' },
+        { playerId: `${prefix}-feeder`, role: 'FEEDER' },
+        { playerId: `${prefix}-striker`, role: 'STRIKER' },
+      ],
+      subs: [],
+    });
+
+    await scoringService.appendEvent(organizer, seed.tournament.id, seed.match.id, {
+      eventId: 'sepak-toss',
+      atMs: 0,
+      type: 'TOSS',
+      winnerTeamId: seed.teamA.id,
+      choice: 'SERVE',
+    });
+    await scoringService.appendEvent(organizer, seed.tournament.id, seed.match.id, lineup(seed.teamA.id, 'a'));
+    await scoringService.appendEvent(organizer, seed.tournament.id, seed.match.id, lineup(seed.teamB.id, 'b'));
+    await scoringService.appendEvent(organizer, seed.tournament.id, seed.match.id, {
+      eventId: 'sepak-set-start',
+      atMs: 0,
+      type: 'SET_START',
+      setNo: 1,
+    });
+    const scored = await scoringService.appendEvent(organizer, seed.tournament.id, seed.match.id, {
+      eventId: 'sepak-ace',
+      atMs: 0,
+      type: 'POINT',
+      pointType: 'ACE',
+      scoringTeamId: seed.teamA.id,
+    });
+    const undone = await scoringService.undoLastEvent(organizer, seed.tournament.id, seed.match.id);
+
+    const board = scored.scoreboard;
+    const undoneBoard = undone.scoreboard;
+    const passed =
+      sepakConfig !== null &&
+      sepakConfig.setPoints === 21 &&
+      sepakConfig.bestOf === 3 &&
+      sepakConfig.serveRotation === 3 &&
+      board.sport === 'sepak-takraw' &&
+      board.phase === 'set_live' &&
+      board.points[seed.teamA.id] === 1 &&
+      board.serving?.teamId === seed.teamA.id &&
+      board.nextAction.action === 'rally_ready' &&
+      undoneBoard.sport === 'sepak-takraw' &&
+      undoneBoard.points[seed.teamA.id] === 0 &&
+      undoneBoard.voidedEventCount === 1;
+
+    await cleanupScoreableMatch(seed);
+
+    results.push({
+      id: 'TEST_SCORING_SEPAK_TAKRAW_SESSION',
+      name: 'Scoring Sepak Takraw: service resolves its engine/config, scores a rally and undoes it',
+      category: 'LIVE SCORER Access Control',
+      passed,
+      message: passed
+        ? 'Sepak-takraw score doc used the 21/3-serve config, accepted TOSS→LINEUP→SET_START→ACE, and undo voided the point.'
+        : 'Sepak-takraw service path did not use the expected engine/config or failed the score/undo round-trip.',
+      durationMs: Date.now() - t7Start,
+    });
+  } catch (err: any) {
+    results.push({
+      id: 'TEST_SCORING_SEPAK_TAKRAW_SESSION',
+      name: 'Scoring Sepak Takraw: service resolves its engine/config, scores a rally and undoes it',
+      category: 'LIVE SCORER Access Control',
+      passed: false,
+      message: `Error: ${err.message}`,
+      durationMs: Date.now() - t7Start,
     });
   }
 

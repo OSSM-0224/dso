@@ -146,7 +146,7 @@ export const KhoKhoConsole: React.FC<SportConsoleProps> = (props) => {
 
   // ---------------- derived ----------------
 
-  const sb = score?.scoreboard ?? null;
+  const sb = score && score.scoreboard.sport === 'kho-kho' ? score.scoreboard : null;
   const action = sb?.nextAction as KhoKhoNextAction | undefined;
   const turn = sb?.currentTurn ?? null;
 

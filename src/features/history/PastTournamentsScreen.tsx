@@ -171,7 +171,7 @@ export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({
                 <option value="kho-kho">Kho-Kho</option>
                 <option value="kabaddi">Kabaddi</option>
                 <option value="volleyball">Volleyball</option>
-                <option value="volleyball">Sepak Takraw</option>
+                <option value="sepak-takraw">Sepak Takraw</option>
               </select>
             </div>
 

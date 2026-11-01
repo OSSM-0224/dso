@@ -101,6 +101,61 @@ export const LiveScoreCard: React.FC<LiveScoreCardProps> = ({
   }, []);
 
   const sb = score.scoreboard;
+
+  // Generic fallback until a sport-specific LiveView is registered.
+  if (sb.sport !== 'kho-kho') {
+    const fallbackWinnerIds = new Set(score.winnerTeamIds ?? []);
+    const fallbackCompleted = score.status === 'completed';
+    return (
+      <div className={`rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden ${className}`}>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/80 px-4 py-2.5">
+          <div className="flex min-w-0 items-center gap-2">
+            {title && (
+              <span className="truncate text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                {title}
+              </span>
+            )}
+            {stale && (
+              <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700">
+                <Icon name="circleInfo" size="sm" /> {t("reconnecting…")}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] font-semibold text-slate-400">
+            {t("Set {setNo}", { setNo: sb.setNo })}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 divide-x divide-slate-100">
+          {sb.teams.map((team) => {
+            const winner = fallbackWinnerIds.has(team.id);
+            const dimmed = fallbackCompleted && fallbackWinnerIds.size > 0 && !winner;
+            return (
+              <div key={team.id} className={`px-4 py-4 ${dimmed ? 'opacity-60' : ''}`}>
+                <p className={`truncate text-sm font-bold ${winner ? 'text-emerald-700' : 'text-slate-800'}`}>
+                  {team.name}
+                </p>
+                <p className="mt-1 font-mono text-3xl font-black tabular-nums text-slate-900">
+                  {sb.points[team.id] ?? 0}
+                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                  {t("{count} set wins", { count: sb.setWins[team.id] ?? 0 })}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+        {fallbackCompleted && (
+          <div className="flex items-center gap-2 border-t border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-900">
+            <Icon name="trophy" size="sm" />
+            {sb.winner.resolved
+              ? `${sb.winner.winnerTeamId ? sb.teams.find((team) => team.id === sb.winner.winnerTeamId)?.name ?? t("Winner") : t("Winner")} · ${sb.winner.label}`
+              : sb.winner.label || t("Result decided")}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   const drift = snapshotAt > 0 ? Math.max(0, nowTick - snapshotAt) : 0;
   const na = sb.nextAction;
   const isLikeKhoKho = sb.sport === 'kho-kho';

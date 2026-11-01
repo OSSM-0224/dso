@@ -1,4 +1,4 @@
-export type ScoringSport = "kho-kho";
+export type ScoringSport = "kho-kho" | "sepak-takraw";
 
 export type ScoringAgeGroup = "U-14" | "U-17" | "U-19" | "Open";
 
@@ -142,7 +142,7 @@ export type KhoKhoScoreEvent =
   | VoidScoringEvent;
 
 export interface MatchScoringState {
-  sport: ScoringSport;
+  sport: "kho-kho";
   teams: ScoringTeamRef[];
   config: KhoKhoScoringConfig;
   events: KhoKhoScoreEvent[];
@@ -275,7 +275,7 @@ export type KhoKhoNextAction =
   | { action: "completed"; winner: KhoKhoWinnerEvaluation };
 
 export interface KhoKhoScoreboard {
-  sport: ScoringSport;
+  sport: "kho-kho";
   teams: Array<{ id: string; name: string; totalPoints: number }>;
   phase: KhoKhoMatchPhase;
   currentTurn: KhoKhoTurnSummary | null;

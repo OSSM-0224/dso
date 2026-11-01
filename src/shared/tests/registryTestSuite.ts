@@ -16,7 +16,7 @@ import {
   listSportMetas,
 } from '../../features/scoring/consoles/registry.ts';
 import { defaultKhoKhoConfigForAgeGroup } from '../scoring/types.ts';
-import { getScoringEngine } from '../scoring/engine.ts';
+import { getScoringEngine, listSupportedScoringSports } from '../scoring/engine.ts';
 
 export function runRegistryTestSuite(): TestSuiteSummary {
   const results: TestResult[] = [];
@@ -84,6 +84,29 @@ export function runRegistryTestSuite(): TestSuiteSummary {
     ] as const) {
       if (typeof engine[method] !== 'function') throw new Error(`engine.${method} missing`);
     }
+  });
+
+  check('TEST_REGISTRY_ENGINE_SEPAK_TAKRAW', 'registry engine contract: sepak-takraw is registered with the shared API', 'Registry', () => {
+    const engine = getScoringEngine('sepak-takraw');
+    if (engine.sport !== 'sepak-takraw') throw new Error(`sport=${engine.sport}`);
+    for (const method of [
+      'createInitialState',
+      'applyEvent',
+      'validateEvent',
+      'getScoreboard',
+      'getNextAction',
+      'getUndoTarget',
+      'canUndo',
+      'computeWinner',
+    ] as const) {
+      if (typeof engine[method] !== 'function') throw new Error(`engine.${method} missing`);
+    }
+  });
+
+  check('TEST_REGISTRY_SUPPORTED_SPORTS', 'registry: supported scoring sports include kho-kho and sepak-takraw', 'Registry', () => {
+    const sports = listSupportedScoringSports();
+    if (!sports.includes('kho-kho')) throw new Error(`sports=${JSON.stringify(sports)}`);
+    if (!sports.includes('sepak-takraw')) throw new Error(`sports=${JSON.stringify(sports)}`);
   });
 
   const total = results.length;

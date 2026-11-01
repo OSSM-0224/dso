@@ -24,8 +24,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link';
 
 import { api } from '@/lib/api.ts';
-import type { MatchScoreViewDto, ScoringMatchDetail } from '@/shared/types.ts';
-import type { KhoKhoScoreEvent, ScoringSport } from '@/shared/scoring/types.ts';
+import type { AnyScoringEvent, MatchScoreViewDto, ScoringMatchDetail } from '@/shared/types.ts';
+import type { ScoringSport } from '@/shared/scoring/types.ts';
 import { getScoringEngine } from '@/shared/scoring/engine.ts';
 import type { ScoringEngine } from '@/shared/scoring/engine.ts';
 import { useAuth } from '@/context/AuthContext.tsx';
@@ -187,7 +187,7 @@ export const ScoringConsoleHost: React.FC<{ tournamentId: string; matchId: strin
     if (!engine) return serverScore;
     const queuedPayloads = queue.snapshot.queued
       .filter((item) => item.kind === 'event')
-      .map((item) => item.payload as KhoKhoScoreEvent);
+      .map((item) => item.payload as AnyScoringEvent);
     if (queuedPayloads.length === 0) return serverScore;
 
     let state = engine.createInitialState({
@@ -199,7 +199,7 @@ export const ScoringConsoleHost: React.FC<{ tournamentId: string; matchId: strin
     // the entire optimistic view.
     for (const event of serverScore.events) {
       try {
-        state = engine.applyEvent(state, event as KhoKhoScoreEvent);
+        state = engine.applyEvent(state, event as AnyScoringEvent);
       } catch {
         // Ignore: the next authoritative refresh will reconcile.
       }
@@ -285,7 +285,7 @@ export const ScoringConsoleHost: React.FC<{ tournamentId: string; matchId: strin
         eventId,
         atMs: clientAtMs,
         clientAtMs,
-      } as unknown as KhoKhoScoreEvent;
+      } as unknown as AnyScoringEvent;
 
       queue.enqueueEvent(event, eventId);
       // The optimistic merged view recomputes from queue.snapshot (memo).

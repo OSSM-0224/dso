@@ -1,7 +1,6 @@
 import 'server-only';
 import { collections } from '../db/docStore.ts';
-import { MatchScoreDoc, ScoreEventDoc } from '../../shared/types.ts';
-import type { KhoKhoScoreEvent } from '../../shared/scoring/types.ts';
+import { AnyScoringEvent, MatchScoreDoc, ScoreEventDoc } from '../../shared/types.ts';
 
 /**
  * Persistence for the LIVE SCORER module. Score docs are keyed by matchId
@@ -74,7 +73,7 @@ export class MatchScoreRepository {
 
   async appendEvent(data: {
     matchId: string;
-    event: KhoKhoScoreEvent;
+    event: AnyScoringEvent;
     recordedBy: string;
     recordedByRole: string;
   }): Promise<{ doc: ScoreEventDoc; inserted: boolean }> {

@@ -53,7 +53,7 @@ export class ScoringRuleError extends Error {
   }
 }
 
-interface ScoringEventBase {
+export interface ScoringEventBase {
   eventId: string;
   atMs: number;
   recordedBy?: string;

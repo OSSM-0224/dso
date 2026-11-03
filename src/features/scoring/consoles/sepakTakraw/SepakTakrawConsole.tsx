@@ -32,6 +32,10 @@ const inputClass =
 const selectClass =
   'w-full rounded-[6px] border border-hairline bg-surface px-2 py-2 text-xs text-ink focus:border-accent-strong focus:outline-none';
 
+/** Jerseys are stored as the engine's opaque player id (1–3 digits). */
+const JERSEY_RE = /^[1-9]\d{0,2}$/;
+const cleanJersey = (value: string) => value.trim().replace(/^#/, '').trim();
+
 type DerivedLineup = { onCourt: SepakTakrawLineupSlot[]; subs: string[] };
 type SendEvent = (payload: Record<string, unknown>) => boolean;
 
@@ -708,18 +712,26 @@ const LineupPanel: React.FC<{
   const [error, setError] = useState('');
 
   const submit = () => {
-    const ids = [tekong.trim(), feeder.trim(), striker.trim()];
+    const ids = [tekong, feeder, striker].map(cleanJersey);
     if (ids.some((id) => !id)) {
-      setError(t('Enter all three on-court players.'));
+      setError(t('Enter all three on-court jersey numbers.'));
+      return;
+    }
+    if (ids.some((id) => !JERSEY_RE.test(id))) {
+      setError(t('Jersey numbers must be 1-3 digits (e.g. 7).'));
       return;
     }
     if (new Set(ids).size !== ids.length) {
-      setError(t('Player names/ids must be distinct.'));
+      setError(t('Each on-court player must have a different jersey number.'));
       return;
     }
-    const subs = subsText.split(',').map((part) => part.trim()).filter(Boolean);
+    const subs = subsText.split(/[,\s]+/).map(cleanJersey).filter(Boolean);
+    if (subs.some((sub) => !JERSEY_RE.test(sub))) {
+      setError(t('Substitute jersey numbers must be 1-3 digits (e.g. 4, 9).'));
+      return;
+    }
     if (new Set(subs).size !== subs.length || subs.some((sub) => ids.includes(sub))) {
-      setError(t('Substitutes must be distinct and not on court.'));
+      setError(t('Substitute jersey numbers must be distinct and not on court.'));
       return;
     }
     setError('');
@@ -740,25 +752,58 @@ const LineupPanel: React.FC<{
       <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.06em] text-faint">
         <Icon name="users" size="xs" /> {t('Lineup: {team}', { team: teamName })}
       </p>
+      <p className="mt-1 text-[10px] text-muted">
+        {t('Enter the jersey number for each on-court player, not their name.')}
+      </p>
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
         <label className="block">
           <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">Tekong</span>
-          <input value={tekong} onChange={(e) => setTekong(e.target.value)} placeholder={t('Player name or ID')} className={inputClass} />
+          <input
+            value={tekong}
+            onChange={(e) => setTekong(e.target.value)}
+            inputMode="numeric"
+            autoComplete="off"
+            maxLength={3}
+            placeholder={t('Jersey no. (e.g. 7)')}
+            className={inputClass}
+          />
         </label>
         <label className="block">
           <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">Feeder</span>
-          <input value={feeder} onChange={(e) => setFeeder(e.target.value)} placeholder={t('Player name or ID')} className={inputClass} />
+          <input
+            value={feeder}
+            onChange={(e) => setFeeder(e.target.value)}
+            inputMode="numeric"
+            autoComplete="off"
+            maxLength={3}
+            placeholder={t('Jersey no. (e.g. 4)')}
+            className={inputClass}
+          />
         </label>
         <label className="block">
           <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">Striker</span>
-          <input value={striker} onChange={(e) => setStriker(e.target.value)} placeholder={t('Player name or ID')} className={inputClass} />
+          <input
+            value={striker}
+            onChange={(e) => setStriker(e.target.value)}
+            inputMode="numeric"
+            autoComplete="off"
+            maxLength={3}
+            placeholder={t('Jersey no. (e.g. 9)')}
+            className={inputClass}
+          />
         </label>
       </div>
       <label className="mt-2 block">
         <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">
-          {t('Substitutes (comma-separated, optional)')}
+          {t('Substitute jersey numbers (comma-separated, optional)')}
         </span>
-        <input value={subsText} onChange={(e) => setSubsText(e.target.value)} placeholder={t('e.g. Riya, Aman')} className={inputClass} />
+        <input
+          value={subsText}
+          onChange={(e) => setSubsText(e.target.value)}
+          autoComplete="off"
+          placeholder={t('e.g. 4, 9')}
+          className={inputClass}
+        />
       </label>
       {error && <p className="mt-2 text-[11px] font-semibold text-red-700">{error}</p>}
       <button onClick={submit} disabled={pending} className={`mt-3 w-full ${btnPrimary}`}>

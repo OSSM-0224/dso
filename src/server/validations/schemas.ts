@@ -149,22 +149,11 @@ export const resetPasswordSchema = z.object({
     .min(6, "Temporary password must be at least 6 characters long"),
 });
 
-export const SCORE_EVENT_TYPES = [
-  "TOSS",
-  "TURN_START",
-  "TURN_PAUSE",
-  "TURN_RESUME",
-  "TURN_END",
-  "DISMISSAL",
-  "FOUL_LOG",
-  "FOLLOW_ON_DECISION",
-  "MIN_TIME_RESULT",
-  "MANUAL_DECISION",
-  "VOID",
-] as const;
-
-/** Incoming scoring event. Payload semantics are validated by the scoring
- * engine (`ScoringRuleError`  409); the schema enforces the envelope.
+/** Incoming scoring event. The envelope is deliberately sport-agnostic: the
+ * event vocabulary and payload semantics belong to the sport engine selected
+ * from `tournament.sport`, which validates them (`ScoringRuleError`  409).
+ * Keeping this open means adding a sport never requires editing a hard-coded
+ * event-type enum here (the regression that rejected Sepak Takraw events).
  * `atMs` is always assigned by the server. `clientAtMs` is the scorer's
  * creation-epoch timestamp request; the server clamps it to the accepted
  * event timeline before storing. */
@@ -173,7 +162,7 @@ export const scoreEventSchema = z
     eventId: z.string().min(1, "eventId is required"),
     atMs: z.number().int().min(0).optional().default(0),
     clientAtMs: z.number().int().min(0).optional(),
-    type: z.enum(SCORE_EVENT_TYPES),
+    type: z.string().trim().min(1, "type is required"),
   })
   .passthrough();
 

@@ -69,14 +69,14 @@ sections 3–4 is the real check for Console/LiveView wiring.
 - [ ] **Start scoring session** → phase shows `awaiting toss`.
 - [ ] Toss: pick the winning team, choose **Serve first** or **Receive first**,
       click **Record toss**.
-- [ ] Lineups: for each team enter three distinct player names/IDs and assign
-      Tekong / Feeder / Striker; optionally add comma-separated substitutes.
-      Save both lineups.
+- [ ] Lineups: for each team enter three distinct jersey numbers and assign
+      Tekong / Feeder / Striker; optionally add comma-separated substitute
+      jersey numbers. Save both lineups.
 - [ ] **Start set 1**.
 
-> Player names/IDs typed here become the player identifiers used by stats.
+> Jersey numbers typed here become the player identifiers used by stats.
 > Scorers cannot list the school player roster (staff-only endpoint), so enter
-> consistent names/IDs.
+> the numbers worn by the players on court.
 
 ### Rally scoring
 

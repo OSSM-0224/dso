@@ -9,6 +9,7 @@ import { notificationRepository } from '../repositories/notificationRepository.t
 import { auditLogRepository } from '../repositories/auditLogRepository.ts';
 import { userRepository } from '../repositories/userRepository.ts';
 import { scoringService } from '../services/scoringService.ts';
+import { scoreEventSchema } from '../validations/schemas.ts';
 import { MatchDoc, UserSession } from '../../shared/types.ts';
 import { sanitizeMatchScoreDto } from '../serializers/dtoSerializers.ts';
 
@@ -527,6 +528,28 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
       ? { setPoints: config.setPoints, bestOf: config.bestOf, serveRotation: config.serveRotation }
       : null;
 
+    // Regression: the API envelope schema must accept every Sepak Takraw
+    // event type. It previously hard-coded only Kho-Kho types, so the
+    // controller rejected LINEUP_SET/SET_START/POINT/etc. with a 400 before
+    // the sport engine could validate them.
+    const sepakEventTypes = [
+      'TOSS',
+      'LINEUP_SET',
+      'ROLE_SWAP',
+      'SUBSTITUTION',
+      'SET_START',
+      'POINT',
+      'FAULT',
+      'PLAYER_ATTRIBUTION',
+      'TIMEOUT',
+      'SIDE_CHANGE_CONFIRMED',
+      'MANUAL_DECISION',
+      'VOID',
+    ] as const;
+    const schemaAcceptsSepakEvents = sepakEventTypes.every(
+      (type) => scoreEventSchema.safeParse({ eventId: `schema-${type}`, type }).success
+    );
+
     const lineup = (teamId: string, prefix: string) => ({
       eventId: `lineup-${prefix}`,
       atMs: 0,
@@ -567,6 +590,7 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
     const board = scored.scoreboard;
     const undoneBoard = undone.scoreboard;
     const passed =
+      schemaAcceptsSepakEvents &&
       sepakConfig !== null &&
       sepakConfig.setPoints === 21 &&
       sepakConfig.bestOf === 3 &&
@@ -588,8 +612,8 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
       category: 'LIVE SCORER Access Control',
       passed,
       message: passed
-        ? 'Sepak-takraw score doc used the 21/3-serve config, accepted TOSS→LINEUP→SET_START→ACE, and undo voided the point.'
-        : 'Sepak-takraw service path did not use the expected engine/config or failed the score/undo round-trip.',
+        ? 'Sepak-takraw API envelope accepted every event type; the 21/3-serve config, TOSS→LINEUP→SET_START→ACE, and undo all worked.'
+        : 'Sepak-takraw event envelope, engine/config, or score/undo round-trip failed.',
       durationMs: Date.now() - t7Start,
     });
   } catch (err: any) {

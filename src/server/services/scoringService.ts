@@ -257,26 +257,36 @@ class ScoringService {
     return state;
   }
 
-  private async ensureScoreDoc(match: MatchDoc, tournament: TournamentDoc): Promise<MatchScoreDoc> {
-    const existing = await matchScoreRepository.findByMatchId(match.id);
-    if (existing) {
-      // Sessions created before the jersey range was widened keep the old
-      // limit in their stored config. Upgrade only the jersey ceiling; all
-      // other stored rules and the event history stay untouched.
-      if (existing.sport === 'dodgeball') {
-        const dodgeballConfig = existing.config as DodgeballScoringConfig;
-        if (dodgeballConfig.jerseyMax < DEFAULT_DODGEBALL_SCORING_CONFIG.jerseyMax) {
-          const upgraded = await matchScoreRepository.update(existing.matchId, {
-            config: {
-              ...dodgeballConfig,
-              jerseyMax: DEFAULT_DODGEBALL_SCORING_CONFIG.jerseyMax,
-            },
-          });
-          if (upgraded) return upgraded;
-        }
+  /**
+   * Load an existing score session and bring its stored config up to the
+   * current rule defaults. Old Dodgeball sessions were created with
+   * `jerseyMax: 10`; widening the range must not require starting a new
+   * match, so the upgrade is applied (and persisted) on every read/write.
+   */
+  private async loadScoreDoc(matchId: string): Promise<MatchScoreDoc | null> {
+    const existing = await matchScoreRepository.findByMatchId(matchId);
+    if (!existing) return null;
+
+    if (existing.sport === 'dodgeball') {
+      const dodgeballConfig = existing.config as DodgeballScoringConfig;
+      const jerseyMax = Math.max(
+        typeof dodgeballConfig.jerseyMax === 'number' ? dodgeballConfig.jerseyMax : 0,
+        DEFAULT_DODGEBALL_SCORING_CONFIG.jerseyMax,
+      );
+      if (jerseyMax !== dodgeballConfig.jerseyMax) {
+        const upgraded = await matchScoreRepository.update(existing.matchId, {
+          config: { ...dodgeballConfig, jerseyMax },
+        });
+        if (upgraded) return upgraded;
       }
-      return existing;
     }
+
+    return existing;
+  }
+
+  private async ensureScoreDoc(match: MatchDoc, tournament: TournamentDoc): Promise<MatchScoreDoc> {
+    const existing = await this.loadScoreDoc(match.id);
+    if (existing) return existing;
 
     const teamSnapshot = (team: TeamDoc | null) =>
       team
@@ -356,7 +366,7 @@ class ScoringService {
       // Idempotent re-delivery: return the current truth without counting the
       // same action twice or writing another audit entry.
       return {
-        scoreDoc: (await matchScoreRepository.findByMatchId(scoreDoc.matchId)) ?? scoreDoc,
+        scoreDoc: (await this.loadScoreDoc(scoreDoc.matchId)) ?? scoreDoc,
         events: await matchScoreRepository.findEventsByMatchId(scoreDoc.matchId),
         inserted: false,
       };
@@ -493,7 +503,7 @@ class ScoringService {
     const { match, tournament } = await this.assertScoreableMatch(matchId, tournamentId);
     this.assertWriterAuthorized(user, match, tournament);
 
-    const scoreDoc = await matchScoreRepository.findByMatchId(matchId);
+    const scoreDoc = await this.loadScoreDoc(matchId);
     const scorerIds = match.scorerIds || [];
     const allUsers = await userRepository.findAll();
     const scorerNames = scorerIds.map(
@@ -543,7 +553,7 @@ class ScoringService {
       throw new ApiError(409, 'This match is already completed and cannot be scored.');
     }
 
-    let scoreDoc = await matchScoreRepository.findByMatchId(matchId);
+    let scoreDoc = await this.loadScoreDoc(matchId);
     if (!scoreDoc) {
       scoreDoc = await this.ensureScoreDoc(match, tournament);
     }
@@ -583,7 +593,7 @@ class ScoringService {
       throw new ApiError(409, 'This match is already completed; use the admin correction tools instead.');
     }
 
-    const scoreDoc = await matchScoreRepository.findByMatchId(matchId);
+    const scoreDoc = await this.loadScoreDoc(matchId);
     if (!scoreDoc) {
       throw new ApiError(409, 'No active scoring session for this match.');
     }
@@ -627,7 +637,7 @@ class ScoringService {
       throw new ApiError(409, 'This match is already completed.');
     }
 
-    const scoreDoc = await matchScoreRepository.findByMatchId(matchId);
+    const scoreDoc = await this.loadScoreDoc(matchId);
     if (!scoreDoc) {
       throw new ApiError(409, 'Scoring has not started for this match yet.');
     }
@@ -704,7 +714,7 @@ class ScoringService {
       throw new ApiError(400, 'Winner must be one of the competing teams in this match.');
     }
 
-    const scoreDoc = await matchScoreRepository.findByMatchId(matchId);
+    const scoreDoc = await this.loadScoreDoc(matchId);
     if (scoreDoc && scoreDoc.status === 'active') {
       // Keep the event history truthful: a MANUAL_DECISION is recorded too.
       const events = await matchScoreRepository.findEventsByMatchId(matchId);
@@ -1080,7 +1090,7 @@ class ScoringService {
       }
     }
 
-    const scoreDoc = await matchScoreRepository.findByMatchId(matchId);
+    const scoreDoc = await this.loadScoreDoc(matchId);
     if (!scoreDoc) {
       throw new ApiError(404, 'No live score is available for this match yet.');
     }

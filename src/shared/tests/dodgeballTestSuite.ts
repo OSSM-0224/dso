@@ -149,12 +149,12 @@ export function runDodgeballTestSuite(): TestSuiteSummary {
     });
   };
 
-  check('TEST_DODGEBALL_DEFAULT_CONFIG', 'dodgeball: defaults are a best-of-3, 8-minute, 6-a-side, jersey 1-99 game', () => {
+  check('TEST_DODGEBALL_DEFAULT_CONFIG', 'dodgeball: defaults are a best-of-3, 3-minute, 6-a-side, jersey 1-99 game', () => {
     const cfg = dodgeballScoringEngine.createInitialState({
       teams: [TEAM_A, TEAM_B],
     }).config;
     assert(cfg.bestOf === 3, `bestOf=${cfg.bestOf}`);
-    assert(cfg.setDurationSec === 480, `setDurationSec=${cfg.setDurationSec}`);
+    assert(cfg.setDurationSec === 180, `setDurationSec=${cfg.setDurationSec}`);
     assert(cfg.playersOnCourt === 6, `playersOnCourt=${cfg.playersOnCourt}`);
     assert(cfg.maxRosterSize === 10, `maxRosterSize=${cfg.maxRosterSize}`);
     assert(cfg.jerseyMin === 1 && cfg.jerseyMax === 99, `jerseys=${cfg.jerseyMin}-${cfg.jerseyMax}`);
@@ -216,13 +216,13 @@ export function runDodgeballTestSuite(): TestSuiteSummary {
     );
   });
 
-  check('TEST_DODGEBALL_SET_START_AND_CLOCK', 'dodgeball: set start opens an 8-minute clock', () => {
+  check('TEST_DODGEBALL_SET_START_AND_CLOCK', 'dodgeball: set start opens a 3-minute clock', () => {
     const h = new Harness();
     const startedAt = h.startMatch();
     const sb = h.board(startedAt);
     assert(sb.phase === 'set_live', `phase=${sb.phase}`);
     assert(sb.time?.period === 'regulation', `period=${sb.time?.period}`);
-    assert(sb.time?.remainingMs === 480000, `remaining=${sb.time?.remainingMs}`);
+    assert(sb.time?.remainingMs === 180000, `remaining=${sb.time?.remainingMs}`);
     assert(sb.setNo === 1, `setNo=${sb.setNo}`);
     assert(sb.teamStates.every((team) => team.activeCount === 6), 'both teams should start with six');
   });
@@ -408,11 +408,11 @@ export function runDodgeballTestSuite(): TestSuiteSummary {
     h.apply({ type: 'PAUSE', reason: 'OFFICIAL' }, startedAt + 100000);
     const paused = h.board(startedAt + 150000);
     assert(paused.time?.paused === true, 'clock should be paused');
-    assert(paused.time?.remainingMs === 380000, `paused remaining=${paused.time?.remainingMs}`);
+    assert(paused.time?.remainingMs === 80000, `paused remaining=${paused.time?.remainingMs}`);
     h.apply({ type: 'RESUME' }, startedAt + 200000);
     const resumed = h.board(startedAt + 250000);
     assert(resumed.time?.paused === false, 'clock should be running');
-    assert(resumed.time?.remainingMs === 330000, `resumed remaining=${resumed.time?.remainingMs}`);
+    assert(resumed.time?.remainingMs === 30000, `resumed remaining=${resumed.time?.remainingMs}`);
   });
 
   check('TEST_DODGEBALL_SUBSTITUTION_INTERVAL_ONLY', 'dodgeball: substitutions are rejected live and allowed between sets', () => {

@@ -3,8 +3,8 @@
  *
  * The values follow the DSO dodgeball rulebook:
  * - 6 main + 4 substitute players, jerseys 1-99 (single or double digit).
- * - best of 3 sets of 8 minutes (5-minute short format allowed), 3-minute
- *   interval, teams change ends after each set.
+ * - best of 3 sets of 3 minutes (configurable), 3-minute interval, teams
+ *   change ends after each set.
  * - 2-minute extra time when a set is tied, then sudden death (first point).
  * - points for hits, line/area violations, revival failures and red cards.
  * - all six out => +2 bonus (excluding the point for the sixth out) and a
@@ -18,7 +18,7 @@ import type { ScoringEventBase, ScoringTeamRef } from "../../types.ts";
 
 export interface DodgeballScoringConfig {
   bestOf: number; // best-of-N sets (default 3 -> first to 2 set wins)
-  setDurationSec: number; // 8 minutes (480) or 5-minute short format (300)
+  setDurationSec: number; // 3 minutes (180); tournaments may override this
   intervalSec: number; // 3-minute interval (display only)
   extraTimeSec: number; // 2-minute extra time when a set is tied
   suddenDeathEnabled: boolean; // first point after extra time wins the set
@@ -46,7 +46,7 @@ export interface DodgeballScoringConfig {
 
 export const DEFAULT_DODGEBALL_SCORING_CONFIG: DodgeballScoringConfig = {
   bestOf: 3,
-  setDurationSec: 480,
+  setDurationSec: 180,
   intervalSec: 180,
   extraTimeSec: 120,
   suddenDeathEnabled: true,

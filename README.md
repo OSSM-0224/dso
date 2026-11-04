@@ -152,7 +152,7 @@ Readers see the same result through a sport-specific live card on the public tou
 | Item | Default |
 | --- | --- |
 | Match | Best of 3 sets; first to 2 set wins |
-| Set | 8 minutes (5-minute short format is configurable) |
+| Set | 3 minutes |
 | Court | 6 players; minimum 4 to start |
 | Squad | Up to 10 named players (6 on court + 4 substitutes) |
 | Jerseys | 1–99 (single or double digit) |

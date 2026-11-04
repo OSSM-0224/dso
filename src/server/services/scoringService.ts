@@ -260,7 +260,8 @@ class ScoringService {
   /**
    * Load an existing score session and bring its stored config up to the
    * current rule defaults. Old Dodgeball sessions were created with
-   * `jerseyMax: 10`; widening the range must not require starting a new
+   * `jerseyMax: 10` and an 8-minute set clock; widening the jersey range and
+   * shortening the default set to 3 minutes must not require starting a new
    * match, so the upgrade is applied (and persisted) on every read/write.
    */
   private async loadScoreDoc(matchId: string): Promise<MatchScoreDoc | null> {
@@ -273,9 +274,19 @@ class ScoringService {
         typeof dodgeballConfig.jerseyMax === 'number' ? dodgeballConfig.jerseyMax : 0,
         DEFAULT_DODGEBALL_SCORING_CONFIG.jerseyMax,
       );
-      if (jerseyMax !== dodgeballConfig.jerseyMax) {
+      // 480 was the old 8-minute default. Migrate legacy sessions to the new
+      // 3-minute default; a missing/invalid value also falls back to it.
+      const storedSetDurationSec = Number(dodgeballConfig.setDurationSec);
+      const setDurationSec =
+        !Number.isFinite(storedSetDurationSec) || storedSetDurationSec === 480
+          ? DEFAULT_DODGEBALL_SCORING_CONFIG.setDurationSec
+          : storedSetDurationSec;
+      if (
+        jerseyMax !== dodgeballConfig.jerseyMax ||
+        setDurationSec !== dodgeballConfig.setDurationSec
+      ) {
         const upgraded = await matchScoreRepository.update(existing.matchId, {
-          config: { ...dodgeballConfig, jerseyMax },
+          config: { ...dodgeballConfig, jerseyMax, setDurationSec },
         });
         if (upgraded) return upgraded;
       }

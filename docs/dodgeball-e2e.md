@@ -21,7 +21,7 @@ regression.
 | Item | Value |
 | --- | --- |
 | Match | Best of 3 sets (first to 2 set wins) |
-| Set | 8 minutes (5-minute short format configurable) |
+| Set | 3 minutes |
 | Extra time | 2 minutes when a set is tied |
 | Sudden death | First point wins the set |
 | On court | 6 players; minimum 4 to start |
@@ -102,7 +102,7 @@ Console/LiveView wiring.
 
 ### Clock and pause
 
-- [ ] The set clock starts at `8:00` and counts down in the console header.
+- [ ] The set clock starts at `3:00` and counts down in the console header.
 - [ ] **Stop clock** freezes the countdown; **Resume clock** continues from the
       same remaining time.
 - [ ] After regulation expires the console shows **Set time is over** and

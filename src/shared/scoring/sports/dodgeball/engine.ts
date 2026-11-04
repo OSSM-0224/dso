@@ -8,7 +8,7 @@
  *
  * Rulebook notes (all values are config-driven):
  * - 6 main + 4 substitutes, jerseys 1-99 (single or double digit); a team may take the court with 4.
- * - best of 3 sets of 8 minutes (5-minute short format supported).
+ * - best of 3 sets of 3 minutes (configurable).
  * - tie after regulation -> 2-minute extra time -> sudden death (first point).
  * - a direct hit / line violation / red card / injury / delay awards a point
  *   and (except delay) puts the offender out.

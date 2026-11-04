@@ -3,6 +3,7 @@ import 'dotenv/config';
 import { runFixtureEngineTestSuite, TestSuiteSummary } from '../../shared/tests/testSuite.ts';
 import { runScoringEngineTestSuite } from '../../shared/tests/scoringTestSuite.ts';
 import { runSepakTakrawTestSuite } from '../../shared/tests/sepakTakrawTestSuite.ts';
+import { runDodgeballTestSuite } from '../../shared/tests/dodgeballTestSuite.ts';
 import { runScoreQueueTestSuite } from '../../shared/tests/scoreQueueTestSuite.ts';
 import { runRegistryTestSuite, runRegistryComponentTestSuite } from '../../shared/tests/registryTestSuite.ts';
 import { runParticipantAccessTestSuite } from './participantAccessTestSuite.ts';
@@ -16,6 +17,7 @@ async function main() {
   const engineSummary = runFixtureEngineTestSuite();
   const scoringSummary = runScoringEngineTestSuite();
   const sepakTakrawSummary = runSepakTakrawTestSuite();
+  const dodgeballSummary = runDodgeballTestSuite();
   const registrySummary = runRegistryTestSuite();
   const registryComponentsSummary = await runRegistryComponentTestSuite();
   const scoreQueueSummary = await runScoreQueueTestSuite();
@@ -27,6 +29,7 @@ async function main() {
     engineSummary,
     scoringSummary,
     sepakTakrawSummary,
+    dodgeballSummary,
     registrySummary,
     registryComponentsSummary,
     scoreQueueSummary,

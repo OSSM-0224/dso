@@ -14,6 +14,8 @@ import { KhoKhoConsole } from './khoKho/KhoKhoConsole';
 import { KhoKhoLiveView } from './khoKho/KhoKhoLiveView';
 import { SepakTakrawConsole } from './sepakTakraw/SepakTakrawConsole';
 import { SepakTakrawLiveView } from './sepakTakraw/SepakTakrawLiveView';
+import { DodgeballConsole } from './dodgeball/DodgeballConsole';
+import { DodgeballLiveView } from './dodgeball/DodgeballLiveView';
 
 export type SportConsoleRegistryEntry = {
   /** Shared engine id used by BOTH the server service and the client replay. */
@@ -37,6 +39,10 @@ const components: Record<string, { Console: ComponentType<any>; LiveView: Compon
     Console: SepakTakrawConsole,
     LiveView: SepakTakrawLiveView,
   },
+  dodgeball: {
+    Console: DodgeballConsole,
+    LiveView: DodgeballLiveView,
+  },
 };
 
 /** Resolves the full console entry (metadata + components) for a sport. */
@@ -58,4 +64,4 @@ export function listSportConsoles(): Array<{ sport: string; entry: SportConsoleR
     .filter((x): x is { sport: string; entry: SportConsoleRegistryEntry } => x.entry !== null);
 }
 
-export { KhoKhoConsole, KhoKhoLiveView, SepakTakrawConsole, SepakTakrawLiveView };
+export { KhoKhoConsole, KhoKhoLiveView, SepakTakrawConsole, SepakTakrawLiveView, DodgeballConsole, DodgeballLiveView };

@@ -17,6 +17,7 @@ import {
 } from '../../features/scoring/consoles/registry.ts';
 import { defaultKhoKhoConfigForAgeGroup } from '../scoring/types.ts';
 import { defaultSepakTakrawConfigForAgeGroup } from '../scoring/sports/sepakTakraw/types.ts';
+import { defaultDodgeballConfigForAgeGroup } from '../scoring/sports/dodgeball/types.ts';
 import { getScoringEngine, listSupportedScoringSports } from '../scoring/engine.ts';
 
 export function runRegistryTestSuite(): TestSuiteSummary {
@@ -51,6 +52,7 @@ export function runRegistryTestSuite(): TestSuiteSummary {
     const sports = metaList.map((m) => m.sport);
     if (!sports.includes('kho-kho')) throw new Error(`list=${JSON.stringify(sports)}`);
     if (!sports.includes('sepak-takraw')) throw new Error(`list=${JSON.stringify(sports)}`);
+    if (!sports.includes('dodgeball')) throw new Error(`list=${JSON.stringify(sports)}`);
   });
 
   check('TEST_REGISTRY_CONFIG_SUMMARY_AGE_GROUP', 'registry: configSummary reflects the age-group config', 'Registry', () => {
@@ -72,6 +74,16 @@ export function runRegistryTestSuite(): TestSuiteSummary {
     const summary = meta.configSummary({ sport: 'sepak-takraw', ageGroup: 'U-17', gender: 'girls' });
     if (!summary.includes(`Best of ${cfg.bestOf}`)) throw new Error(`summary=${summary}`);
     if (!summary.includes(`${cfg.setPoints}-pt`)) throw new Error(`summary=${summary}`);
+  });
+
+  check('TEST_REGISTRY_DODGEBALL_CONFIG_SUMMARY', 'registry: dodgeball configSummary reflects its engine config', 'Registry', () => {
+    const meta = getSportConsoleMeta('dodgeball');
+    if (!meta) throw new Error('dodgeball missing from the meta registry');
+    if (meta.engineId !== 'dodgeball') throw new Error(`engineId=${meta.engineId}`);
+    const cfg = defaultDodgeballConfigForAgeGroup('U-17');
+    const summary = meta.configSummary({ sport: 'dodgeball', ageGroup: 'U-17', gender: 'girls' });
+    if (!summary.includes(`Best of ${cfg.bestOf}`)) throw new Error(`summary=${summary}`);
+    if (!summary.includes(`${cfg.playersOnCourt} on court`)) throw new Error(`summary=${summary}`);
   });
 
   check('TEST_REGISTRY_FALLBACK_DESCRIPTOR', 'registry: non-kho-kho tournament falls back to plain descriptor', 'Registry', () => {
@@ -115,10 +127,28 @@ export function runRegistryTestSuite(): TestSuiteSummary {
     }
   });
 
-  check('TEST_REGISTRY_SUPPORTED_SPORTS', 'registry: supported scoring sports include kho-kho and sepak-takraw', 'Registry', () => {
+  check('TEST_REGISTRY_ENGINE_DODGEBALL', 'registry engine contract: dodgeball is registered with the shared API', 'Registry', () => {
+    const engine = getScoringEngine('dodgeball');
+    if (engine.sport !== 'dodgeball') throw new Error(`sport=${engine.sport}`);
+    for (const method of [
+      'createInitialState',
+      'applyEvent',
+      'validateEvent',
+      'getScoreboard',
+      'getNextAction',
+      'getUndoTarget',
+      'canUndo',
+      'computeWinner',
+    ] as const) {
+      if (typeof engine[method] !== 'function') throw new Error(`engine.${method} missing`);
+    }
+  });
+
+  check('TEST_REGISTRY_SUPPORTED_SPORTS', 'registry: supported scoring sports include kho-kho, sepak-takraw and dodgeball', 'Registry', () => {
     const sports = listSupportedScoringSports();
     if (!sports.includes('kho-kho')) throw new Error(`sports=${JSON.stringify(sports)}`);
     if (!sports.includes('sepak-takraw')) throw new Error(`sports=${JSON.stringify(sports)}`);
+    if (!sports.includes('dodgeball')) throw new Error(`sports=${JSON.stringify(sports)}`);
   });
 
   const total = results.length;
@@ -158,7 +188,7 @@ export async function runRegistryComponentTestSuite(): Promise<TestSuiteSummary>
   if (mod) {
     let problems: string[] = [];
     try {
-      for (const sport of ['kho-kho', 'sepak-takraw'] as const) {
+      for (const sport of ['kho-kho', 'sepak-takraw', 'dodgeball'] as const) {
         const entry = mod.getSportConsole(sport);
         const live = mod.getSportLiveView(sport);
         if (!entry) {
@@ -182,7 +212,7 @@ export async function runRegistryComponentTestSuite(): Promise<TestSuiteSummary>
       category: 'Registry',
       passed,
       message: passed
-        ? 'Component registry resolved kho-kho + sepak-takraw Console/LiveView pairs; unknown sport returned null.'
+        ? 'Component registry resolved kho-kho + sepak-takraw + dodgeball Console/LiveView pairs; unknown sport returned null.'
         : problems.join('; '),
       durationMs: Date.now() - start,
     });

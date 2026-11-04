@@ -26,6 +26,7 @@ import {
   defaultKhoKhoConfigForAgeGroup,
 } from '../../shared/scoring/types.ts';
 import { defaultSepakTakrawConfigForAgeGroup } from '../../shared/scoring/sports/sepakTakraw/types.ts';
+import { defaultDodgeballConfigForAgeGroup } from '../../shared/scoring/sports/dodgeball/types.ts';
 
 const SCOREABLE_TOURNAMENT_STATUSES = ['published', 'ongoing'] as const;
 const READABLE_TOURNAMENT_STATUSES = ['published', 'ongoing', 'completed'] as const;
@@ -61,8 +62,8 @@ class ScoringEngineResolver {
 
 /**
  * One default scoring config per sport. New sports plug in here when their
- * engine lands (see README "How to add a new sport"); existing tournaments
- * with a registered sport always get a deterministic config.
+ * engine lands; existing tournaments with a registered sport always get a
+ * deterministic config.
  */
 function defaultConfigForTournament(tournament: TournamentDoc): MatchScoreDoc['config'] {
   switch (tournament.sport) {
@@ -70,6 +71,8 @@ function defaultConfigForTournament(tournament: TournamentDoc): MatchScoreDoc['c
       return defaultKhoKhoConfigForAgeGroup(tournament.ageGroup as ScoringAgeGroup);
     case 'sepak-takraw':
       return defaultSepakTakrawConfigForAgeGroup(tournament.ageGroup as ScoringAgeGroup);
+    case 'dodgeball':
+      return defaultDodgeballConfigForAgeGroup(tournament.ageGroup as ScoringAgeGroup);
     default:
       throw new ApiError(
         400,

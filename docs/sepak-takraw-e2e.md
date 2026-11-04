@@ -38,7 +38,7 @@ npx tsc --noEmit
 npm test
 ```
 
-Expected: `tsc` is silent; `npm test` ends with `Total: 126, Passed: 126`.
+Expected: `tsc` is silent; `npm test` ends with `Total: 158, Passed: 158`.
 
 In the app (staff): open `/engine-tests` and click **Run All Engine Tests**.
 The sepak suite is included, plus `TEST_REGISTRY_*` and

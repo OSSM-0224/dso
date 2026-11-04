@@ -17,6 +17,15 @@ import type {
   SepakTakrawScoringState,
   SepakTakrawWinnerEvaluation,
 } from './sports/sepakTakraw/types.ts';
+import { dodgeballScoringEngine } from './sports/dodgeball/engine.ts';
+import type {
+  CreateDodgeballMatchInput,
+  DodgeballNextAction,
+  DodgeballScoreEvent,
+  DodgeballScoreboard,
+  DodgeballScoringState,
+  DodgeballWinnerEvaluation,
+} from './sports/dodgeball/types.ts';
 
 /**
  * Sport-erased engine contract. The service and the client replay resolve an
@@ -46,6 +55,7 @@ export interface ScoringEngine<
 const engines: Record<string, ScoringEngine> = {
   'kho-kho': khoKhoScoringEngine,
   'sepak-takraw': sepakTakrawScoringEngine,
+  dodgeball: dodgeballScoringEngine,
 };
 
 export function getScoringEngine(sport: 'kho-kho'): ScoringEngine<
@@ -63,6 +73,14 @@ export function getScoringEngine(sport: 'sepak-takraw'): ScoringEngine<
   SepakTakrawNextAction,
   SepakTakrawWinnerEvaluation,
   CreateSepakTakrawMatchInput
+>;
+export function getScoringEngine(sport: 'dodgeball'): ScoringEngine<
+  DodgeballScoringState,
+  DodgeballScoreEvent,
+  DodgeballScoreboard,
+  DodgeballNextAction,
+  DodgeballWinnerEvaluation,
+  CreateDodgeballMatchInput
 >;
 export function getScoringEngine(sport: ScoringSport): ScoringEngine;
 export function getScoringEngine(sport: ScoringSport): ScoringEngine {

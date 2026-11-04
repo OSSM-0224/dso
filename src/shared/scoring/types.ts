@@ -1,4 +1,4 @@
-export type ScoringSport = "kho-kho" | "sepak-takraw";
+export type ScoringSport = "kho-kho" | "sepak-takraw" | "dodgeball";
 
 export type ScoringAgeGroup = "U-14" | "U-17" | "U-19" | "Open";
 

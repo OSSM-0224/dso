@@ -1,6 +1,7 @@
 import { runFixtureEngineTestSuite } from '@/shared/tests/testSuite';
 import { runScoringEngineTestSuite } from '@/shared/tests/scoringTestSuite';
 import { runSepakTakrawTestSuite } from '@/shared/tests/sepakTakrawTestSuite';
+import { runDodgeballTestSuite } from '@/shared/tests/dodgeballTestSuite';
 import { runScoreQueueTestSuite } from '@/shared/tests/scoreQueueTestSuite';
 import { runRegistryTestSuite, runRegistryComponentTestSuite } from '@/shared/tests/registryTestSuite';
 import { runParticipantAccessTestSuite } from '@/server/tests/participantAccessTestSuite';
@@ -8,15 +9,16 @@ import { runScoringAccessTestSuite } from '@/server/tests/scoringAccessTestSuite
 import { runScoringScopingTestSuite } from '@/server/tests/scoringScopingTestSuite';
 import { handler, ok } from '@/server/validations/helpers';
 
-// GET /api/tests/run - runs all unit tests: pure fixture engine, kho-kho
-// scoring engine, sport console registry, score event queue (console bug
-// fixes), participant access isolation, scoring access control and the
-// tournament-scoping guarantees.
+// GET /api/tests/run - runs all unit tests: pure fixture engine, kho-kho,
+// sepak-takraw and dodgeball scoring engines, sport console registry, score
+// event queue (console bug fixes), participant access isolation, scoring
+// access control and the tournament-scoping guarantees.
 export async function GET() {
   return handler(async () => {
     const engineSummary = runFixtureEngineTestSuite();
     const scoringSummary = runScoringEngineTestSuite();
     const sepakTakrawSummary = runSepakTakrawTestSuite();
+    const dodgeballSummary = runDodgeballTestSuite();
     const registrySummary = runRegistryTestSuite();
     const registryComponentsSummary = await runRegistryComponentTestSuite();
     const scoreQueueSummary = await runScoreQueueTestSuite();
@@ -28,6 +30,7 @@ export async function GET() {
       engineSummary,
       scoringSummary,
       sepakTakrawSummary,
+      dodgeballSummary,
       registrySummary,
       registryComponentsSummary,
       scoreQueueSummary,

@@ -169,9 +169,8 @@ export const PastTournamentsScreen: React.FC<PastTournamentsScreenProps> = ({
                 className="w-full text-xs border border-slate-200 rounded-md p-2 bg-white"
               >
                 <option value="kho-kho">Kho-Kho</option>
-                <option value="kabaddi">Kabaddi</option>
-                <option value="volleyball">Volleyball</option>
                 <option value="sepak-takraw">Sepak Takraw</option>
+                <option value="dodgeball">Dodgeball</option>
               </select>
             </div>
 

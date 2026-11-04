@@ -9,11 +9,25 @@ import {
   SepakTakrawScoreEvent,
   SepakTakrawScoringConfig,
 } from "./scoring/sports/sepakTakraw/types.ts";
+import {
+  DodgeballScoreboard,
+  DodgeballScoreEvent,
+  DodgeballScoringConfig,
+} from "./scoring/sports/dodgeball/types.ts";
 
 /** Cross-sport unions for the sport-pluggable scoring pipeline. */
-export type AnyScoringConfig = KhoKhoScoringConfig | SepakTakrawScoringConfig;
-export type AnyScoringEvent = KhoKhoScoreEvent | SepakTakrawScoreEvent;
-export type AnyScoringScoreboard = KhoKhoScoreboard | SepakTakrawScoreboard;
+export type AnyScoringConfig =
+  | KhoKhoScoringConfig
+  | SepakTakrawScoringConfig
+  | DodgeballScoringConfig;
+export type AnyScoringEvent =
+  | KhoKhoScoreEvent
+  | SepakTakrawScoreEvent
+  | DodgeballScoreEvent;
+export type AnyScoringScoreboard =
+  | KhoKhoScoreboard
+  | SepakTakrawScoreboard
+  | DodgeballScoreboard;
 
 export type UserRole =
   | "admin"
@@ -217,7 +231,7 @@ export interface MatchScoreDoc {
   id: string;
   matchId: string;
   tournamentId: string;
-  sport: string; // 'kho-kho' | 'sepak-takraw'
+  sport: string; // 'kho-kho' | 'sepak-takraw' | 'dodgeball'
   config: AnyScoringConfig;
   teams: Array<ScoringTeamRef & { schoolName?: string }>;
   /** Bumped on every state change (event, undo, completion). */

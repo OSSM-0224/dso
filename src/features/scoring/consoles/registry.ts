@@ -10,7 +10,7 @@
  * The console host + reader panels resolve the actual Console/LiveView via
  * `registryComponents.ts`; hub cards and the picker use the pure metadata.
  *
- * How to add a new sport (full checklist in README):
+ * How to add a new sport:
  *   1. engine strategy in src/shared/scoring
  *   2. config schema
  *   3. Console component    4. LiveView component
@@ -21,6 +21,8 @@ import type { KhoKhoScoringConfig } from '@/shared/scoring/types.ts';
 import { defaultKhoKhoConfigForAgeGroup, type ScoringAgeGroup } from '@/shared/scoring/types.ts';
 import type { SepakTakrawScoringConfig } from '@/shared/scoring/sports/sepakTakraw/types.ts';
 import { defaultSepakTakrawConfigForAgeGroup } from '@/shared/scoring/sports/sepakTakraw/types.ts';
+import type { DodgeballScoringConfig } from '@/shared/scoring/sports/dodgeball/types.ts';
+import { defaultDodgeballConfigForAgeGroup } from '@/shared/scoring/sports/dodgeball/types.ts';
 
 import type { MatchScoreViewDto, MatchDoc, ScoringMatchDetail } from '@/shared/types.ts';
 
@@ -123,6 +125,18 @@ const metaRegistry: Record<string, SportConsoleMetaEntry> = {
       if (t.sport !== 'sepak-takraw') return `${t.ageGroup} · ${t.gender}`;
       const cfg: SepakTakrawScoringConfig = defaultSepakTakrawConfigForAgeGroup(t.ageGroup as ScoringAgeGroup);
       return `${t.ageGroup} · ${t.gender} · Best of ${cfg.bestOf} · ${cfg.setPoints}-pt sets`;
+    },
+  },
+  dodgeball: {
+    engineId: 'dodgeball',
+    configSummary: (t) => {
+      if (t.sport !== 'dodgeball') return `${t.ageGroup} · ${t.gender}`;
+      const cfg: DodgeballScoringConfig = defaultDodgeballConfigForAgeGroup(
+        t.ageGroup as ScoringAgeGroup,
+      );
+      return `${t.ageGroup} · ${t.gender} · Best of ${cfg.bestOf} · ${Math.round(
+        cfg.setDurationSec / 60,
+      )} min sets · ${cfg.playersOnCourt} on court`;
     },
   },
 };

@@ -627,6 +627,137 @@ export async function runScoringAccessTestSuite(): Promise<TestSuiteSummary> {
     });
   }
 
+  // Test 8: legacy Dodgeball sessions are migrated to the widened jersey range.
+  const t8Start = Date.now();
+  try {
+    const seed = await seedScoreableMatch('dodgeball-legacy', [], 'dodgeball');
+    const organizer: UserSession = { id: 'org-dodgeball-legacy', name: 'Organizer', role: 'organizer' };
+
+    await scoringService.ensureMatchScore(organizer, seed.tournament.id, seed.match.id);
+    const created = await matchScoreRepository.findByMatchId(seed.match.id);
+    if (!created || !('jerseyMax' in created.config)) {
+      throw new Error('Dodgeball score session/config was not created');
+    }
+
+    // Simulate a session created before the range was widened.
+    await matchScoreRepository.update(created.matchId, {
+      config: { ...created.config, jerseyMax: 10 },
+    });
+
+    // A console GET must migrate the persisted config...
+    const detail = await scoringService.getMatchForScoring(
+      organizer,
+      seed.tournament.id,
+      seed.match.id,
+    );
+    const readMax =
+      detail.score && 'jerseyMax' in detail.score.config
+        ? detail.score.config.jerseyMax
+        : null;
+
+    // ...and double-digit jerseys must then be accepted end-to-end.
+    await scoringService.appendEvent(organizer, seed.tournament.id, seed.match.id, {
+      eventId: 'dodge-legacy-toss',
+      atMs: 0,
+      type: 'TOSS',
+      winnerTeamId: seed.teamA.id,
+    });
+    const lineup = await scoringService.appendEvent(organizer, seed.tournament.id, seed.match.id, {
+      eventId: 'dodge-legacy-lineup',
+      atMs: 0,
+      type: 'LINEUP_SET',
+      teamId: seed.teamA.id,
+      onCourt: ['1', '2', '11', '23'],
+      subs: ['45', '99'],
+    });
+
+    const persisted = await matchScoreRepository.findByMatchId(seed.match.id);
+    const persistedMax =
+      persisted && 'jerseyMax' in persisted.config ? persisted.config.jerseyMax : null;
+    const teamState =
+      lineup.scoreboard.sport === 'dodgeball'
+        ? lineup.scoreboard.teamStates.find((team) => team.teamId === seed.teamA.id)
+        : undefined;
+
+    const passed =
+      readMax === 99 &&
+      persistedMax === 99 &&
+      teamState?.onCourt.includes('11') === true &&
+      teamState?.onCourt.includes('23') === true &&
+      teamState?.subs.includes('99') === true;
+
+    await cleanupScoreableMatch(seed);
+
+    results.push({
+      id: 'TEST_SCORING_DODGEBALL_LEGACY_JERSEYS',
+      name: 'Scoring Dodgeball: legacy sessions migrate to 1-99 jerseys and accept double-digit lineups',
+      category: 'LIVE SCORER Access Control',
+      passed,
+      message: passed
+        ? 'A stored jerseyMax=10 session was upgraded to 99 on read and accepted jerseys 11, 23, 45 and 99 end-to-end.'
+        : `Legacy jersey migration failed (read=${readMax}, persisted=${persistedMax}, onCourt=${JSON.stringify(teamState?.onCourt ?? [])}, subs=${JSON.stringify(teamState?.subs ?? [])}).`,
+      durationMs: Date.now() - t8Start,
+    });
+  } catch (err: any) {
+    results.push({
+      id: 'TEST_SCORING_DODGEBALL_LEGACY_JERSEYS',
+      name: 'Scoring Dodgeball: legacy sessions migrate to 1-99 jerseys and accept double-digit lineups',
+      category: 'LIVE SCORER Access Control',
+      passed: false,
+      message: `Error: ${err.message}`,
+      durationMs: Date.now() - t8Start,
+    });
+  }
+
+  // Test 9: Dodgeball team colors persist through the scoring config.
+  const t9Start = Date.now();
+  try {
+    const seed = await seedScoreableMatch('dodgeball-colors', [], 'dodgeball');
+    const organizer: UserSession = { id: 'org-dodgeball-colors', name: 'Organizer', role: 'organizer' };
+
+    await scoringService.ensureMatchScore(organizer, seed.tournament.id, seed.match.id);
+    const updated = await scoringService.updateConfig(
+      organizer,
+      seed.tournament.id,
+      seed.match.id,
+      { teamAColor: '#16A34A', teamBColor: '#EA580C' },
+    );
+    const persisted = await matchScoreRepository.findByMatchId(seed.match.id);
+
+    const passed =
+      'teamAColor' in updated.config &&
+      updated.config.teamAColor === '#16A34A' &&
+      'teamBColor' in updated.config &&
+      updated.config.teamBColor === '#EA580C' &&
+      persisted !== null &&
+      'teamAColor' in persisted.config &&
+      persisted.config.teamAColor === '#16A34A' &&
+      'teamBColor' in persisted.config &&
+      persisted.config.teamBColor === '#EA580C';
+
+    await cleanupScoreableMatch(seed);
+
+    results.push({
+      id: 'TEST_SCORING_DODGEBALL_TEAM_COLORS',
+      name: 'Scoring Dodgeball: team colors persist in the score config for console/live display',
+      category: 'LIVE SCORER Access Control',
+      passed,
+      message: passed
+        ? 'Green/orange team colors were stored and returned in the sanitized score view.'
+        : 'Team color config was not persisted or returned correctly.',
+      durationMs: Date.now() - t9Start,
+    });
+  } catch (err: any) {
+    results.push({
+      id: 'TEST_SCORING_DODGEBALL_TEAM_COLORS',
+      name: 'Scoring Dodgeball: team colors persist in the score config for console/live display',
+      category: 'LIVE SCORER Access Control',
+      passed: false,
+      message: `Error: ${err.message}`,
+      durationMs: Date.now() - t9Start,
+    });
+  }
+
   const durationMs = Date.now() - startAll;
   const passedCount = results.filter((r) => r.passed).length;
 

@@ -267,6 +267,15 @@ export const ScoringConsoleHost: React.FC<{ tournamentId: string; matchId: strin
     [tournamentId, matchId, applyServerScore, refresh]
   );
 
+  /** Update the scoring config (e.g., Dodgeball team colors). */
+  const updateConfig = useCallback(
+    async (config: Record<string, unknown>) => {
+      const updated = await api.scoring.updateConfig(tournamentId, matchId, config);
+      applyServerScore(updated);
+    },
+    [tournamentId, matchId, applyServerScore]
+  );
+
   /** Queue a scoring event through the ordered queue (returns false if not ready). */
   const postEvent = useCallback(
     (payload: Record<string, unknown>): boolean => {
@@ -436,6 +445,7 @@ export const ScoringConsoleHost: React.FC<{ tournamentId: string; matchId: strin
       refresh,
       completeMatch,
       overrideWinner,
+      updateConfig,
     },
     sync: {
       pendingCount: queue.queuedCount,

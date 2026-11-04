@@ -424,6 +424,7 @@ export interface AuditLogDoc {
     | "score_event"
     | "score_undo"
     | "score_override_winner"
+    | "score_config"
     | "score_complete";
   before: any;
   after: any;

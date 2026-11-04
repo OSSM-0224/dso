@@ -39,6 +39,9 @@ export interface DodgeballScoringConfig {
   delayPenaltyPoints: number; // 5s/3s delay penalty
   redCardPoints: number; // opponent point for a red card
   injuryOutPoints: number; // opponent point when an injured player leaves
+  /** Team display colors (hex). Optional — only used in the scorer console. */
+  teamAColor?: string;
+  teamBColor?: string;
 }
 
 export const DEFAULT_DODGEBALL_SCORING_CONFIG: DodgeballScoringConfig = {
@@ -64,6 +67,8 @@ export const DEFAULT_DODGEBALL_SCORING_CONFIG: DodgeballScoringConfig = {
   delayPenaltyPoints: 1,
   redCardPoints: 1,
   injuryOutPoints: 1,
+  teamAColor: "#2563EB", // Blue-600
+  teamBColor: "#DC2626", // Red-600
 };
 
 /** Rules are identical across age groups for now — hook for later DSO tweaks. */

@@ -24,6 +24,7 @@ import {
   type DodgeballScoringConfig,
   type DodgeballStatsRow,
   type DodgeballTeamState,
+  DEFAULT_DODGEBALL_SCORING_CONFIG,
 } from "@/shared/scoring/sports/dodgeball/types";
 import type { MatchScoreViewDto, SanitizedScoreEvent } from "@/shared/types";
 import type { SportConsoleProps } from "../registry";
@@ -38,6 +39,103 @@ const inputClass =
   "w-full rounded-[6px] border border-hairline bg-canvas px-3 py-2 text-sm text-ink focus:border-accent-strong focus:outline-none";
 const selectClass =
   "w-full rounded-[6px] border border-hairline bg-surface px-2 py-2 text-xs text-ink focus:border-accent-strong focus:outline-none";
+
+const PRESET_COLORS = [
+  "#2563EB", // Blue-600
+  "#DC2626", // Red-600
+  "#16A34A", // Green-600
+  "#EA580C", // Orange-600
+  "#9333EA", // Purple-600
+  "#DB2777", // Pink-600
+  "#0891B2", // Cyan-600
+  "#65A30D", // Lime-600
+  "#D97706", // Amber-600
+  "#0D9488", // Teal-600
+  "#7C3AED", // Violet-600
+  "#C026D3", // Fuchsia-600
+];
+
+/** Inline color picker with presets + custom hex input. */
+const TeamColorPicker: React.FC<{
+  teamId: string;
+  teamName: string;
+  color: string;
+  onChange: (teamId: string, color: string) => void;
+  disabled: boolean;
+}> = ({ teamId, teamName, color, onChange, disabled }) => {
+  const { t } = useI18n();
+  const [customColor, setCustomColor] = useState("");
+
+  const handlePresetClick = (preset: string) => {
+    if (!disabled) onChange(teamId, preset);
+  };
+
+  const handleCustomSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (disabled) return;
+    const raw = customColor.trim();
+    if (!raw) return;
+    const normalized = raw.startsWith("#") ? raw : `#${raw}`;
+    if (/^#[0-9A-Fa-f]{6}$/.test(normalized)) {
+      onChange(teamId, normalized.toUpperCase());
+      setCustomColor("");
+    }
+  };
+
+  return (
+    <div className="rounded-[8px] border border-hairline bg-surface p-3">
+      <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-faint mb-2">
+        {t("{team} color", { team: teamName })}
+      </p>
+      <div className="flex flex-wrap gap-1.5 mb-2">
+        {PRESET_COLORS.map((preset) => (
+          <button
+            key={preset}
+            type="button"
+            onClick={() => handlePresetClick(preset)}
+            disabled={disabled}
+            className={`w-7 h-7 rounded-[6px] border-2 transition-all ${
+              color === preset
+                ? "border-ink scale-110 shadow-md"
+                : "border-transparent hover:border-faint"
+            }`}
+            style={{ backgroundColor: preset }}
+            aria-label={preset}
+            aria-pressed={color === preset}
+          />
+        ))}
+      </div>
+      <form onSubmit={handleCustomSubmit} className="flex gap-1.5">
+        <div className="w-24 shrink-0">
+          <input
+            type="text"
+            value={customColor}
+            onChange={(e) => setCustomColor(e.target.value.toUpperCase())}
+            placeholder="#RRGGBB"
+            maxLength={7}
+            disabled={disabled}
+            className={`${inputClass} font-mono text-xs`}
+            aria-label={t("Custom hex color")}
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={disabled || !customColor.trim()}
+          className={`${btnPrimary} shrink-0 px-3`}
+        >
+          {t("Apply")}
+        </button>
+      </form>
+      <div className="mt-1.5 flex items-center gap-2">
+        <div
+          className="w-6 h-6 rounded-[4px] border border-hairline"
+          style={{ backgroundColor: color }}
+        />
+        <span className="font-mono text-xs text-ink">{color}</span>
+      </div>
+    </div>
+  );
+};
 
 const PHASE_LABEL: Record<DodgeballPhase, string> = {
   awaiting_toss: "Awaiting toss",
@@ -198,6 +296,7 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
   const { t } = useI18n();
 
   const [pending, setPending] = useState(false);
+  const [colorSaving, setColorSaving] = useState(false);
   const [toast, setToast] = useState<{
     tone: "error" | "info" | "success";
     text: string;
@@ -237,6 +336,36 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
   };
   const teamAName = teamName(teamAId) || t("TBD");
   const teamBName = teamName(teamBId) || t("TBD");
+
+  // Team colors are display-only config so the console matches the team kit.
+  // Defaults keep old sessions readable until the scorer picks a color.
+  const teamAColor =
+    config?.teamAColor ?? DEFAULT_DODGEBALL_SCORING_CONFIG.teamAColor ?? "#2563EB";
+  const teamBColor =
+    config?.teamBColor ?? DEFAULT_DODGEBALL_SCORING_CONFIG.teamBColor ?? "#DC2626";
+
+  const updateTeamColors = async (teamId: string, color: string) => {
+    if (!score || !config) return;
+    const key =
+      teamId === teamAId
+        ? "teamAColor"
+        : teamId === teamBId
+          ? "teamBColor"
+          : null;
+    if (!key) return;
+    setColorSaving(true);
+    try {
+      await actions.updateConfig({ [key]: color });
+    } catch (err) {
+      setToast({
+        tone: "error",
+        text:
+          err instanceof Error ? err.message : "Failed to update team colors",
+      });
+    } finally {
+      setColorSaving(false);
+    }
+  };
 
   const send: SendEvent = (payload) => {
     const ok = actions.postEvent(payload);
@@ -700,8 +829,30 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
           {t("Match #{number}", { number: match.matchNumber })}
         </p>
         <div className="mt-2 text-center font-serif text-[17px] font-semibold text-ink">
-          {teamAName} <span className="text-faint">{t("vs")}</span> {teamBName}
+          <span style={{ color: teamAColor }}>{teamAName}</span>{" "}
+          <span className="text-faint">{t("vs")}</span>{" "}
+          <span style={{ color: teamBColor }}>{teamBName}</span>
         </div>
+
+        {!isReadOnly && (
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <TeamColorPicker
+              teamId={teamAId}
+              teamName={teamAName}
+              color={teamAColor}
+              onChange={updateTeamColors}
+              disabled={pending || colorSaving}
+            />
+            <TeamColorPicker
+              teamId={teamBId}
+              teamName={teamBName}
+              color={teamBColor}
+              onChange={updateTeamColors}
+              disabled={pending || colorSaving}
+            />
+          </div>
+        )}
+
         <p className="mt-1 text-center text-[11px] text-muted">
           {t("Set {setNo}", { setNo: sb.setNo })} · {t(PHASE_LABEL[sb.phase])} ·
           v{score.version}
@@ -745,11 +896,14 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
                   ? "border-accent-strong bg-accent-soft/30"
                   : "border-hairline bg-surface"
               }`}
+              style={{
+                borderColor: teamId === teamAId ? teamAColor : teamBColor,
+              } as React.CSSProperties}
             >
-              <p className="truncate text-xs font-semibold text-ink">
+              <p className="truncate text-xs font-semibold" style={{ color: teamId === teamAId ? teamAColor : teamBColor }}>
                 {teamName(teamId)}
               </p>
-              <p className="mt-1 font-mono text-4xl font-bold tabular-nums text-ink">
+              <p className="mt-1 font-mono text-4xl font-bold tabular-nums" style={{ color: teamId === teamAId ? teamAColor : teamBColor }}>
                 {sb.points[teamId] ?? 0}
               </p>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">

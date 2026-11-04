@@ -88,6 +88,16 @@ Console/LiveView wiring.
 > Jersey numbers typed here are the player identifiers used by every stat.
 > Scorers do not need the school roster; they enter the numbers worn on court.
 
+### Team colors
+
+- [ ] As scorer/admin, use the two color pickers in the console header to set
+      each team's color (preset swatch or custom hex).
+- [ ] The team name, score card border and score use the selected color in the
+      console.
+- [ ] The same colors appear on the public/reader live view for this match.
+- [ ] Refresh the page: the colors persist because they are stored in the match
+      score config.
+
 ### Clock and pause
 
 - [ ] The set clock starts at `8:00` and counts down in the console header.

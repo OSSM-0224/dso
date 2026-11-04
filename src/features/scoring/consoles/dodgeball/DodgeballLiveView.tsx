@@ -10,12 +10,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { dodgeballScoringEngine } from '@/shared/scoring/sports/dodgeball/engine.ts';
-import type {
-  DodgeballPhase,
-  DodgeballScoreEvent,
-  DodgeballScoreboard,
-  DodgeballScoringConfig,
-  DodgeballStatsRow,
+import {
+  type DodgeballPhase,
+  type DodgeballScoreEvent,
+  type DodgeballScoreboard,
+  type DodgeballScoringConfig,
+  type DodgeballStatsRow,
+  DEFAULT_DODGEBALL_SCORING_CONFIG,
 } from '@/shared/scoring/sports/dodgeball/types.ts';
 import type { MatchScoreViewDto, SanitizedScoreEvent } from '@/shared/types.ts';
 import type { SportLiveViewProps } from '../registry.ts';
@@ -215,6 +216,17 @@ export const DodgeballLiveView: React.FC<SportLiveViewProps> = ({
   const teamName = (id?: string | null): string =>
     (id ? sb.teams.find((team) => team.id === id)?.name : null) ?? '';
 
+  const config =
+    score && 'hitPoints' in score.config
+      ? (score.config as DodgeballScoringConfig)
+      : null;
+  const teamAColor =
+    config?.teamAColor ?? DEFAULT_DODGEBALL_SCORING_CONFIG.teamAColor ?? '#2563EB';
+  const teamBColor =
+    config?.teamBColor ?? DEFAULT_DODGEBALL_SCORING_CONFIG.teamBColor ?? '#DC2626';
+  const teamColor = (id: string): string =>
+    id === match.teamA?.id ? teamAColor : teamBColor;
+
   const completed = score.status === 'completed';
   const winnerIds = new Set(score.winnerTeamIds ?? []);
   if (completed && winnerIds.size === 0 && sb.winner.winnerTeamId) {
@@ -288,9 +300,13 @@ export const DodgeballLiveView: React.FC<SportLiveViewProps> = ({
           const leading = hasLead && leader.teamId === team.id;
           const dimmed = completed && winnerIds.size > 0 && !winner;
           const state = sb.teamStates.find((entry) => entry.teamId === team.id);
+          const color = teamColor(team.id);
           return (
             <div key={team.id} className={`px-4 py-4 ${dimmed ? 'opacity-60' : ''}`}>
-              <p className={`truncate text-sm font-bold ${winner ? 'text-emerald-700' : 'text-slate-800'}`}>
+              <p
+                className="truncate text-sm font-bold"
+                style={{ color }}
+              >
                 {team.name}
               </p>
               {winner ? (
@@ -302,7 +318,10 @@ export const DodgeballLiveView: React.FC<SportLiveViewProps> = ({
                   <Icon name="bolt" size="sm" /> {t('Leading')}
                 </p>
               ) : null}
-              <p className={`mt-1 font-mono text-3xl font-black tabular-nums ${winner ? 'text-emerald-800' : 'text-slate-900'}`}>
+              <p
+                className="mt-1 font-mono text-3xl font-black tabular-nums"
+                style={{ color }}
+              >
                 {sb.points[team.id] ?? 0}
               </p>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">

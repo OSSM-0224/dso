@@ -21,7 +21,7 @@ import {
 
 import { scoringService } from '../services/scoringService.ts';
 import { parseBody } from '../validations/helpers.ts';
-import { scoreEventSchema, overrideWinnerSchema, setScorersSchema } from '../validations/schemas.ts';
+import { scoreEventSchema, overrideWinnerSchema, setScorersSchema, updateConfigSchema } from '../validations/schemas.ts';
 import { ApiError } from '../apiError.ts';
 
 /** Resolves the tournament a match belongs to (legacy alias helpers). */
@@ -86,6 +86,17 @@ export const scoringController = {
   ) {
     const parsed = parseBody(overrideWinnerSchema, body);
     return scoringService.overrideWinner(user, tournamentId, matchId, parsed);
+  },
+
+  /** PATCH .../matches/:matchId/config — update scoring config (e.g., team colors). */
+  async updateConfig(
+    user: UserSession,
+    tournamentId: string,
+    matchId: string,
+    body: unknown
+  ): Promise<MatchScoreViewDto> {
+    const parsed = parseBody(updateConfigSchema, body);
+    return scoringService.updateConfig(user, tournamentId, matchId, parsed as Record<string, unknown>);
   },
 
   /** GET /api/scoring/overview — staff-only cross-tournament overview. */

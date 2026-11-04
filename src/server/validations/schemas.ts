@@ -178,3 +178,8 @@ export const setScorersSchema = z.object({
     .array(z.string().min(1))
     .max(10, "At most 10 scorers can be assigned per match"),
 });
+
+export const updateConfigSchema = z.object({
+  teamAColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional(),
+  teamBColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional(),
+}).strict();

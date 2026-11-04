@@ -776,6 +776,55 @@ class ScoringService {
     };
   }
 
+  /** PATCH .../matches/:matchId/config — update display-only config (team colors). */
+  async updateConfig(
+    user: UserSession,
+    tournamentId: string,
+    matchId: string,
+    updates: Record<string, unknown>
+  ): Promise<MatchScoreViewDto> {
+    const { match, tournament } = await this.assertScoreableMatch(matchId, tournamentId);
+    this.assertWriterAuthorized(user, match, tournament);
+
+    const scoreDoc = await this.loadScoreDoc(matchId);
+    if (!scoreDoc) {
+      throw new ApiError(409, 'Scoring has not started for this match yet.');
+    }
+    if (scoreDoc.sport !== 'dodgeball') {
+      throw new ApiError(400, 'Team colors are only supported for dodgeball.');
+    }
+
+    const config = scoreDoc.config as DodgeballScoringConfig;
+    const nextConfig: DodgeballScoringConfig = {
+      ...config,
+      ...(typeof updates.teamAColor === 'string' ? { teamAColor: updates.teamAColor } : {}),
+      ...(typeof updates.teamBColor === 'string' ? { teamBColor: updates.teamBColor } : {}),
+    };
+
+    const updated = await matchScoreRepository.update(matchId, { config: nextConfig });
+    if (!updated) {
+      throw new ApiError(409, 'Scoring has not started for this match yet.');
+    }
+
+    await auditLogRepository.create({
+      tournamentId: tournament.id,
+      who: user.name,
+      role: user.role,
+      what: 'score_config',
+      before: {
+        teamAColor: config.teamAColor ?? null,
+        teamBColor: config.teamBColor ?? null,
+      },
+      after: {
+        teamAColor: nextConfig.teamAColor ?? null,
+        teamBColor: nextConfig.teamBColor ?? null,
+      },
+      details: `Team colors updated for Match ${match.matchNumber} (${match.roundName}).`,
+    });
+
+    return this.buildViewDto(updated, await matchScoreRepository.findEventsByMatchId(matchId));
+  }
+
   /** Admin/organizer: scorer accounts available for match assignment. */
   async listScorerCandidates(user: UserSession): Promise<ScorerCandidate[]> {
     if (user.role !== 'admin' && user.role !== 'organizer') {

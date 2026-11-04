@@ -53,6 +53,8 @@ export type SportConsoleActions = {
   completeMatch(): Promise<void>;
   /** Emergency winner decision (audited on the server). */
   overrideWinner(data: { winnerTeamId: string; reason: string }): Promise<void>;
+  /** Update the scoring config (e.g., team colors for Dodgeball). */
+  updateConfig(config: Record<string, unknown>): Promise<void>;
 };
 
 /** Live sync/window status of the console queue (drives Undo/Complete gating). */

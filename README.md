@@ -167,6 +167,8 @@ Readers see the same result through a sport-specific live card on the public tou
 
 Dodgeball tracks statistics by jersey number: **points, hits, outs, catches, revives, cards, and delays**. The same table appears in the scorer console and in the reader live view.
 
+The scorer or admin can set a display color for each team from the console header (preset swatches or a custom hex value). Colors are saved with the match and applied to the console score cards and the reader live view, so both teams are easy to tell apart at a glance.
+
 All rule values are configuration defaults. A DSO can adjust a value without changing the console or the bracket logic.
 
 ---

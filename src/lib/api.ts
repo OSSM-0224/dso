@@ -614,6 +614,20 @@ export const api = {
         },
       ),
 
+    /** Update the scoring config (e.g., team colors for Dodgeball). */
+    updateConfig: (
+      tournamentId: string,
+      matchId: string,
+      config: Record<string, unknown>,
+    ) =>
+      request<MatchScoreViewDto>(
+        `/scoring/tournaments/${tournamentId}/matches/${matchId}/config`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(config),
+        },
+      ),
+
     /** STAFF-ONLY organizer overview — matches grouped by tournament. */
     organizerOverview: () =>
       request<OrganizerOverviewGroup[]>("/scoring/overview"),

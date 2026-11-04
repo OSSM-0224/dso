@@ -90,8 +90,10 @@ Console/LiveView wiring.
 
 ### Team colors
 
-- [ ] As scorer/admin, use the two color pickers in the console header to set
-      each team's color (preset swatch or custom hex).
+- [ ] As scorer/admin, click a team's color chip in the console header to open
+      its picker; choose a preset swatch or enter a custom hex value.
+- [ ] After a color is chosen the picker closes automatically; the compact chip
+      remains for a later change.
 - [ ] The team name, score card border and score use the selected color in the
       console.
 - [ ] The same colors appear on the public/reader live view for this match.

@@ -61,8 +61,9 @@ const TeamColorPicker: React.FC<{
   teamName: string;
   color: string;
   onChange: (teamId: string, color: string) => void;
+  onClose: () => void;
   disabled: boolean;
-}> = ({ teamId, teamName, color, onChange, disabled }) => {
+}> = ({ teamId, teamName, color, onChange, onClose, disabled }) => {
   const { t } = useI18n();
   const [customColor, setCustomColor] = useState("");
 
@@ -84,9 +85,19 @@ const TeamColorPicker: React.FC<{
 
   return (
     <div className="rounded-[8px] border border-hairline bg-surface p-3">
-      <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-faint mb-2">
-        {t("{team} color", { team: teamName })}
-      </p>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-faint">
+          {t("{team} color", { team: teamName })}
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex h-5 w-5 items-center justify-center rounded-[4px] text-faint hover:bg-canvas hover:text-ink"
+          aria-label={t("Close color picker")}
+        >
+          <Icon name="xmark" size="xs" />
+        </button>
+      </div>
       <div className="flex flex-wrap gap-1.5 mb-2">
         {PRESET_COLORS.map((preset) => (
           <button
@@ -297,6 +308,7 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
 
   const [pending, setPending] = useState(false);
   const [colorSaving, setColorSaving] = useState(false);
+  const [editingColorTeam, setEditingColorTeam] = useState<string | null>(null);
   const [toast, setToast] = useState<{
     tone: "error" | "info" | "success";
     text: string;
@@ -344,24 +356,26 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
   const teamBColor =
     config?.teamBColor ?? DEFAULT_DODGEBALL_SCORING_CONFIG.teamBColor ?? "#DC2626";
 
-  const updateTeamColors = async (teamId: string, color: string) => {
-    if (!score || !config) return;
+  const updateTeamColors = async (teamId: string, color: string): Promise<boolean> => {
+    if (!score || !config) return false;
     const key =
       teamId === teamAId
         ? "teamAColor"
         : teamId === teamBId
           ? "teamBColor"
           : null;
-    if (!key) return;
+    if (!key) return false;
     setColorSaving(true);
     try {
       await actions.updateConfig({ [key]: color });
+      return true;
     } catch (err) {
       setToast({
         tone: "error",
         text:
           err instanceof Error ? err.message : "Failed to update team colors",
       });
+      return false;
     } finally {
       setColorSaving(false);
     }
@@ -835,21 +849,57 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
         </div>
 
         {!isReadOnly && (
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <TeamColorPicker
-              teamId={teamAId}
-              teamName={teamAName}
-              color={teamAColor}
-              onChange={updateTeamColors}
-              disabled={pending || colorSaving}
-            />
-            <TeamColorPicker
-              teamId={teamBId}
-              teamName={teamBName}
-              color={teamBColor}
-              onChange={updateTeamColors}
-              disabled={pending || colorSaving}
-            />
+          <div className="mt-3">
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {[teamAId, teamBId].map((id) => {
+                const color = id === teamAId ? teamAColor : teamBColor;
+                const name = id === teamAId ? teamAName : teamBName;
+                const active = editingColorTeam === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() =>
+                      setEditingColorTeam((current) =>
+                        current === id ? null : id,
+                      )
+                    }
+                    className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold transition-colors hover:bg-canvas"
+                    style={{ borderColor: color, color }}
+                    aria-expanded={active}
+                    aria-label={t("Change {team} color", { team: name })}
+                  >
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: color }}
+                    />
+                    <span className="max-w-[8rem] truncate">{name}</span>
+                    <span className="font-mono opacity-70">{color}</span>
+                    <Icon name="pen" size="xs" />
+                  </button>
+                );
+              })}
+            </div>
+
+            {editingColorTeam && (
+              <div className="mt-2">
+                <TeamColorPicker
+                  teamId={editingColorTeam}
+                  teamName={
+                    editingColorTeam === teamAId ? teamAName : teamBName
+                  }
+                  color={
+                    editingColorTeam === teamAId ? teamAColor : teamBColor
+                  }
+                  onChange={async (id, color) => {
+                    const saved = await updateTeamColors(id, color);
+                    if (saved) setEditingColorTeam(null);
+                  }}
+                  onClose={() => setEditingColorTeam(null)}
+                  disabled={pending || colorSaving}
+                />
+              </div>
+            )}
           </div>
         )}
 

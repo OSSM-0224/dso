@@ -5,7 +5,7 @@
  *
  * Mirrors the Sepak Takraw console contract (`SportConsoleProps`): every action
  * is queued through the host and validated server-side by the dodgeball engine.
- * Players are identified by jersey number (1-10) — the engine's opaque
+ * Players are identified by jersey number (1-99) — the engine's opaque
  * `playerId` — so the scorer never types a name.
  */
 import React, { useEffect, useMemo, useState } from 'react';
@@ -894,7 +894,7 @@ const LineupPanel: React.FC<{
           value={subsText}
           onChange={(e) => setSubsText(e.target.value)}
           autoComplete="off"
-          placeholder={t('e.g. 7, 8, 9, 10')}
+          placeholder={t('e.g. 7, 8, 11, 23')}
           className={inputClass}
         />
       </label>

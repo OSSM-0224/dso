@@ -2,7 +2,7 @@
  * Dodgeball scoring: config, event vocabulary, state and scoreboard types.
  *
  * The values follow the DSO dodgeball rulebook:
- * - 6 main + 4 substitute players, jerseys 1-10.
+ * - 6 main + 4 substitute players, jerseys 1-99 (single or double digit).
  * - best of 3 sets of 8 minutes (5-minute short format allowed), 3-minute
  *   interval, teams change ends after each set.
  * - 2-minute extra time when a set is tied, then sudden death (first point).
@@ -26,7 +26,7 @@ export interface DodgeballScoringConfig {
   minPlayersToStart: number; // 4 players is the minimum to take the court
   maxRosterSize: number; // 10 named players
   maxSubstitutes: number; // 4 substitutes
-  jerseyMin: number; // rulebook jerseys 1-10
+  jerseyMin: number; // jerseys 1-99 (single or double digit)
   jerseyMax: number;
   hitPoints: number; // direct hit on an opponent
   lineOutPoints: number; // opponent touches/crosses a boundary line
@@ -52,7 +52,7 @@ export const DEFAULT_DODGEBALL_SCORING_CONFIG: DodgeballScoringConfig = {
   maxRosterSize: 10,
   maxSubstitutes: 4,
   jerseyMin: 1,
-  jerseyMax: 10,
+  jerseyMax: 99,
   hitPoints: 1,
   lineOutPoints: 1,
   allOutBonusPoints: 2,

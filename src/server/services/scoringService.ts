@@ -26,7 +26,11 @@ import {
   defaultKhoKhoConfigForAgeGroup,
 } from '../../shared/scoring/types.ts';
 import { defaultSepakTakrawConfigForAgeGroup } from '../../shared/scoring/sports/sepakTakraw/types.ts';
-import { defaultDodgeballConfigForAgeGroup } from '../../shared/scoring/sports/dodgeball/types.ts';
+import {
+  DEFAULT_DODGEBALL_SCORING_CONFIG,
+  defaultDodgeballConfigForAgeGroup,
+  type DodgeballScoringConfig,
+} from '../../shared/scoring/sports/dodgeball/types.ts';
 
 const SCOREABLE_TOURNAMENT_STATUSES = ['published', 'ongoing'] as const;
 const READABLE_TOURNAMENT_STATUSES = ['published', 'ongoing', 'completed'] as const;
@@ -255,7 +259,24 @@ class ScoringService {
 
   private async ensureScoreDoc(match: MatchDoc, tournament: TournamentDoc): Promise<MatchScoreDoc> {
     const existing = await matchScoreRepository.findByMatchId(match.id);
-    if (existing) return existing;
+    if (existing) {
+      // Sessions created before the jersey range was widened keep the old
+      // limit in their stored config. Upgrade only the jersey ceiling; all
+      // other stored rules and the event history stay untouched.
+      if (existing.sport === 'dodgeball') {
+        const dodgeballConfig = existing.config as DodgeballScoringConfig;
+        if (dodgeballConfig.jerseyMax < DEFAULT_DODGEBALL_SCORING_CONFIG.jerseyMax) {
+          const upgraded = await matchScoreRepository.update(existing.matchId, {
+            config: {
+              ...dodgeballConfig,
+              jerseyMax: DEFAULT_DODGEBALL_SCORING_CONFIG.jerseyMax,
+            },
+          });
+          if (upgraded) return upgraded;
+        }
+      }
+      return existing;
+    }
 
     const teamSnapshot = (team: TeamDoc | null) =>
       team

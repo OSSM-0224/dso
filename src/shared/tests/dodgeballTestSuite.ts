@@ -149,7 +149,7 @@ export function runDodgeballTestSuite(): TestSuiteSummary {
     });
   };
 
-  check('TEST_DODGEBALL_DEFAULT_CONFIG', 'dodgeball: defaults are a best-of-3, 8-minute, 6-a-side, jersey 1-10 game', () => {
+  check('TEST_DODGEBALL_DEFAULT_CONFIG', 'dodgeball: defaults are a best-of-3, 8-minute, 6-a-side, jersey 1-99 game', () => {
     const cfg = dodgeballScoringEngine.createInitialState({
       teams: [TEAM_A, TEAM_B],
     }).config;
@@ -157,7 +157,7 @@ export function runDodgeballTestSuite(): TestSuiteSummary {
     assert(cfg.setDurationSec === 480, `setDurationSec=${cfg.setDurationSec}`);
     assert(cfg.playersOnCourt === 6, `playersOnCourt=${cfg.playersOnCourt}`);
     assert(cfg.maxRosterSize === 10, `maxRosterSize=${cfg.maxRosterSize}`);
-    assert(cfg.jerseyMin === 1 && cfg.jerseyMax === 10, `jerseys=${cfg.jerseyMin}-${cfg.jerseyMax}`);
+    assert(cfg.jerseyMin === 1 && cfg.jerseyMax === 99, `jerseys=${cfg.jerseyMin}-${cfg.jerseyMax}`);
     assert(cfg.allOutBonusPoints === 2, `allOutBonusPoints=${cfg.allOutBonusPoints}`);
     assert(DEFAULT_DODGEBALL_SCORING_CONFIG.suddenDeathEnabled, 'sudden death should default on');
   });
@@ -173,12 +173,28 @@ export function runDodgeballTestSuite(): TestSuiteSummary {
     h.reject('LINEUP_REQUIRED', { type: 'SET_START', setNo: 1 });
   });
 
-  check('TEST_DODGEBALL_JERSEY_RANGE', 'dodgeball: jerseys outside 1-10 are rejected', () => {
+  check('TEST_DODGEBALL_JERSEY_RANGE', 'dodgeball: single- and double-digit jerseys are accepted up to 99', () => {
     const h = new Harness();
     h.toss();
+    h.apply({
+      type: 'LINEUP_SET',
+      teamId: TEAM_A.id,
+      onCourt: ['1', '2', '11', '23'],
+      subs: ['45', '99'],
+    });
+    const lineup = h.board().teamStates.find((team) => team.teamId === TEAM_A.id)!;
+    assert(
+      lineup.onCourt.includes('11') && lineup.onCourt.includes('23'),
+      `onCourt=${JSON.stringify(lineup.onCourt)}`,
+    );
+    assert(lineup.subs.includes('99'), `subs=${JSON.stringify(lineup.subs)}`);
     h.reject(
       'BAD_JERSEY',
-      { type: 'LINEUP_SET', teamId: TEAM_A.id, onCourt: ['1', '2', '3', '11'], subs: [] },
+      { type: 'LINEUP_SET', teamId: TEAM_A.id, onCourt: ['1', '2', '3', '100'], subs: [] },
+    );
+    h.reject(
+      'BAD_JERSEY',
+      { type: 'LINEUP_SET', teamId: TEAM_A.id, onCourt: ['0', '2', '3', '4'], subs: [] },
     );
   });
 

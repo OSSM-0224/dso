@@ -25,7 +25,7 @@ regression.
 | Extra time | 2 minutes when a set is tied |
 | Sudden death | First point wins the set |
 | On court | 6 players; minimum 4 to start |
-| Squad | Up to 10 (6 on court + 4 substitutes), jerseys 1–10 |
+| Squad | Up to 10 (6 on court + 4 substitutes), jerseys 1–99 |
 | Point actions | Hit, line-out, catch, red card, injury, delay, revival failure |
 | All-out | +2 bonus and a 5-second revival window |
 | Revival failure | Opponent point, then the team re-enters so play continues |
@@ -75,9 +75,12 @@ Console/LiveView wiring.
 - [ ] Toss: pick the winning team and click **Record toss**. The rulebook gives
       the toss winner the choice of court only.
 - [ ] Each team's lineup panel: enter at least 4 and up to 6 distinct jersey
-      numbers (1–10) on court; enter up to 4 substitute jerseys.
-- [ ] Saving a lineup with 3 players, a duplicate jersey, or jersey `11` is
-      rejected with a clear message.
+      numbers (1–99, single or double digit) on court; enter up to 4 substitute
+      jerseys.
+- [ ] Saving a lineup with 3 players, a duplicate jersey, or jersey `100`/`0`
+      is rejected with a clear message.
+- [ ] Double-digit jerseys such as `11` and `23` are accepted and appear as
+      separate players in the stats table.
 - [ ] Save both lineups, then **Start set 1**.
 - [ ] If a team has substitutes, the interval panel offers an outgoing player
       and an incoming substitute before the next set.

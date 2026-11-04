@@ -155,7 +155,7 @@ Readers see the same result through a sport-specific live card on the public tou
 | Set | 8 minutes (5-minute short format is configurable) |
 | Court | 6 players; minimum 4 to start |
 | Squad | Up to 10 named players (6 on court + 4 substitutes) |
-| Jerseys | 1–10 |
+| Jerseys | 1–99 (single or double digit) |
 | Scoring actions | Hit, line-out, catch, red card, injury, delay, revival failure |
 | All-out | +2 bonus and a 5-second revival window |
 | Revival failure | Opponent gains a point, then the team re-enters so play continues |

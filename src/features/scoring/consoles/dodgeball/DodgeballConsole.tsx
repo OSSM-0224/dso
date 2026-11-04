@@ -40,6 +40,37 @@ const inputClass =
 const selectClass =
   "w-full rounded-[6px] border border-hairline bg-surface px-2 py-2 text-xs text-ink focus:border-accent-strong focus:outline-none";
 
+/**
+ * Extra-large jersey numeral used by the referee court board. On-court players
+ * take the team colour; out players are red. The numerals are deliberately
+ * large so the referee can read who is in and who is out from a distance.
+ */
+const JerseyTile: React.FC<{
+  playerId: string;
+  tone: "active" | "out";
+  color?: string;
+}> = ({ playerId, tone, color }) => (
+  <span
+    aria-label={`#${playerId}`}
+    className={`inline-flex h-11 min-w-[2.75rem] items-center justify-center rounded-[8px] border-2 px-1.5 font-mono text-2xl font-black leading-none tabular-nums ${
+      tone === "out"
+        ? "border-red-200 bg-red-50 text-red-700"
+        : "bg-canvas text-ink"
+    }`}
+    style={
+      tone === "active"
+        ? {
+            borderColor: color,
+            color,
+            backgroundColor: color ? `${color}14` : undefined,
+          }
+        : undefined
+    }
+  >
+    {playerId}
+  </span>
+);
+
 const PRESET_COLORS = [
   "#2563EB", // Blue-600
   "#DC2626", // Red-600
@@ -764,6 +795,8 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
           config={config}
           teamAId={teamAId}
           teamBId={teamBId}
+          teamAColor={teamAColor}
+          teamBColor={teamBColor}
           pending={pending}
           onEvent={send}
         />
@@ -959,20 +992,46 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
                 {t("Set wins: {count}", { count: sb.setWins[teamId] ?? 0 })}
               </p>
-              <p className="mt-1 text-[10px] text-muted">
-                {t("{active} on court · {out} out", {
-                  active: state?.activeCount ?? 0,
-                  out: state?.outPlayerIds.length ?? 0,
-                })}
-              </p>
-              {state && state.outPlayerIds.length > 0 && (
-                <p className="mt-1 truncate text-[10px] text-red-700">
-                  {t("Out: {players}", {
-                    players: state.outPlayerIds
-                      .map((id) => `#${id}`)
-                      .join(", "),
-                  })}
-                </p>
+              {state && (
+                <div className="mt-2 space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-1">
+                    <span className="mr-0.5 text-[9px] font-bold uppercase tracking-wider text-faint">
+                      {t("On court")} · {state.activePlayerIds.length}
+                    </span>
+                    {state.activePlayerIds.map((playerId) => (
+                      <span
+                        key={playerId}
+                        className="inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-[5px] bg-canvas px-1 font-mono text-base font-bold leading-none tabular-nums"
+                        style={{ color: teamId === teamAId ? teamAColor : teamBColor }}
+                      >
+                        {playerId}
+                      </span>
+                    ))}
+                    {state.activePlayerIds.length === 0 && (
+                      <span className="text-[10px] font-semibold text-red-700">
+                        {t("None")}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1">
+                    <span className="mr-0.5 text-[9px] font-bold uppercase tracking-wider text-red-700">
+                      {t("Out")} · {state.outPlayerIds.length}
+                    </span>
+                    {state.outPlayerIds.map((playerId) => (
+                      <span
+                        key={`out-${playerId}`}
+                        className="inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-[5px] bg-red-50 px-1 font-mono text-base font-bold leading-none tabular-nums text-red-700 ring-1 ring-red-200"
+                      >
+                        {playerId}
+                      </span>
+                    ))}
+                    {state.outPlayerIds.length === 0 && (
+                      <span className="text-[10px] font-semibold text-faint">
+                        {t("None")}
+                      </span>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           );
@@ -1501,9 +1560,20 @@ const MatchActionsPanel: React.FC<{
   config: DodgeballScoringConfig;
   teamAId: string;
   teamBId: string;
+  teamAColor: string;
+  teamBColor: string;
   pending: boolean;
   onEvent: SendEvent;
-}> = ({ sb, config, teamAId, teamBId, pending, onEvent }) => {
+}> = ({
+  sb,
+  config,
+  teamAId,
+  teamBId,
+  teamAColor,
+  teamBColor,
+  pending,
+  onEvent,
+}) => {
   const { t } = useI18n();
 
   return (
@@ -1515,6 +1585,7 @@ const MatchActionsPanel: React.FC<{
           config={config}
           teamId={teamId}
           rivalId={teamId === teamAId ? teamBId : teamAId}
+          teamColor={teamId === teamAId ? teamAColor : teamBColor}
           pending={pending}
           onEvent={onEvent}
         />
@@ -1533,9 +1604,10 @@ const TeamActionCard: React.FC<{
   config: DodgeballScoringConfig;
   teamId: string;
   rivalId: string;
+  teamColor: string;
   pending: boolean;
   onEvent: SendEvent;
-}> = ({ sb, config, teamId, rivalId, pending, onEvent }) => {
+}> = ({ sb, config, teamId, rivalId, teamColor, pending, onEvent }) => {
   const { t } = useI18n();
   const state = sb.teamStates.find((team) => team.teamId === teamId);
   const rival = sb.teamStates.find((team) => team.teamId === rivalId);
@@ -1567,21 +1639,55 @@ const TeamActionCard: React.FC<{
 
   return (
     <div className="rounded-[12px] border border-hairline bg-surface p-4">
-      <p className="truncate text-sm font-semibold text-ink">{teamLabel}</p>
-      <div className="mt-2 flex flex-wrap gap-1">
-        {ownActive.map((playerId) => (
-          <span
-            key={playerId}
-            className="inline-flex items-center rounded-full bg-canvas px-2 py-0.5 font-mono text-[11px] font-semibold text-ink"
-          >
-            #{playerId}
-          </span>
-        ))}
-        {ownActive.length === 0 && (
-          <span className="text-[11px] text-red-700">
-            {t("No players on court")}
-          </span>
-        )}
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate text-sm font-semibold text-ink">{teamLabel}</p>
+        <span className="shrink-0 rounded-full bg-canvas px-2 py-0.5 font-mono text-[10px] font-semibold tabular-nums text-muted">
+          {t("{active} on court · {out} out", {
+            active: ownActive.length,
+            out: ownOut.length,
+          })}
+        </span>
+      </div>
+
+      {/* Referee court board: big numerals for on-court and out players. */}
+      <div className="mt-3 grid grid-cols-2 gap-3 rounded-[8px] border border-hairline bg-canvas/50 p-2.5">
+        <div>
+          <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.05em] text-faint">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            {t("On court")} · {ownActive.length}
+          </p>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {ownActive.map((playerId) => (
+              <JerseyTile
+                key={playerId}
+                playerId={playerId}
+                tone="active"
+                color={teamColor}
+              />
+            ))}
+            {ownActive.length === 0 && (
+              <span className="text-[11px] font-semibold text-red-700">
+                {t("No players on court")}
+              </span>
+            )}
+          </div>
+        </div>
+        <div>
+          <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.05em] text-red-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+            {t("Out")} · {ownOut.length}
+          </p>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {ownOut.map((playerId) => (
+              <JerseyTile key={playerId} playerId={playerId} tone="out" />
+            ))}
+            {ownOut.length === 0 && (
+              <span className="text-[11px] font-semibold text-faint">
+                {t("None")}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2">

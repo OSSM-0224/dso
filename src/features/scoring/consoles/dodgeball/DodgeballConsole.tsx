@@ -943,6 +943,8 @@ const SubstitutionPanel: React.FC<{
   const { t } = useI18n();
   const [outPlayer, setOutPlayer] = useState('');
   const [inPlayer, setInPlayer] = useState('');
+  const outSelected = state.onCourt.includes(outPlayer) ? outPlayer : '';
+  const inSelected = state.subs.includes(inPlayer) ? inPlayer : '';
 
   return (
     <div className="rounded-[12px] border border-hairline bg-surface p-4">
@@ -950,7 +952,7 @@ const SubstitutionPanel: React.FC<{
         {t('{team} · substitution', { team: state.teamName })}
       </p>
       <div className="mt-2 grid grid-cols-2 gap-2">
-        <select value={outPlayer} onChange={(e) => setOutPlayer(e.target.value)} className={selectClass}>
+        <select value={outSelected} onChange={(e) => setOutPlayer(e.target.value)} className={selectClass}>
           <option value="">{t('Outgoing player')}</option>
           {state.onCourt.map((playerId) => (
             <option key={playerId} value={playerId}>
@@ -958,7 +960,7 @@ const SubstitutionPanel: React.FC<{
             </option>
           ))}
         </select>
-        <select value={inPlayer} onChange={(e) => setInPlayer(e.target.value)} className={selectClass}>
+        <select value={inSelected} onChange={(e) => setInPlayer(e.target.value)} className={selectClass}>
           <option value="">{t('Incoming sub')}</option>
           {state.subs.map((playerId) => (
             <option key={playerId} value={playerId}>
@@ -969,9 +971,9 @@ const SubstitutionPanel: React.FC<{
       </div>
       <button
         onClick={() =>
-          onEvent({ type: 'SUBSTITUTION', teamId: state.teamId, outPlayerId: outPlayer, inPlayerId: inPlayer })
+          onEvent({ type: 'SUBSTITUTION', teamId: state.teamId, outPlayerId: outSelected, inPlayerId: inSelected })
         }
-        disabled={pending || !outPlayer || !inPlayer}
+        disabled={pending || !outSelected || !inSelected}
         className={`mt-2 w-full ${btnGhost}`}
       >
         <Icon name="swap" size="sm" /> {t('Substitute')}
@@ -1083,6 +1085,18 @@ const TeamActionCard: React.FC<{
   const ownOut = state.outPlayerIds;
   const teamLabel = state.teamName;
 
+  // The scoreboard is refreshed after every event, so a jersey can disappear
+  // from a dropdown while its number is still held in local state. Derive the
+  // effective value from the live scoreboard on every render: a stale jersey
+  // must never be posted (the engine rejects it with a 409) and its buttons
+  // must disable immediately.
+  const ownSelected = ownActive.includes(ownPlayer) ? ownPlayer : '';
+  const rivalSelected = rivalActive.includes(rivalPlayer) ? rivalPlayer : '';
+  const revivableOut = ownOut.filter(
+    (playerId) => !state.disqualifiedPlayerIds.includes(playerId),
+  );
+  const reviveSelected = revivableOut.includes(revivePlayer) ? revivePlayer : '';
+
   return (
     <div className="rounded-[12px] border border-hairline bg-surface p-4">
       <p className="truncate text-sm font-semibold text-ink">{teamLabel}</p>
@@ -1103,7 +1117,7 @@ const TeamActionCard: React.FC<{
           <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">
             {t('Own player')}
           </span>
-          <select value={ownPlayer} onChange={(e) => setOwnPlayer(e.target.value)} className={selectClass}>
+          <select value={ownSelected} onChange={(e) => setOwnPlayer(e.target.value)} className={selectClass}>
             <option value="">{t('Optional')}</option>
             {ownActive.map((playerId) => (
               <option key={playerId} value={playerId}>
@@ -1116,7 +1130,7 @@ const TeamActionCard: React.FC<{
           <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">
             {t('Opponent player')}
           </span>
-          <select value={rivalPlayer} onChange={(e) => setRivalPlayer(e.target.value)} className={selectClass}>
+          <select value={rivalSelected} onChange={(e) => setRivalPlayer(e.target.value)} className={selectClass}>
             <option value="">{t('Select')}</option>
             {rivalActive.map((playerId) => (
               <option key={playerId} value={playerId}>
@@ -1133,11 +1147,11 @@ const TeamActionCard: React.FC<{
             onEvent({
               type: 'HIT',
               teamId,
-              ...(ownPlayer ? { playerId: ownPlayer } : {}),
-              targetPlayerId: rivalPlayer,
+              ...(ownSelected ? { playerId: ownSelected } : {}),
+              targetPlayerId: rivalSelected,
             })
           }
-          disabled={pending || !rivalPlayer}
+          disabled={pending || !rivalSelected}
           className={btnPrimary}
         >
           <Icon name="bolt" size="sm" /> {t('Hit')}
@@ -1147,11 +1161,11 @@ const TeamActionCard: React.FC<{
             onEvent({
               type: 'LINE_OUT',
               teamId,
-              ...(ownPlayer ? { playerId: ownPlayer } : {}),
-              targetPlayerId: rivalPlayer,
+              ...(ownSelected ? { playerId: ownSelected } : {}),
+              targetPlayerId: rivalSelected,
             })
           }
-          disabled={pending || !rivalPlayer}
+          disabled={pending || !rivalSelected}
           className={btnGhost}
         >
           <Icon name="triangleExclamation" size="sm" /> {t('Line out')}
@@ -1161,48 +1175,48 @@ const TeamActionCard: React.FC<{
             onEvent({
               type: 'CATCH',
               teamId,
-              playerId: ownPlayer,
+              playerId: ownSelected,
               throwerTeamId: rivalId,
-              ...(rivalPlayer ? { throwerPlayerId: rivalPlayer } : {}),
-              ...(revivePlayer ? { revivePlayerId: revivePlayer } : {}),
+              throwerPlayerId: rivalSelected,
+              ...(reviveSelected ? { revivePlayerId: reviveSelected } : {}),
             })
           }
-          disabled={pending || !ownPlayer}
+          disabled={pending || !ownSelected || !rivalSelected}
           className={btnPrimary}
         >
           <Icon name="shield" size="sm" /> {t('Catch')}
         </button>
         <button
-          onClick={() => onEvent({ type: 'CARD', cardType: 'YELLOW', teamId, playerId: ownPlayer })}
-          disabled={pending || !ownPlayer}
+          onClick={() => onEvent({ type: 'CARD', cardType: 'YELLOW', teamId, playerId: ownSelected })}
+          disabled={pending || !ownSelected}
           className={btnGhost}
         >
           <Icon name="flag" size="sm" /> {t('Yellow card')}
         </button>
         <button
-          onClick={() => onEvent({ type: 'CARD', cardType: 'RED', teamId, playerId: ownPlayer })}
-          disabled={pending || !ownPlayer}
+          onClick={() => onEvent({ type: 'CARD', cardType: 'RED', teamId, playerId: ownSelected })}
+          disabled={pending || !ownSelected}
           className={btnDanger}
         >
           <Icon name="flag" size="sm" /> {t('Red card')}
         </button>
         <button
-          onClick={() => onEvent({ type: 'INJURY', teamId, playerId: ownPlayer })}
-          disabled={pending || !ownPlayer}
+          onClick={() => onEvent({ type: 'INJURY', teamId, playerId: ownSelected })}
+          disabled={pending || !ownSelected}
           className={btnGhost}
         >
           <Icon name="userPlus" size="sm" /> {t('Injury out')}
         </button>
       </div>
 
-      {ownOut.length > 0 && (
+      {revivableOut.length > 0 && (
         <label className="mt-2 block">
           <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">
             {t('Catch revival target')}
           </span>
-          <select value={revivePlayer} onChange={(e) => setRevivePlayer(e.target.value)} className={selectClass}>
+          <select value={reviveSelected} onChange={(e) => setRevivePlayer(e.target.value)} className={selectClass}>
             <option value="">{t('Automatic (first out)')}</option>
-            {ownOut.map((playerId) => (
+            {revivableOut.map((playerId) => (
               <option key={playerId} value={playerId}>
                 #{playerId}
               </option>
@@ -1228,7 +1242,7 @@ const TeamActionCard: React.FC<{
                 type: 'DELAY',
                 delayType,
                 teamId,
-                ...(ownPlayer ? { playerId: ownPlayer } : {}),
+                ...(ownSelected ? { playerId: ownSelected } : {}),
               })
             }
             disabled={pending}

@@ -894,6 +894,10 @@ const RallyPanel: React.FC<{
         const serving = servingTeamId === team.id;
         const players = lineups[team.id]?.onCourt ?? [];
         const player = selectedPlayer[team.id] ?? '';
+        // A substitution can remove the selected jersey from the lineup while
+        // its value is still in local state. Use the live lineup as the source
+        // of truth so a stale attribution is never posted.
+        const playerSelected = players.some((slot) => slot.playerId === player) ? player : '';
         const faultOptions = SEPAK_TAKRAW_FAULTS.filter(
           (fault) =>
             (fault.category !== 'service' || serving) &&
@@ -910,8 +914,8 @@ const RallyPanel: React.FC<{
           };
           if (pointType === 'ACE') {
             if (sb.serving?.playerId) payload.playerId = sb.serving.playerId;
-          } else if (pointType !== 'OTHER' && player) {
-            payload.playerId = player;
+          } else if (pointType !== 'OTHER' && playerSelected) {
+            payload.playerId = playerSelected;
           }
           onEvent(payload);
         };
@@ -938,7 +942,7 @@ const RallyPanel: React.FC<{
                   {t('Attribute to (optional)')}
                 </span>
                 <select
-                  value={player}
+                  value={playerSelected}
                   onChange={(e) => setSelectedPlayer((map) => ({ ...map, [team.id]: e.target.value }))}
                   className={selectClass}
                 >
@@ -996,7 +1000,7 @@ const RallyPanel: React.FC<{
                       type: 'FAULT',
                       faultType: selectedFault,
                       faultyTeamId: team.id,
-                      ...(player ? { playerId: player } : {}),
+                      ...(playerSelected ? { playerId: playerSelected } : {}),
                     })
                   }
                   disabled={pending || !selectedFault}
@@ -1037,6 +1041,14 @@ const PlayerChangesCard: React.FC<{
 
   if (!lineup) return null;
 
+  const onCourtIds = lineup.onCourt.map((slot) => slot.playerId);
+  // Substitutions and role swaps change the lineup continuously; keep the
+  // posted values aligned with what is actually on court right now.
+  const swapASelected = onCourtIds.includes(swapA) ? swapA : '';
+  const swapBSelected = onCourtIds.includes(swapB) ? swapB : '';
+  const outSelected = onCourtIds.includes(outPlayer) ? outPlayer : '';
+  const inSelected = lineup.subs.includes(inPlayer) ? inPlayer : '';
+
   return (
     <div className="rounded-[12px] border border-hairline bg-surface p-4">
       <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-faint">
@@ -1058,7 +1070,7 @@ const PlayerChangesCard: React.FC<{
       )}
 
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <select value={swapA} onChange={(e) => setSwapA(e.target.value)} className={selectClass}>
+        <select value={swapASelected} onChange={(e) => setSwapA(e.target.value)} className={selectClass}>
           <option value="">{t('Player A')}</option>
           {lineup.onCourt.map((slot) => (
             <option key={slot.playerId} value={slot.playerId}>
@@ -1066,7 +1078,7 @@ const PlayerChangesCard: React.FC<{
             </option>
           ))}
         </select>
-        <select value={swapB} onChange={(e) => setSwapB(e.target.value)} className={selectClass}>
+        <select value={swapBSelected} onChange={(e) => setSwapB(e.target.value)} className={selectClass}>
           <option value="">{t('Player B')}</option>
           {lineup.onCourt.map((slot) => (
             <option key={slot.playerId} value={slot.playerId}>
@@ -1076,8 +1088,8 @@ const PlayerChangesCard: React.FC<{
         </select>
       </div>
       <button
-        onClick={() => onEvent({ type: 'ROLE_SWAP', teamId, playerId: swapA, withPlayerId: swapB })}
-        disabled={pending || !swapA || !swapB || swapA === swapB}
+        onClick={() => onEvent({ type: 'ROLE_SWAP', teamId, playerId: swapASelected, withPlayerId: swapBSelected })}
+        disabled={pending || !swapASelected || !swapBSelected || swapASelected === swapBSelected}
         className={`mt-2 w-full ${btnGhost}`}
       >
         <Icon name="swap" size="sm" /> {t('Swap roles')}
@@ -1086,7 +1098,7 @@ const PlayerChangesCard: React.FC<{
       {lineup.subs.length > 0 && (
         <div className="mt-3 border-t border-hairline pt-3">
           <div className="grid grid-cols-2 gap-2">
-            <select value={outPlayer} onChange={(e) => setOutPlayer(e.target.value)} className={selectClass}>
+            <select value={outSelected} onChange={(e) => setOutPlayer(e.target.value)} className={selectClass}>
               <option value="">{t('Outgoing player')}</option>
               {lineup.onCourt.map((slot) => (
                 <option key={slot.playerId} value={slot.playerId}>
@@ -1094,7 +1106,7 @@ const PlayerChangesCard: React.FC<{
                 </option>
               ))}
             </select>
-            <select value={inPlayer} onChange={(e) => setInPlayer(e.target.value)} className={selectClass}>
+            <select value={inSelected} onChange={(e) => setInPlayer(e.target.value)} className={selectClass}>
               <option value="">{t('Incoming sub')}</option>
               {lineup.subs.map((playerId) => (
                 <option key={playerId} value={playerId}>
@@ -1104,8 +1116,8 @@ const PlayerChangesCard: React.FC<{
             </select>
           </div>
           <button
-            onClick={() => onEvent({ type: 'SUBSTITUTION', teamId, outPlayerId: outPlayer, inPlayerId: inPlayer })}
-            disabled={pending || !outPlayer || !inPlayer}
+            onClick={() => onEvent({ type: 'SUBSTITUTION', teamId, outPlayerId: outSelected, inPlayerId: inSelected })}
+            disabled={pending || !outSelected || !inSelected}
             className={`mt-2 w-full ${btnGhost}`}
           >
             <Icon name="swap" size="sm" /> {t('Substitute')}

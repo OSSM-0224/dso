@@ -278,7 +278,9 @@ class ScoringService {
       // 3-minute default; a missing/invalid value also falls back to it.
       const storedSetDurationSec = Number(dodgeballConfig.setDurationSec);
       const setDurationSec =
-        !Number.isFinite(storedSetDurationSec) || storedSetDurationSec === 480
+        !Number.isFinite(storedSetDurationSec) ||
+        storedSetDurationSec <= 0 ||
+        storedSetDurationSec === 480
           ? DEFAULT_DODGEBALL_SCORING_CONFIG.setDurationSec
           : storedSetDurationSec;
       if (

@@ -361,7 +361,7 @@ export function runDodgeballTestSuite(): TestSuiteSummary {
     assert(b.outPlayerIds.includes('3'), `out=${JSON.stringify(b.outPlayerIds)}`);
     assert(b.disqualifiedPlayerIds.includes('3'), 'player should be disqualified');
 
-    h.apply({ type: 'SET_END', setNo: 1, reason: 'TIMER' }, startedAt + 480000);
+    h.apply({ type: 'SET_END', setNo: 1, reason: 'TIMER' }, startedAt + 180000);
     h.reject('PLAYER_DISQUALIFIED', {
       type: 'LINEUP_SET',
       teamId: TEAM_B.id,
@@ -425,7 +425,7 @@ export function runDodgeballTestSuite(): TestSuiteSummary {
       inPlayerId: '7',
     });
     h.hit(TEAM_A.id, '1', '2');
-    h.apply({ type: 'SET_END', setNo: 1, reason: 'TIMER' }, startedAt + 480000);
+    h.apply({ type: 'SET_END', setNo: 1, reason: 'TIMER' }, startedAt + 180000);
     h.apply({ type: 'SUBSTITUTION', teamId: TEAM_A.id, outPlayerId: '6', inPlayerId: '7' });
     const lineup = h.board().teamStates.find((team) => team.teamId === TEAM_A.id)!;
     assert(lineup.onCourt.includes('7'), `onCourt=${JSON.stringify(lineup.onCourt)}`);
@@ -440,10 +440,10 @@ export function runDodgeballTestSuite(): TestSuiteSummary {
     h.reject(
       'SET_TIME_EXPIRED',
       { type: 'HIT', teamId: TEAM_A.id, playerId: '1', targetPlayerId: '3' },
-      startedAt + 480000,
+      startedAt + 180000,
     );
-    h.apply({ type: 'SET_END', setNo: 1, reason: 'TIMER' }, startedAt + 480000);
-    const sb = h.board(startedAt + 480000);
+    h.apply({ type: 'SET_END', setNo: 1, reason: 'TIMER' }, startedAt + 180000);
+    const sb = h.board(startedAt + 180000);
     assert(sb.sets[0].completed, 'set should be complete');
     assert(sb.sets[0].winnerTeamId === TEAM_A.id, `winner=${sb.sets[0].winnerTeamId}`);
     assert(sb.nextAction.action === 'start_set', `next=${sb.nextAction.action}`);
@@ -456,9 +456,9 @@ export function runDodgeballTestSuite(): TestSuiteSummary {
     h.hit(TEAM_B.id, '2', '1');
     assert(h.board().points[TEAM_A.id] === 1 && h.board().points[TEAM_B.id] === 1, 'setup should be 1-1');
 
-    h.reject('TIE_REQUIRES_EXTRA_TIME', { type: 'SET_END', setNo: 1, reason: 'TIMER' }, startedAt + 480000);
-    h.apply({ type: 'EXTRA_TIME_START', setNo: 1 }, startedAt + 480000);
-    const extra = h.board(startedAt + 480000);
+    h.reject('TIE_REQUIRES_EXTRA_TIME', { type: 'SET_END', setNo: 1, reason: 'TIMER' }, startedAt + 180000);
+    h.apply({ type: 'EXTRA_TIME_START', setNo: 1 }, startedAt + 180000);
+    const extra = h.board(startedAt + 180000);
     assert(extra.time?.period === 'extra_time', `period=${extra.time?.period}`);
     assert(extra.time?.remainingMs === 120000, `remaining=${extra.time?.remainingMs}`);
 
@@ -477,13 +477,13 @@ export function runDodgeballTestSuite(): TestSuiteSummary {
     const h = new Harness();
     const firstStart = h.startMatch();
     h.hit(TEAM_A.id, '1', '2');
-    h.apply({ type: 'SET_END', setNo: 1, reason: 'TIMER' }, firstStart + 480000);
+    h.apply({ type: 'SET_END', setNo: 1, reason: 'TIMER' }, firstStart + 180000);
 
     const secondStart = h.beginSet(2);
     h.hit(TEAM_A.id, '1', '3');
-    h.apply({ type: 'SET_END', setNo: 2, reason: 'TIMER' }, secondStart + 480000);
+    h.apply({ type: 'SET_END', setNo: 2, reason: 'TIMER' }, secondStart + 180000);
 
-    const sb = h.board(secondStart + 480000);
+    const sb = h.board(secondStart + 180000);
     assert(sb.winner.resolved, 'winner should be resolved');
     assert(sb.winner.winnerTeamId === TEAM_A.id, `winner=${sb.winner.winnerTeamId}`);
     assert(sb.winner.kind === 'sets', `kind=${sb.winner.kind}`);

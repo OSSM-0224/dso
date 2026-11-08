@@ -136,9 +136,10 @@ const metaRegistry: Record<string, SportConsoleMetaEntry> = {
       const cfg: DodgeballScoringConfig = defaultDodgeballConfigForAgeGroup(
         t.ageGroup as ScoringAgeGroup,
       );
-      return `${t.ageGroup} · ${t.gender} · Best of ${cfg.bestOf} · ${Math.round(
-        cfg.setDurationSec / 60,
-      )} min sets · ${cfg.playersOnCourt} on court`;
+      const minutes = Math.floor(cfg.setDurationSec / 60);
+      const seconds = cfg.setDurationSec % 60;
+      const clock = `${minutes}:${String(seconds).padStart(2, '0')}`;
+      return `${t.ageGroup} · ${t.gender} · ${cfg.regulationSets} sets × ${clock} · ${cfg.ballsPerTeam} balls · ${cfg.playersOnCourt} on court`;
     },
   },
 };

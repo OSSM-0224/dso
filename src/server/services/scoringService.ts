@@ -259,10 +259,10 @@ class ScoringService {
 
   /**
    * Load an existing score session and bring its stored config up to the
-   * current rule defaults. Old Dodgeball sessions were created with
-   * `jerseyMax: 10` and an 8-minute set clock; widening the jersey range and
-   * shortening the default set to 3 minutes must not require starting a new
-   * match, so the upgrade is applied (and persisted) on every read/write.
+   * current rule defaults. Old Dodgeball sessions may still carry an 8-minute
+   * or 3-minute set clock, best-of-three extra time or jersey-era settings;
+   * the DSO 1:30 two-set format is applied (and persisted) on every read/write
+   * so an in-progress match does not need to be restarted.
    */
   private async loadScoreDoc(matchId: string): Promise<MatchScoreDoc | null> {
     const existing = await matchScoreRepository.findByMatchId(matchId);
@@ -270,25 +270,38 @@ class ScoringService {
 
     if (existing.sport === 'dodgeball') {
       const dodgeballConfig = existing.config as DodgeballScoringConfig;
+      const defaults = DEFAULT_DODGEBALL_SCORING_CONFIG;
       const jerseyMax = Math.max(
         typeof dodgeballConfig.jerseyMax === 'number' ? dodgeballConfig.jerseyMax : 0,
-        DEFAULT_DODGEBALL_SCORING_CONFIG.jerseyMax,
+        defaults.jerseyMax,
       );
-      // 480 was the old 8-minute default. Migrate legacy sessions to the new
-      // 3-minute default; a missing/invalid value also falls back to it.
-      const storedSetDurationSec = Number(dodgeballConfig.setDurationSec);
-      const setDurationSec =
-        !Number.isFinite(storedSetDurationSec) ||
-        storedSetDurationSec <= 0 ||
-        storedSetDurationSec === 480
-          ? DEFAULT_DODGEBALL_SCORING_CONFIG.setDurationSec
-          : storedSetDurationSec;
-      if (
+      // DSO rule migration: every stored dodgeball session moves to the
+      // 1:30 two-set format (plus a decider when level), three balls per team,
+      // no extra time and no sudden death. This keeps old sessions playable
+      // without asking scorers to start a new match.
+      const nextConfig: DodgeballScoringConfig = {
+        ...dodgeballConfig,
+        jerseyMax,
+        bestOf: defaults.bestOf,
+        regulationSets: defaults.regulationSets,
+        decidingSetOnTie: defaults.decidingSetOnTie,
+        setDurationSec: defaults.setDurationSec,
+        ballsPerTeam: defaults.ballsPerTeam,
+        extraTimeSec: defaults.extraTimeSec,
+        suddenDeathEnabled: defaults.suddenDeathEnabled,
+      };
+      const needsUpgrade =
         jerseyMax !== dodgeballConfig.jerseyMax ||
-        setDurationSec !== dodgeballConfig.setDurationSec
-      ) {
+        nextConfig.bestOf !== dodgeballConfig.bestOf ||
+        nextConfig.regulationSets !== dodgeballConfig.regulationSets ||
+        nextConfig.decidingSetOnTie !== dodgeballConfig.decidingSetOnTie ||
+        nextConfig.setDurationSec !== dodgeballConfig.setDurationSec ||
+        nextConfig.ballsPerTeam !== dodgeballConfig.ballsPerTeam ||
+        nextConfig.extraTimeSec !== dodgeballConfig.extraTimeSec ||
+        nextConfig.suddenDeathEnabled !== dodgeballConfig.suddenDeathEnabled;
+      if (needsUpgrade) {
         const upgraded = await matchScoreRepository.update(existing.matchId, {
-          config: { ...dodgeballConfig, jerseyMax, setDurationSec },
+          config: nextConfig,
         });
         if (upgraded) return upgraded;
       }

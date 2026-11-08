@@ -1,32 +1,30 @@
 "use client";
 
 /**
- * Dodgeball scorer console.
+ * DSO dodgeball scorer console.
  *
- * Mirrors the Sepak Takraw console contract (`SportConsoleProps`): every action
- * is queued through the host and validated server-side by the dodgeball engine.
- * Players are identified by jersey number (1-99) — the engine's opaque
- * `playerId` — so the scorer never types a name.
+ * DSO dodgeball differences from the generic rulebook:
+ * - no toss and no jersey-number lineups: each team fields Player 1-6;
+ * - two 1:30 sets, with a deciding third set only when the first two are level;
+ * - each team gets three balls to attack with;
+ * - points belong to the team, never to an individual player;
+ * - no team-colour picker.
+ *
+ * Every action is queued through the host and validated server-side by the
+ * dodgeball engine.
  */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { Icon } from "@/components/ui/Icon";
 import { useI18n } from "@/i18n/LanguageProvider";
 import { ToastBanner } from "@/features/scoring/shared/ToastBanner";
-import { dodgeballScoringEngine } from "@/shared/scoring/sports/dodgeball/engine";
 import {
-  type DodgeballCardType,
-  type DodgeballDelayType,
   type DodgeballPhase,
-  type DodgeballScoreEvent,
   type DodgeballScoreboard,
   type DodgeballScoringConfig,
-  type DodgeballStatsRow,
-  type DodgeballTeamState,
-  DEFAULT_DODGEBALL_SCORING_CONFIG,
 } from "@/shared/scoring/sports/dodgeball/types";
-import type { MatchScoreViewDto, SanitizedScoreEvent } from "@/shared/types";
+import type { SanitizedScoreEvent } from "@/shared/types";
 import type { SportConsoleProps } from "../registry";
 
 const btnGhost =
@@ -35,154 +33,11 @@ const btnPrimary =
   "flex items-center justify-center gap-1.5 rounded-[6px] bg-ink px-3 py-2 text-xs font-semibold text-white transition-opacity duration-200 disabled:opacity-45";
 const btnDanger =
   "flex items-center justify-center gap-1.5 rounded-[6px] border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition-colors duration-200 disabled:opacity-45";
-const inputClass =
-  "w-full rounded-[6px] border border-hairline bg-canvas px-3 py-2 text-sm text-ink focus:border-accent-strong focus:outline-none";
-const selectClass =
-  "w-full rounded-[6px] border border-hairline bg-surface px-2 py-2 text-xs text-ink focus:border-accent-strong focus:outline-none";
-
-/**
- * Extra-large jersey numeral used by the referee court board. On-court players
- * take the team colour; out players are red. The numerals are deliberately
- * large so the referee can read who is in and who is out from a distance.
- */
-const JerseyTile: React.FC<{
-  playerId: string;
-  tone: "active" | "out";
-  color?: string;
-}> = ({ playerId, tone, color }) => (
-  <span
-    aria-label={`#${playerId}`}
-    className={`inline-flex h-11 min-w-[2.75rem] items-center justify-center rounded-[8px] border-2 px-1.5 font-mono text-2xl font-black leading-none tabular-nums ${
-      tone === "out"
-        ? "border-red-200 bg-red-50 text-red-700"
-        : "bg-canvas text-ink"
-    }`}
-    style={
-      tone === "active"
-        ? {
-            borderColor: color,
-            color,
-            backgroundColor: color ? `${color}14` : undefined,
-          }
-        : undefined
-    }
-  >
-    {playerId}
-  </span>
-);
-
-const PRESET_COLORS = [
-  "#2563EB", // Blue-600
-  "#DC2626", // Red-600
-  "#16A34A", // Green-600
-  "#EA580C", // Orange-600
-  "#9333EA", // Purple-600
-  "#DB2777", // Pink-600
-  "#0891B2", // Cyan-600
-  "#65A30D", // Lime-600
-  "#D97706", // Amber-600
-  "#0D9488", // Teal-600
-  "#7C3AED", // Violet-600
-  "#C026D3", // Fuchsia-600
-];
-
-/** Inline color picker with presets + custom hex input. */
-const TeamColorPicker: React.FC<{
-  teamId: string;
-  teamName: string;
-  color: string;
-  onChange: (teamId: string, color: string) => void;
-  onClose: () => void;
-  disabled: boolean;
-}> = ({ teamId, teamName, color, onChange, onClose, disabled }) => {
-  const { t } = useI18n();
-  const [customColor, setCustomColor] = useState("");
-
-  const handlePresetClick = (preset: string) => {
-    if (!disabled) onChange(teamId, preset);
-  };
-
-  const handleCustomSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (disabled) return;
-    const raw = customColor.trim();
-    if (!raw) return;
-    const normalized = raw.startsWith("#") ? raw : `#${raw}`;
-    if (/^#[0-9A-Fa-f]{6}$/.test(normalized)) {
-      onChange(teamId, normalized.toUpperCase());
-      setCustomColor("");
-    }
-  };
-
-  return (
-    <div className="rounded-[8px] border border-hairline bg-surface p-3">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-faint">
-          {t("{team} color", { team: teamName })}
-        </p>
-        <button
-          type="button"
-          onClick={onClose}
-          className="inline-flex h-5 w-5 items-center justify-center rounded-[4px] text-faint hover:bg-canvas hover:text-ink"
-          aria-label={t("Close color picker")}
-        >
-          <Icon name="xmark" size="xs" />
-        </button>
-      </div>
-      <div className="flex flex-wrap gap-1.5 mb-2">
-        {PRESET_COLORS.map((preset) => (
-          <button
-            key={preset}
-            type="button"
-            onClick={() => handlePresetClick(preset)}
-            disabled={disabled}
-            className={`w-7 h-7 rounded-[6px] border-2 transition-all ${
-              color === preset
-                ? "border-ink scale-110 shadow-md"
-                : "border-transparent hover:border-faint"
-            }`}
-            style={{ backgroundColor: preset }}
-            aria-label={preset}
-            aria-pressed={color === preset}
-          />
-        ))}
-      </div>
-      <form onSubmit={handleCustomSubmit} className="flex gap-1.5">
-        <div className="w-24 shrink-0">
-          <input
-            type="text"
-            value={customColor}
-            onChange={(e) => setCustomColor(e.target.value.toUpperCase())}
-            placeholder="#RRGGBB"
-            maxLength={7}
-            disabled={disabled}
-            className={`${inputClass} font-mono text-xs`}
-            aria-label={t("Custom hex color")}
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={disabled || !customColor.trim()}
-          className={`${btnPrimary} shrink-0 px-3`}
-        >
-          {t("Apply")}
-        </button>
-      </form>
-      <div className="mt-1.5 flex items-center gap-2">
-        <div
-          className="w-6 h-6 rounded-[4px] border border-hairline"
-          style={{ backgroundColor: color }}
-        />
-        <span className="font-mono text-xs text-ink">{color}</span>
-      </div>
-    </div>
-  );
-};
 
 const PHASE_LABEL: Record<DodgeballPhase, string> = {
-  awaiting_toss: "Awaiting toss",
-  awaiting_lineups: "Awaiting lineups",
-  awaiting_set_start: "Set about to start",
+  awaiting_toss: "Ready for set 1",
+  awaiting_lineups: "Ready for set 1",
+  awaiting_set_start: "Ready for set 1",
   set_live: "In play",
   set_paused: "Clock stopped",
   awaiting_revival: "Revival window",
@@ -217,6 +72,13 @@ const fmtTimeString = (iso: string | null) => {
   }
 };
 
+/** DSO players are anonymous slots, not jersey numbers. */
+const playerLabel = (playerId?: string | null): string => {
+  if (!playerId) return "";
+  const slot = /^p(\d+)$/i.exec(playerId);
+  return slot ? `P${slot[1]}` : `#${playerId}`;
+};
+
 function useElapsedMs(active: boolean, anchor: number | undefined): number {
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
@@ -232,35 +94,15 @@ function useElapsedMs(active: boolean, anchor: number | undefined): number {
   return elapsed;
 }
 
-function replayStats(score: MatchScoreViewDto | null): DodgeballStatsRow[] {
-  if (!score || score.scoreboard.sport !== "dodgeball") return [];
-  if (!("hitPoints" in score.config)) return [];
-  try {
-    let state = dodgeballScoringEngine.createInitialState({
-      teams: score.teams.map((team) => ({ id: team.id, name: team.name })),
-      config: score.config as DodgeballScoringConfig,
-    });
-    for (const event of score.events) {
-      state = dodgeballScoringEngine.applyEvent(
-        state,
-        event as unknown as DodgeballScoreEvent,
-      );
-    }
-    return dodgeballScoringEngine
-      .getPlayerStats(state)
-      .filter((row) => row.playerId !== null);
-  } catch {
-    return [];
-  }
-}
-
 function describeEvent(
   ev: SanitizedScoreEvent,
   teamName: (id?: string | null) => string,
   t: (phrase: string, vars?: Record<string, string | number>) => string,
 ): string {
-  const parsed = ev as unknown as DodgeballScoreEvent;
+  const parsed = ev as unknown as Record<string, any>;
   switch (parsed.type) {
+    case "TEAM_POINT":
+      return t("{team} team point", { team: teamName(parsed.teamId) });
     case "TOSS":
       return t("Toss: {team} chose the court", {
         team: teamName(parsed.winnerTeamId),
@@ -272,27 +114,27 @@ function describeEvent(
     case "SET_START":
       return t("Set {setNo} started", { setNo: parsed.setNo });
     case "HIT":
-      return t("{team} hit #{player}", {
+      return t("{team} hit {player}", {
         team: teamName(parsed.teamId),
-        player: parsed.targetPlayerId,
+        player: playerLabel(parsed.targetPlayerId),
       });
     case "LINE_OUT":
       return t("{team} line-out point", { team: teamName(parsed.teamId) });
     case "CATCH":
-      return t("Catch by {team} (jersey {player})", {
+      return t("Catch by {team} ({player})", {
         team: teamName(parsed.teamId),
-        player: parsed.playerId,
+        player: playerLabel(parsed.playerId),
       });
     case "CARD":
-      return t("{card} card: {team} #{player}", {
+      return t("{card} card: {team} {player}", {
         card: parsed.cardType,
         team: teamName(parsed.teamId),
-        player: parsed.playerId,
+        player: playerLabel(parsed.playerId),
       });
     case "INJURY":
-      return t("Injury: {team} #{player}", {
+      return t("Injury: {team} {player}", {
         team: teamName(parsed.teamId),
-        player: parsed.playerId,
+        player: playerLabel(parsed.playerId),
       });
     case "DELAY":
       return t("Delay penalty: {team}", { team: teamName(parsed.teamId) });
@@ -338,8 +180,6 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
   const { t } = useI18n();
 
   const [pending, setPending] = useState(false);
-  const [colorSaving, setColorSaving] = useState(false);
-  const [editingColorTeam, setEditingColorTeam] = useState<string | null>(null);
   const [toast, setToast] = useState<{
     tone: "error" | "info" | "success";
     text: string;
@@ -360,7 +200,6 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
     score && "hitPoints" in score.config
       ? (score.config as DodgeballScoringConfig)
       : null;
-  const stats = useMemo(() => replayStats(score), [score]);
   const clockActive = Boolean(
     sb?.time && !sb.time.paused && sb.time.period !== "sudden_death",
   );
@@ -379,38 +218,6 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
   };
   const teamAName = teamName(teamAId) || t("TBD");
   const teamBName = teamName(teamBId) || t("TBD");
-
-  // Team colors are display-only config so the console matches the team kit.
-  // Defaults keep old sessions readable until the scorer picks a color.
-  const teamAColor =
-    config?.teamAColor ?? DEFAULT_DODGEBALL_SCORING_CONFIG.teamAColor ?? "#2563EB";
-  const teamBColor =
-    config?.teamBColor ?? DEFAULT_DODGEBALL_SCORING_CONFIG.teamBColor ?? "#DC2626";
-
-  const updateTeamColors = async (teamId: string, color: string): Promise<boolean> => {
-    if (!score || !config) return false;
-    const key =
-      teamId === teamAId
-        ? "teamAColor"
-        : teamId === teamBId
-          ? "teamBColor"
-          : null;
-    if (!key) return false;
-    setColorSaving(true);
-    try {
-      await actions.updateConfig({ [key]: color });
-      return true;
-    } catch (err) {
-      setToast({
-        tone: "error",
-        text:
-          err instanceof Error ? err.message : "Failed to update team colors",
-      });
-      return false;
-    } finally {
-      setColorSaving(false);
-    }
-  };
 
   const send: SendEvent = (payload) => {
     const ok = actions.postEvent(payload);
@@ -541,7 +348,6 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
               "Winner recorded to the official bracket (advancement, audit log and school notifications done).",
             )}
           </p>
-          {stats.length > 0 && <StatsTable stats={stats} teamName={teamName} />}
           <Link
             href={`/score/${tournamentId}`}
             className={`mt-4 inline-flex ${btnGhost}`}
@@ -599,7 +405,7 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
             {t("Start scoring session")}
           </button>
           <p className="mt-2 text-center text-[10px] text-faint">
-            {t("First step: the toss")}
+            {t("No toss, no jersey numbers — start set 1 straight away.")}
           </p>
         </div>
         <Link href={`/score/${tournamentId}`} className={`w-full ${btnGhost}`}>
@@ -613,64 +419,15 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
   const action = sb.nextAction;
   let promptBody: React.ReactNode = null;
 
-  if (action.action === "prompt_toss") {
+  if (action.action === "start_set") {
     promptBody = (
-      <TossPanel
-        teamAId={teamAId}
-        teamBId={teamBId}
-        teamAName={teamAName}
-        teamBName={teamBName}
+      <StartSetPanel
+        setNo={action.setNo}
+        deciding={action.deciding}
+        config={config}
         pending={pending}
         onEvent={send}
       />
-    );
-  } else if (action.action === "require_lineups") {
-    promptBody = (
-      <div className="space-y-3">
-        {action.missingTeamIds.map((teamId) => {
-          const state = sb.teamStates.find((team) => team.teamId === teamId);
-          return (
-            <LineupPanel
-              key={teamId}
-              teamId={teamId}
-              teamName={teamName(teamId)}
-              config={config}
-              initialOnCourt={state?.onCourt ?? []}
-              initialSubs={state?.subs ?? []}
-              pending={pending}
-              onEvent={send}
-            />
-          );
-        })}
-      </div>
-    );
-  } else if (action.action === "start_set") {
-    promptBody = (
-      <div className="space-y-3">
-        <StartSetPanel
-          setNo={action.setNo}
-          deciding={action.deciding}
-          pending={pending}
-          onEvent={send}
-        />
-        {action.setNo > 1 && (
-          <div className="space-y-3">
-            {[teamAId, teamBId].map((teamId) => {
-              const state = sb.teamStates.find(
-                (team) => team.teamId === teamId,
-              );
-              return state && state.subs.length > 0 ? (
-                <SubstitutionPanel
-                  key={teamId}
-                  state={state}
-                  pending={pending}
-                  onEvent={send}
-                />
-              ) : null;
-            })}
-          </div>
-        )}
-      </div>
     );
   } else if (action.action === "require_revival" && sb.revival) {
     promptBody = (
@@ -707,6 +464,7 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
       </div>
     );
   } else if (action.action === "end_set") {
+    const level = (sb.points[teamAId] ?? 0) === (sb.points[teamBId] ?? 0);
     promptBody = (
       <div className="rounded-[12px] border border-hairline bg-surface p-5 text-center">
         <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-faint">
@@ -715,6 +473,13 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
         <p className="mt-1 font-mono text-3xl font-bold tabular-nums text-ink">
           {sb.points[teamAId] ?? 0} – {sb.points[teamBId] ?? 0}
         </p>
+        {level && (
+          <p className="mt-2 text-[11px] font-semibold text-amber-800">
+            {t(
+              "Level set — it will be recorded as a draw. No set point to either team.",
+            )}
+          </p>
+        )}
         <button
           onClick={() =>
             send({ type: "SET_END", setNo: action.setNo, reason: "TIMER" })
@@ -731,53 +496,6 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
         </button>
       </div>
     );
-  } else if (action.action === "prompt_extra_time") {
-    promptBody = (
-      <div className="rounded-[12px] border border-amber-300 bg-amber-50/70 p-5 text-center">
-        <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-amber-800">
-          {t("Scores are tied")}
-        </p>
-        <p className="mt-1 font-mono text-3xl font-bold tabular-nums text-ink">
-          {sb.points[teamAId] ?? 0} – {sb.points[teamBId] ?? 0}
-        </p>
-        <button
-          onClick={() =>
-            send({ type: "EXTRA_TIME_START", setNo: action.setNo })
-          }
-          disabled={pending || isReadOnly}
-          className={`mt-4 w-full ${btnPrimary}`}
-        >
-          {pending ? (
-            <Icon name="spinner" size="sm" spin />
-          ) : (
-            <Icon name="stopwatch" size="sm" />
-          )}
-          {t("Start 2-minute extra time")}
-        </button>
-      </div>
-    );
-  } else if (action.action === "prompt_sudden_death") {
-    promptBody = (
-      <div className="rounded-[12px] border border-amber-300 bg-amber-50/70 p-5 text-center">
-        <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-amber-800">
-          {t("Still tied after extra time")}
-        </p>
-        <button
-          onClick={() =>
-            send({ type: "SUDDEN_DEATH_START", setNo: action.setNo })
-          }
-          disabled={pending || isReadOnly}
-          className={`mt-4 w-full ${btnPrimary}`}
-        >
-          {pending ? (
-            <Icon name="spinner" size="sm" spin />
-          ) : (
-            <Icon name="bolt" size="sm" />
-          )}
-          {t("Start sudden death")}
-        </button>
-      </div>
-    );
   } else if (
     action.action === "record_events" ||
     action.action === "sudden_death"
@@ -790,14 +508,13 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
             {t("Sudden death — the first point wins the set.")}
           </p>
         )}
-        <MatchActionsPanel
+        <TeamPointsPanel
           sb={sb}
           config={config}
           teamAId={teamAId}
           teamBId={teamBId}
-          teamAColor={teamAColor}
-          teamBColor={teamBColor}
           pending={pending}
+          isReadOnly={isReadOnly}
           onEvent={send}
         />
         <div className="grid grid-cols-2 gap-2">
@@ -824,6 +541,7 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
       </div>
     );
   } else if (action.action === "completed") {
+    const drawn = sb.winner.kind === "draw";
     promptBody = (
       <div className="rounded-[12px] border border-emerald-200 bg-emerald-50 p-5 text-center">
         <Icon
@@ -832,28 +550,36 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
           className="mx-auto mb-2 text-emerald-700"
         />
         <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-emerald-800">
-          {t("Match decided")}
+          {drawn ? t("Match drawn") : t("Match decided")}
         </p>
         <p className="mt-1 font-serif text-xl font-semibold text-ink">
-          {teamName(sb.winner.winnerTeamId)}
+          {drawn ? t("Level after the decider") : teamName(sb.winner.winnerTeamId)}
         </p>
         {sb.winner.label && (
           <p className="text-xs font-semibold text-emerald-700">
             {sb.winner.label}
           </p>
         )}
-        <button
-          onClick={doComplete}
-          disabled={pending || isReadOnly}
-          className={`mt-4 w-full ${btnPrimary}`}
-        >
-          {pending ? (
-            <Icon name="spinner" size="sm" spin />
-          ) : (
-            <Icon name="flag" size="sm" />
-          )}
-          {t("Complete match")}
-        </button>
+        {drawn ? (
+          <p className="mt-2 text-[11px] text-emerald-900">
+            {t(
+              "Use Override winner to record the official result for this drawn match.",
+            )}
+          </p>
+        ) : (
+          <button
+            onClick={doComplete}
+            disabled={pending || isReadOnly}
+            className={`mt-4 w-full ${btnPrimary}`}
+          >
+            {pending ? (
+              <Icon name="spinner" size="sm" spin />
+            ) : (
+              <Icon name="flag" size="sm" />
+            )}
+            {t("Complete match")}
+          </button>
+        )}
       </div>
     );
   }
@@ -876,65 +602,8 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
           {t("Match #{number}", { number: match.matchNumber })}
         </p>
         <div className="mt-2 text-center font-serif text-[17px] font-semibold text-ink">
-          <span style={{ color: teamAColor }}>{teamAName}</span>{" "}
-          <span className="text-faint">{t("vs")}</span>{" "}
-          <span style={{ color: teamBColor }}>{teamBName}</span>
+          {teamAName} <span className="text-faint">{t("vs")}</span> {teamBName}
         </div>
-
-        {!isReadOnly && (
-          <div className="mt-3">
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {[teamAId, teamBId].map((id) => {
-                const color = id === teamAId ? teamAColor : teamBColor;
-                const name = id === teamAId ? teamAName : teamBName;
-                const active = editingColorTeam === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() =>
-                      setEditingColorTeam((current) =>
-                        current === id ? null : id,
-                      )
-                    }
-                    className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold transition-colors hover:bg-canvas"
-                    style={{ borderColor: color, color }}
-                    aria-expanded={active}
-                    aria-label={t("Change {team} color", { team: name })}
-                  >
-                    <span
-                      className="h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: color }}
-                    />
-                    <span className="max-w-[8rem] truncate">{name}</span>
-                    <span className="font-mono opacity-70">{color}</span>
-                    <Icon name="pen" size="xs" />
-                  </button>
-                );
-              })}
-            </div>
-
-            {editingColorTeam && (
-              <div className="mt-2">
-                <TeamColorPicker
-                  teamId={editingColorTeam}
-                  teamName={
-                    editingColorTeam === teamAId ? teamAName : teamBName
-                  }
-                  color={
-                    editingColorTeam === teamAId ? teamAColor : teamBColor
-                  }
-                  onChange={async (id, color) => {
-                    const saved = await updateTeamColors(id, color);
-                    if (saved) setEditingColorTeam(null);
-                  }}
-                  onClose={() => setEditingColorTeam(null)}
-                  disabled={pending || colorSaving}
-                />
-              </div>
-            )}
-          </div>
-        )}
 
         <p className="mt-1 text-center text-[11px] text-muted">
           {t("Set {setNo}", { setNo: sb.setNo })} · {t(PHASE_LABEL[sb.phase])} ·
@@ -947,6 +616,9 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
           {sb.phase === "sudden_death"
             ? t("SUDDEN DEATH")
             : fmtClock(liveRemaining)}
+        </p>
+        <p className="mt-0.5 text-center text-[10px] text-faint">
+          {t("1:30 per set · 3 balls per team · team points only")}
         </p>
       </div>
 
@@ -964,74 +636,37 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
       <div className="grid grid-cols-2 gap-3">
         {[teamAId, teamBId].map((teamId) => {
           const state = sb.teamStates.find((team) => team.teamId === teamId);
-          const leading =
-            (sb.points[teamId] ?? 0) >
-            Math.max(
-              ...[teamAId, teamBId]
-                .filter((id) => id !== teamId)
-                .map((id) => sb.points[id] ?? 0),
-            );
+          const setWins = sb.setWins[teamId] ?? 0;
+          const rivalSetWins = sb.setWins[teamId === teamAId ? teamBId : teamAId] ?? 0;
+          const leading = setWins > rivalSetWins;
           return (
             <div
               key={teamId}
               className={`rounded-[12px] border p-4 ${
-                leading && sb.points[teamId] > 0
+                leading
                   ? "border-accent-strong bg-accent-soft/30"
                   : "border-hairline bg-surface"
               }`}
-              style={{
-                borderColor: teamId === teamAId ? teamAColor : teamBColor,
-              } as React.CSSProperties}
             >
-              <p className="truncate text-xs font-semibold" style={{ color: teamId === teamAId ? teamAColor : teamBColor }}>
+              <p className="truncate text-xs font-semibold text-ink">
                 {teamName(teamId)}
               </p>
-              <p className="mt-1 font-mono text-4xl font-bold tabular-nums" style={{ color: teamId === teamAId ? teamAColor : teamBColor }}>
+              <p className="mt-1 font-mono text-4xl font-bold tabular-nums text-ink">
                 {sb.points[teamId] ?? 0}
               </p>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
-                {t("Set wins: {count}", { count: sb.setWins[teamId] ?? 0 })}
+                {t("Set points")}
+              </p>
+              <p className="mt-0.5 text-[10px] text-muted">
+                {t("Set wins: {wins}", { wins: setWins })}
               </p>
               {state && (
-                <div className="mt-2 space-y-1.5">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <span className="mr-0.5 text-[9px] font-bold uppercase tracking-wider text-faint">
-                      {t("On court")} · {state.activePlayerIds.length}
-                    </span>
-                    {state.activePlayerIds.map((playerId) => (
-                      <span
-                        key={playerId}
-                        className="inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-[5px] bg-canvas px-1 font-mono text-base font-bold leading-none tabular-nums"
-                        style={{ color: teamId === teamAId ? teamAColor : teamBColor }}
-                      >
-                        {playerId}
-                      </span>
-                    ))}
-                    {state.activePlayerIds.length === 0 && (
-                      <span className="text-[10px] font-semibold text-red-700">
-                        {t("None")}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1">
-                    <span className="mr-0.5 text-[9px] font-bold uppercase tracking-wider text-red-700">
-                      {t("Out")} · {state.outPlayerIds.length}
-                    </span>
-                    {state.outPlayerIds.map((playerId) => (
-                      <span
-                        key={`out-${playerId}`}
-                        className="inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-[5px] bg-red-50 px-1 font-mono text-base font-bold leading-none tabular-nums text-red-700 ring-1 ring-red-200"
-                      >
-                        {playerId}
-                      </span>
-                    ))}
-                    {state.outPlayerIds.length === 0 && (
-                      <span className="text-[10px] font-semibold text-faint">
-                        {t("None")}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                <p className="mt-2 flex items-center gap-1.5 text-[10px] text-muted">
+                  <Icon name="bolt" size="xs" />
+                  {t("Balls to attack: {count}", {
+                    count: state.balls ?? config.ballsPerTeam,
+                  })}
+                </p>
               )}
             </div>
           );
@@ -1059,7 +694,9 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
                 </span>
                 <span className="w-28 shrink-0 text-right text-[10px] font-semibold text-muted">
                   {set.completed
-                    ? teamName(set.winnerTeamId)
+                    ? set.winnerTeamId
+                      ? teamName(set.winnerTeamId)
+                      : t("Draw")
                     : set.suddenDeath
                       ? t("Sudden death")
                       : set.extraTime
@@ -1071,8 +708,6 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
           </ul>
         </div>
       )}
-
-      {stats.length > 0 && <StatsTable stats={stats} teamName={teamName} />}
 
       {showOverride && (
         <div className="rounded-[12px] border border-amber-300 bg-amber-50/70 p-5">
@@ -1173,7 +808,7 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
               {t("Undo last event")}
             </button>
           )}
-          {score.status === "active" && !showOverride && sb.winner.resolved ? (
+          {score.status === "active" && !showOverride && sb.winner.resolved && sb.winner.winnerTeamId ? (
             <button
               onClick={doComplete}
               disabled={pending || isReadOnly}
@@ -1212,204 +847,13 @@ export const DodgeballConsole: React.FC<SportConsoleProps> = (props) => {
   );
 };
 
-const TossPanel: React.FC<{
-  teamAId: string;
-  teamBId: string;
-  teamAName: string;
-  teamBName: string;
-  pending: boolean;
-  onEvent: SendEvent;
-}> = ({ teamAId, teamBId, teamAName, teamBName, pending, onEvent }) => {
-  const { t } = useI18n();
-  const [winnerTeamId, setWinnerTeamId] = useState("");
-
-  return (
-    <div className="rounded-[12px] border border-hairline bg-surface p-5">
-      <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.06em] text-faint">
-        <Icon name="trophy" size="xs" /> {t("Opening toss")}
-      </p>
-      <p className="mt-1 text-[10px] text-muted">
-        {t(
-          "The toss winner chooses the court. The other team starts with the ball.",
-        )}
-      </p>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        {[teamAId, teamBId].map((id, idx) => (
-          <button
-            key={id}
-            onClick={() => setWinnerTeamId(id)}
-            className={`rounded-[6px] border px-3 py-3 text-sm font-semibold transition-colors ${
-              winnerTeamId === id
-                ? "border-accent-strong bg-accent-soft text-accent-strong"
-                : "border-hairline bg-surface text-ink hover:border-faint"
-            }`}
-          >
-            {idx === 0 ? teamAName : teamBName}
-          </button>
-        ))}
-      </div>
-      <button
-        onClick={() => onEvent({ type: "TOSS", winnerTeamId, choice: "COURT" })}
-        disabled={pending || !winnerTeamId}
-        className={`mt-3 w-full ${btnPrimary}`}
-      >
-        {pending ? (
-          <Icon name="spinner" size="sm" spin />
-        ) : (
-          <Icon name="check" size="sm" />
-        )}
-        {t("Record toss")}
-      </button>
-    </div>
-  );
-};
-
-const LineupPanel: React.FC<{
-  teamId: string;
-  teamName: string;
-  config: DodgeballScoringConfig;
-  initialOnCourt: string[];
-  initialSubs: string[];
-  pending: boolean;
-  onEvent: SendEvent;
-}> = ({
-  teamId,
-  teamName,
-  config,
-  initialOnCourt,
-  initialSubs,
-  pending,
-  onEvent,
-}) => {
-  const { t } = useI18n();
-  const [onCourt, setOnCourt] = useState<string[]>(() => {
-    const base = [...initialOnCourt];
-    while (base.length < config.playersOnCourt) base.push("");
-    return base.slice(0, config.playersOnCourt);
-  });
-  const [subsText, setSubsText] = useState(initialSubs.join(", "));
-  const [error, setError] = useState("");
-
-  const clean = (value: string) => value.trim().replace(/^#/, "").trim();
-  const validJersey = (value: string) =>
-    /^\d+$/.test(value) && Number(value) >= 1;
-
-  const submit = () => {
-    const ids = onCourt.map(clean).filter(Boolean);
-    if (ids.length < config.minPlayersToStart) {
-      setError(
-        t("Enter at least {min} on-court jersey numbers.", {
-          min: config.minPlayersToStart,
-        }),
-      );
-      return;
-    }
-    if (ids.some((id) => !validJersey(id))) {
-      setError(t("Jersey numbers must be valid positive numbers."));
-      return;
-    }
-    if (new Set(ids).size !== ids.length) {
-      setError(t("Each on-court player must have a different jersey number."));
-      return;
-    }
-    const subs = subsText
-      .split(/[,\s]+/)
-      .map(clean)
-      .filter(Boolean);
-    if (subs.some((sub) => !validJersey(sub))) {
-      setError(t("Substitute jersey numbers must be valid positive numbers."));
-      return;
-    }
-    if (
-      new Set(subs).size !== subs.length ||
-      subs.some((sub) => ids.includes(sub))
-    ) {
-      setError(
-        t("Substitute jersey numbers must be distinct and not on court."),
-      );
-      return;
-    }
-    setError("");
-    onEvent({ type: "LINEUP_SET", teamId, onCourt: ids, subs });
-  };
-
-  return (
-    <div className="rounded-[12px] border border-hairline bg-surface p-5">
-      <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.06em] text-faint">
-        <Icon name="users" size="xs" />{" "}
-        {t("Lineup: {team}", { team: teamName })}
-      </p>
-      <p className="mt-1 text-[10px] text-muted">
-        {t(
-          "Enter jersey numbers only — up to {max} on court, at least {min}.",
-          {
-            max: config.playersOnCourt,
-            min: config.minPlayersToStart,
-          },
-        )}
-      </p>
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {onCourt.map((value, index) => (
-          <label key={index} className="block">
-            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">
-              {t("Player {n}", { n: index + 1 })}
-            </span>
-            <input
-              value={value}
-              onChange={(e) =>
-                setOnCourt((current) =>
-                  current.map((entry, i) =>
-                    i === index ? e.target.value : entry,
-                  ),
-                )
-              }
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder={t("Jersey no.")}
-              className={inputClass}
-            />
-          </label>
-        ))}
-      </div>
-      <label className="mt-2 block">
-        <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">
-          {t("Substitute jersey numbers (comma-separated, up to {max})", {
-            max: config.maxSubstitutes,
-          })}
-        </span>
-        <input
-          value={subsText}
-          onChange={(e) => setSubsText(e.target.value)}
-          autoComplete="off"
-          placeholder={t("e.g. 7, 8, 11, 23")}
-          className={inputClass}
-        />
-      </label>
-      {error && (
-        <p className="mt-2 text-[11px] font-semibold text-red-700">{error}</p>
-      )}
-      <button
-        onClick={submit}
-        disabled={pending}
-        className={`mt-3 w-full ${btnPrimary}`}
-      >
-        {pending ? (
-          <Icon name="spinner" size="sm" spin />
-        ) : (
-          <Icon name="check" size="sm" />
-        )}
-        {t("Save lineup")}
-      </button>
-    </div>
-  );
-};
-
 const StartSetPanel: React.FC<{
   setNo: number;
   deciding: boolean;
+  config: DodgeballScoringConfig;
   pending: boolean;
   onEvent: SendEvent;
-}> = ({ setNo, deciding, pending, onEvent }) => {
+}> = ({ setNo, deciding, config, pending, onEvent }) => {
   const { t } = useI18n();
   return (
     <div className="rounded-[12px] border border-hairline bg-surface p-5 text-center">
@@ -1420,7 +864,14 @@ const StartSetPanel: React.FC<{
         {t("Set {setNo}", { setNo })}
       </p>
       <p className="mt-1 text-[10px] text-muted">
-        {t("Substitutions are allowed only before the set starts.")}
+        {deciding
+          ? t("Only played because the first two sets were level.")
+          : t("1:30 on the clock · 3 balls for each team.")}
+      </p>
+      <p className="mt-1 text-[10px] text-faint">
+        {t("{players} players per side · no jersey numbers", {
+          players: config.playersOnCourt,
+        })}
       </p>
       <button
         onClick={() => onEvent({ type: "SET_START", setNo })}
@@ -1433,66 +884,6 @@ const StartSetPanel: React.FC<{
           <Icon name="play" size="sm" />
         )}
         {t("Start set {setNo}", { setNo })}
-      </button>
-    </div>
-  );
-};
-
-const SubstitutionPanel: React.FC<{
-  state: DodgeballTeamState;
-  pending: boolean;
-  onEvent: SendEvent;
-}> = ({ state, pending, onEvent }) => {
-  const { t } = useI18n();
-  const [outPlayer, setOutPlayer] = useState("");
-  const [inPlayer, setInPlayer] = useState("");
-  const outSelected = state.onCourt.includes(outPlayer) ? outPlayer : "";
-  const inSelected = state.subs.includes(inPlayer) ? inPlayer : "";
-
-  return (
-    <div className="rounded-[12px] border border-hairline bg-surface p-4">
-      <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-faint">
-        {t("{team} · substitution", { team: state.teamName })}
-      </p>
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        <select
-          value={outSelected}
-          onChange={(e) => setOutPlayer(e.target.value)}
-          className={selectClass}
-        >
-          <option value="">{t("Outgoing player")}</option>
-          {state.onCourt.map((playerId) => (
-            <option key={playerId} value={playerId}>
-              #{playerId}
-            </option>
-          ))}
-        </select>
-        <select
-          value={inSelected}
-          onChange={(e) => setInPlayer(e.target.value)}
-          className={selectClass}
-        >
-          <option value="">{t("Incoming sub")}</option>
-          {state.subs.map((playerId) => (
-            <option key={playerId} value={playerId}>
-              #{playerId}
-            </option>
-          ))}
-        </select>
-      </div>
-      <button
-        onClick={() =>
-          onEvent({
-            type: "SUBSTITUTION",
-            teamId: state.teamId,
-            outPlayerId: outSelected,
-            inPlayerId: inSelected,
-          })
-        }
-        disabled={pending || !outSelected || !inSelected}
-        className={`mt-2 w-full ${btnGhost}`}
-      >
-        <Icon name="swap" size="sm" /> {t("Substitute")}
       </button>
     </div>
   );
@@ -1517,9 +908,9 @@ const RevivalPanel: React.FC<{
       <p className="mt-1 text-sm font-semibold text-ink">{teamName}</p>
       <p className="mt-1 text-xs text-red-900">
         {t(
-          "Jerseys {players} must re-enter before the 5-second window closes.",
+          "Players {players} must re-enter before the 5-second window closes.",
           {
-            players: revival.outPlayerIds.map((id) => `#${id}`).join(", "),
+            players: revival.outPlayerIds.map(playerLabel).join(", "),
           },
         )}
       </p>
@@ -1555,387 +946,56 @@ const RevivalPanel: React.FC<{
   );
 };
 
-const MatchActionsPanel: React.FC<{
+const TeamPointsPanel: React.FC<{
   sb: DodgeballScoreboard;
   config: DodgeballScoringConfig;
   teamAId: string;
   teamBId: string;
-  teamAColor: string;
-  teamBColor: string;
   pending: boolean;
+  isReadOnly: boolean;
   onEvent: SendEvent;
-}> = ({
-  sb,
-  config,
-  teamAId,
-  teamBId,
-  teamAColor,
-  teamBColor,
-  pending,
-  onEvent,
-}) => {
+}> = ({ sb, config, teamAId, teamBId, pending, isReadOnly, onEvent }) => {
   const { t } = useI18n();
 
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-      {[teamAId, teamBId].map((teamId) => (
-        <TeamActionCard
-          key={teamId}
-          sb={sb}
-          config={config}
-          teamId={teamId}
-          rivalId={teamId === teamAId ? teamBId : teamAId}
-          teamColor={teamId === teamAId ? teamAColor : teamBColor}
-          pending={pending}
-          onEvent={onEvent}
-        />
-      ))}
+      {[teamAId, teamBId].map((teamId) => {
+        const state = sb.teamStates.find((team) => team.teamId === teamId);
+        return (
+          <div
+            key={teamId}
+            className="rounded-[12px] border border-hairline bg-surface p-4 text-center"
+          >
+            <p className="truncate text-sm font-semibold text-ink">
+              {state?.teamName ?? teamId}
+            </p>
+            <p className="mt-1 font-mono text-4xl font-bold tabular-nums text-ink">
+              {sb.points[teamId] ?? 0}
+            </p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
+              {t("Set points")}
+            </p>
+            <button
+              onClick={() => onEvent({ type: "TEAM_POINT", teamId, points: 1 })}
+              disabled={pending || isReadOnly}
+              className={`mt-3 w-full ${btnPrimary}`}
+            >
+              <Icon name="bolt" size="sm" /> {t("Team point +1")}
+            </button>
+            <p className="mt-2 flex items-center justify-center gap-1.5 text-[10px] text-muted">
+              <Icon name="bolt" size="xs" />
+              {t("Balls to attack: {count}", {
+                count: state?.balls ?? config.ballsPerTeam,
+              })}
+            </p>
+          </div>
+        );
+      })}
       <p className="text-[10px] text-muted md:col-span-2">
         {t(
-          "Hit / line-out points go to the selected team. A catch credits the catcher and puts the thrower out.",
+          "Points belong to the team. No player selection and no individual player points.",
         )}
       </p>
-    </div>
-  );
-};
-
-const TeamActionCard: React.FC<{
-  sb: DodgeballScoreboard;
-  config: DodgeballScoringConfig;
-  teamId: string;
-  rivalId: string;
-  teamColor: string;
-  pending: boolean;
-  onEvent: SendEvent;
-}> = ({ sb, config, teamId, rivalId, teamColor, pending, onEvent }) => {
-  const { t } = useI18n();
-  const state = sb.teamStates.find((team) => team.teamId === teamId);
-  const rival = sb.teamStates.find((team) => team.teamId === rivalId);
-  const [ownPlayer, setOwnPlayer] = useState("");
-  const [rivalPlayer, setRivalPlayer] = useState("");
-  const [revivePlayer, setRevivePlayer] = useState("");
-  const [delayType, setDelayType] = useState<DodgeballDelayType>("FIVE_SECOND");
-
-  if (!state || !rival) return null;
-
-  const ownActive = state.activePlayerIds;
-  const rivalActive = rival.activePlayerIds;
-  const ownOut = state.outPlayerIds;
-  const teamLabel = state.teamName;
-
-  // The scoreboard is refreshed after every event, so a jersey can disappear
-  // from a dropdown while its number is still held in local state. Derive the
-  // effective value from the live scoreboard on every render: a stale jersey
-  // must never be posted (the engine rejects it with a 409) and its buttons
-  // must disable immediately.
-  const ownSelected = ownActive.includes(ownPlayer) ? ownPlayer : "";
-  const rivalSelected = rivalActive.includes(rivalPlayer) ? rivalPlayer : "";
-  const revivableOut = ownOut.filter(
-    (playerId) => !state.disqualifiedPlayerIds.includes(playerId),
-  );
-  const reviveSelected = revivableOut.includes(revivePlayer)
-    ? revivePlayer
-    : "";
-
-  return (
-    <div className="rounded-[12px] border border-hairline bg-surface p-4">
-      <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-sm font-semibold text-ink">{teamLabel}</p>
-        <span className="shrink-0 rounded-full bg-canvas px-2 py-0.5 font-mono text-[10px] font-semibold tabular-nums text-muted">
-          {t("{active} on court · {out} out", {
-            active: ownActive.length,
-            out: ownOut.length,
-          })}
-        </span>
-      </div>
-
-      {/* Referee court board: big numerals for on-court and out players. */}
-      <div className="mt-3 grid grid-cols-2 gap-3 rounded-[8px] border border-hairline bg-canvas/50 p-2.5">
-        <div>
-          <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.05em] text-faint">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            {t("On court")} · {ownActive.length}
-          </p>
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {ownActive.map((playerId) => (
-              <JerseyTile
-                key={playerId}
-                playerId={playerId}
-                tone="active"
-                color={teamColor}
-              />
-            ))}
-            {ownActive.length === 0 && (
-              <span className="text-[11px] font-semibold text-red-700">
-                {t("No players on court")}
-              </span>
-            )}
-          </div>
-        </div>
-        <div>
-          <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.05em] text-red-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-            {t("Out")} · {ownOut.length}
-          </p>
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {ownOut.map((playerId) => (
-              <JerseyTile key={playerId} playerId={playerId} tone="out" />
-            ))}
-            {ownOut.length === 0 && (
-              <span className="text-[11px] font-semibold text-faint">
-                {t("None")}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <label className="block">
-          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">
-            {t("Own player")}
-          </span>
-          <select
-            value={ownSelected}
-            onChange={(e) => setOwnPlayer(e.target.value)}
-            className={selectClass}
-          >
-            <option value="">{t("Optional")}</option>
-            {ownActive.map((playerId) => (
-              <option key={playerId} value={playerId}>
-                #{playerId}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">
-            {t("Opponent player")}
-          </span>
-          <select
-            value={rivalSelected}
-            onChange={(e) => setRivalPlayer(e.target.value)}
-            className={selectClass}
-          >
-            <option value="">{t("Select")}</option>
-            {rivalActive.map((playerId) => (
-              <option key={playerId} value={playerId}>
-                #{playerId}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        <button
-          onClick={() =>
-            onEvent({
-              type: "HIT",
-              teamId,
-              ...(ownSelected ? { playerId: ownSelected } : {}),
-              targetPlayerId: rivalSelected,
-            })
-          }
-          disabled={pending || !rivalSelected}
-          className={btnPrimary}
-        >
-          <Icon name="bolt" size="sm" /> {t("Hit")}
-        </button>
-        <button
-          onClick={() =>
-            onEvent({
-              type: "LINE_OUT",
-              teamId,
-              ...(ownSelected ? { playerId: ownSelected } : {}),
-              targetPlayerId: rivalSelected,
-            })
-          }
-          disabled={pending || !rivalSelected}
-          className={btnGhost}
-        >
-          <Icon name="triangleExclamation" size="sm" /> {t("Line out")}
-        </button>
-        <button
-          onClick={() =>
-            onEvent({
-              type: "CATCH",
-              teamId,
-              playerId: ownSelected,
-              throwerTeamId: rivalId,
-              throwerPlayerId: rivalSelected,
-              ...(reviveSelected ? { revivePlayerId: reviveSelected } : {}),
-            })
-          }
-          disabled={pending || !ownSelected || !rivalSelected}
-          className={btnPrimary}
-        >
-          <Icon name="shield" size="sm" /> {t("Catch")}
-        </button>
-        <button
-          onClick={() =>
-            onEvent({
-              type: "CARD",
-              cardType: "YELLOW",
-              teamId,
-              playerId: ownSelected,
-            })
-          }
-          disabled={pending || !ownSelected}
-          className={btnGhost}
-        >
-          <Icon name="flag" size="sm" /> {t("Yellow card")}
-        </button>
-        <button
-          onClick={() =>
-            onEvent({
-              type: "CARD",
-              cardType: "RED",
-              teamId,
-              playerId: ownSelected,
-            })
-          }
-          disabled={pending || !ownSelected}
-          className={btnDanger}
-        >
-          <Icon name="flag" size="sm" /> {t("Red card")}
-        </button>
-        <button
-          onClick={() =>
-            onEvent({ type: "INJURY", teamId, playerId: ownSelected })
-          }
-          disabled={pending || !ownSelected}
-          className={btnGhost}
-        >
-          <Icon name="userPlus" size="sm" /> {t("Injury out")}
-        </button>
-      </div>
-
-      {revivableOut.length > 0 && (
-        <label className="mt-2 block">
-          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">
-            {t("Catch revival target")}
-          </span>
-          <select
-            value={reviveSelected}
-            onChange={(e) => setRevivePlayer(e.target.value)}
-            className={selectClass}
-          >
-            <option value="">{t("Automatic (first out)")}</option>
-            {revivableOut.map((playerId) => (
-              <option key={playerId} value={playerId}>
-                #{playerId}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-
-      <div className="mt-3 border-t border-hairline pt-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-faint">
-          {t("Delay")}
-        </p>
-        <div className="mt-1 flex gap-2">
-          <select
-            value={delayType}
-            onChange={(e) => setDelayType(e.target.value as DodgeballDelayType)}
-            className={selectClass}
-          >
-            <option value="FIVE_SECOND">{t("5-second delay")}</option>
-            <option value="THREE_SECOND">{t("3-second delay")}</option>
-          </select>
-          <button
-            onClick={() =>
-              onEvent({
-                type: "DELAY",
-                delayType,
-                teamId,
-                ...(ownSelected ? { playerId: ownSelected } : {}),
-              })
-            }
-            disabled={pending}
-            className={btnGhost}
-          >
-            <Icon name="stopwatch" size="sm" /> {t("Delay")}
-          </button>
-        </div>
-        <p className="mt-1 text-[9px] text-faint">
-          {t("A delay awards {points} point(s) to the opponent.", {
-            points: config.delayPenaltyPoints,
-          })}
-        </p>
-      </div>
-    </div>
-  );
-};
-
-const StatsTable: React.FC<{
-  stats: DodgeballStatsRow[];
-  teamName: (id?: string | null) => string;
-}> = ({ stats, teamName }) => {
-  const { t } = useI18n();
-  const columns = dodgeballScoringEngine.statColumns();
-  const teamIds = Array.from(
-    new Set(
-      stats.map((row) => row.teamId).filter((id): id is string => Boolean(id)),
-    ),
-  );
-
-  return (
-    <div className="rounded-[12px] border border-hairline bg-surface p-4">
-      <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.06em] text-faint">
-        {t("Player stats (by jersey)")}
-      </p>
-      <div className="space-y-3">
-        {teamIds.map((teamId) => {
-          const rows = stats.filter((row) => row.teamId === teamId);
-          if (rows.length === 0) return null;
-          return (
-            <div key={teamId}>
-              <p className="mb-1 truncate text-[11px] font-semibold text-ink">
-                {teamName(teamId)}
-              </p>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[320px] text-left text-[11px]">
-                  <thead>
-                    <tr className="text-[9px] uppercase tracking-wider text-faint">
-                      <th className="pb-1 pr-2 font-semibold">{t("Jersey")}</th>
-                      {columns.map((column) => (
-                        <th
-                          key={column.key}
-                          className="pb-1 px-1 text-right font-semibold"
-                        >
-                          {column.label}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row) => (
-                      <tr
-                        key={`${row.teamId}:${row.playerId}`}
-                        className="border-t border-hairline/60"
-                      >
-                        <td className="py-1 pr-2 font-mono font-semibold text-ink">
-                          #{row.playerId}
-                        </td>
-                        {columns.map((column) => (
-                          <td
-                            key={column.key}
-                            className="py-1 px-1 text-right font-mono tabular-nums text-ink"
-                          >
-                            {row.values[column.key] ?? 0}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 };

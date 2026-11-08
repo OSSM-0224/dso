@@ -117,11 +117,11 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:space-y-3">
       {/* Back and Title Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-sm print:border-0 print:p-0 print:pb-2 print:shadow-none">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 min-w-0 flex-wrap">
+          <div className="flex items-center gap-2 min-w-0 flex-wrap print:hidden">
             <button
               onClick={onBack}
               className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 shrink-0"
@@ -144,8 +144,8 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
             <span className="capitalize font-medium text-slate-800">{tournament.gender}</span>
             <span>·</span>
             <span>{t("Year {year}", { year: tournament.year })}</span>
-            <span>·</span>
-            <span>{t("Lookback: {years} Yrs", { years: tournament.championLookbackYears || 3 })}</span>
+            <span className="print:hidden">·</span>
+            <span className="print:hidden">{t("Lookback: {years} Yrs", { years: tournament.championLookbackYears || 3 })}</span>
             <span>·</span>
             <span
               className={`font-semibold capitalize px-2 py-0.5 rounded text-[11px] ${
@@ -163,7 +163,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 print:hidden">
           {(tournament.status === 'published' || tournament.status === 'completed') && (
             <button
               onClick={() => onOpenPublicView(tournament.id)}
@@ -177,7 +177,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
       </div>
 
       {/* Main Feature Tabs */}
-      <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg w-full sm:max-w-md overflow-x-auto">
+      <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg w-full sm:max-w-md overflow-x-auto print:hidden">
         <button
           onClick={() => setActiveTab('fixtures')}
           className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${

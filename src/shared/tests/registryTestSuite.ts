@@ -82,7 +82,9 @@ export function runRegistryTestSuite(): TestSuiteSummary {
     if (meta.engineId !== 'dodgeball') throw new Error(`engineId=${meta.engineId}`);
     const cfg = defaultDodgeballConfigForAgeGroup('U-17');
     const summary = meta.configSummary({ sport: 'dodgeball', ageGroup: 'U-17', gender: 'girls' });
-    if (!summary.includes(`Best of ${cfg.bestOf}`)) throw new Error(`summary=${summary}`);
+    const clock = `${Math.floor(cfg.setDurationSec / 60)}:${String(cfg.setDurationSec % 60).padStart(2, '0')}`;
+    if (!summary.includes(`${cfg.regulationSets} sets × ${clock}`)) throw new Error(`summary=${summary}`);
+    if (!summary.includes(`${cfg.ballsPerTeam} balls`)) throw new Error(`summary=${summary}`);
     if (!summary.includes(`${cfg.playersOnCourt} on court`)) throw new Error(`summary=${summary}`);
   });
 

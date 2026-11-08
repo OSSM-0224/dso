@@ -12,7 +12,7 @@ The platform replaces notebook fixture-drawing with a deterministic, constraint-
 | --- | --- | --- | --- | --- |
 | **Kho-Kho** | Yes | Yes | Yes | Team and turn events |
 | **Sepak Takraw** | Yes | Yes | Yes | Jersey-based point attribution |
-| **Dodgeball** | Yes | Yes | Yes | Jersey-wise points, hits, outs, catches, revives, cards, delays |
+| **Dodgeball** | Yes | Yes | Yes | Team-only points; no player selection |
 
 All three sports are selectable when creating a tournament and when recording a past tournament. Kabaddi and Volleyball are not available in the sport picker at the moment.
 
@@ -85,7 +85,7 @@ The scorer console is sport-specific and driven by the server's next-action prom
 
 - **Kho-Kho** — toss, turn clock, dismissals, fouls, pause/resume, follow-on, extra innings, sudden death, manual decision.
 - **Sepak Takraw** — toss and serve choice, three-player lineups with roles, rally points and faults, serve rotation, deuce, timeouts, side change, deciding-set toss.
-- **Dodgeball** — toss, six-player jersey lineups with substitutes, set clock, hits, line-outs, catches, cards, injuries, delays, all-out revival, extra time, sudden death.
+- **Dodgeball** — no toss, no jersey numbers and no player selection, two 1:30 sets plus a decider when level, three balls per team, team-point buttons only.
 
 ### 8. Points and corrections
 
@@ -151,23 +151,19 @@ Readers see the same result through a sport-specific live card on the public tou
 
 | Item | Default |
 | --- | --- |
-| Match | Best of 3 sets; first to 2 set wins |
-| Set | 3 minutes |
-| Court | 6 players; minimum 4 to start |
-| Squad | Up to 10 named players (6 on court + 4 substitutes) |
-| Jerseys | 1–99 (single or double digit) |
-| Scoring actions | Hit, line-out, catch, red card, injury, delay, revival failure |
-| All-out | +2 bonus and a 5-second revival window |
-| Revival failure | Opponent gains a point, then the team re-enters so play continues |
-| Catch | Thrower is out; one team-mate is revived by default |
-| Tie after regulation | 2-minute extra time, then sudden death (first point wins the set) |
-| Cards | Yellow is a warning; a red card disqualifies the player for the match and awards the opponent a point |
-| Delays | 5-second and 3-second delays award the opponent a point |
-| Substitutions | Between sets only; red-carded players cannot return |
+| Match | Two 1:30 sets; a third set is played only when the first two leave the match level |
+| Set | 1 minute 30 seconds |
+| Court | 6 players per side (not listed in the console) |
+| Balls | 3 balls per team to attack with |
+| Scoring | Tap **Team point +1** on a team card; no player selection |
+| Points | Team points only; no individual player scoring |
+| Tied set | Recorded as a draw; no set point, no extra time and no sudden death |
+| Toss | Not used; the scorer starts set 1 straight away |
+| Player selection | None — no jerseys, no on-court/out picks, no player dropdowns |
 
-Dodgeball tracks statistics by jersey number: **points, hits, outs, catches, revives, cards, and delays**. The same table appears in the scorer console and in the reader live view.
+Dodgeball tracks **team-level** statistics only. No row is attributed to an individual player or jersey number. Legacy sessions can still replay older hit/catch/card events, but the DSO console exposes team points only.
 
-The scorer or admin can set a display color for each team from the console header (preset swatches or a custom hex value). Colors are saved with the match and applied to the console score cards and the reader live view, so both teams are easy to tell apart at a glance.
+There is no team-colour picker in the dodgeball console; the reader live view uses the standard neutral card styling.
 
 All rule values are configuration defaults. A DSO can adjust a value without changing the console or the bracket logic.
 
@@ -203,7 +199,7 @@ All rule values are configuration defaults. A DSO can adjust a value without cha
 npm run dev        # Development server on http://localhost:3000
 npm run build      # Production build
 npm start          # Run the production build
-npm test           # 158 automated checks
+npm test           # 160 automated checks
 npm run lint       # TypeScript check (tsc --noEmit)
 ```
 
@@ -216,12 +212,12 @@ Environment variables (see `.env.example`):
 
 ### Test coverage
 
-`npm test` runs 158 automated checks across:
+`npm test` runs 160 automated checks across:
 
 - the pure fixture engine (byes, seeding, separation, reproducibility)
 - the Kho-Kho scoring engine
 - the Sepak Takraw scoring engine
-- the Dodgeball scoring engine (30 cases: lineups, clock, hits, catches, all-out revival, cards, delays, extra time, sudden death, best-of-three, void/undo, statistics)
+- the Dodgeball scoring engine (30 cases: no toss, team points only, 1:30 sets, three balls, draws, decider, legacy hit/catch/card events, void/undo)
 - the sport console registry and component registry
 - the offline score-event queue
 - participant access isolation and data secrecy

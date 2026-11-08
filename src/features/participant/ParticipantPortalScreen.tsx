@@ -28,7 +28,10 @@ const SchoolLiveMatchesSection: React.FC<{ matches: any[] }> = ({ matches }) => 
   if (matches.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-red-200 bg-white shadow-xs overflow-hidden">
+    <div
+      data-live-section="school"
+      className="rounded-2xl border border-red-200 bg-white shadow-xs overflow-hidden"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-red-100 bg-red-50/70 px-4 py-3">
         <div className="flex flex-wrap items-center gap-2">
           <span className="relative flex h-2.5 w-2.5">

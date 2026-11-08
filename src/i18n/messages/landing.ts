@@ -71,6 +71,9 @@ export const landing: AreaMessages = {
     "On the court right now.": "आता मैदानावर.",
     "Matches in progress across the district, updating as points are scored.":
       "जिल्ह्यभर सुरू असलेले सामने, गुण पडताच अपडेट होतात.",
+    "Match not started yet": "सामना अजून सुरू झालेला नाही",
+    "Starting soon": "लवकरच सुरू होणार",
+    "Score updates will appear here once play begins.": "खेळ सुरू झाल्यावर स्कोअर येथे दिसेल.",
     "Completed": "पूर्ण",
     "Published": "प्रकाशित",
     "View bracket": "ब्रॅकेट पहा",
@@ -96,6 +99,12 @@ export const landing: AreaMessages = {
     "© {year} District Sports Office, Navi Mumbai. Built for the district’s schools.":
       "© {year} जिल्हा क्रीडा कार्यालय, नवी मुंबई. जिल्ह्यातील शाळांसाठी बनवलेले.",
     "{count} public draws": "{count} सार्वजनिक ड्रॉ",
+    "{count} tournaments": "{count} स्पर्धा",
+    "Tournaments whose draw is not published yet are listed here as pending.":
+      "ज्या स्पर्धांचा ड्रॉ अजून प्रकाशित झालेला नाही, त्या येथे प्रलंबित म्हणून दिसतात.",
+    "Draw pending": "ड्रॉ प्रलंबित",
+    "Awaiting publish": "प्रकाशनाच्या प्रतीक्षेत",
+    "Draw not published yet.": "ड्रॉ अजून प्रकाशित झालेला नाही.",
     "{count} schools": "{count} शाळा",
     "Official fixtures desk": "अधिकृत सामना डेस्क",
     "Open menu": "मेनू उघडा",
@@ -189,6 +198,9 @@ export const landing: AreaMessages = {
     "On the court right now.": "अभी मैदान पर।",
     "Matches in progress across the district, updating as points are scored.":
       "जिले भर में जारी मैच, अंक बनते ही अपडेट होते हैं।",
+    "Match not started yet": "मैच अभी शुरू नहीं हुआ",
+    "Starting soon": "जल्द शुरू होगा",
+    "Score updates will appear here once play begins.": "खेल शुरू होते ही स्कोर यहाँ दिखेगा।",
     "Completed": "पूर्ण",
     "Published": "प्रकाशित",
     "View bracket": "ब्रैकेट देखें",
@@ -214,6 +226,12 @@ export const landing: AreaMessages = {
     "© {year} District Sports Office, Navi Mumbai. Built for the district’s schools.":
       "© {year} जिला क्रीड़ा कार्यालय, नवी मुंबई। जिले के स्कूलों के लिए बनाया गया।",
     "{count} public draws": "{count} सार्वजनिक ड्रॉ",
+    "{count} tournaments": "{count} टूर्नामेंट",
+    "Tournaments whose draw is not published yet are listed here as pending.":
+      "जिन टूर्नामेंट का ड्रॉ अभी प्रकाशित नहीं हुआ है, वे यहाँ लंबित के रूप में सूचीबद्ध रहते हैं।",
+    "Draw pending": "ड्रॉ लंबित",
+    "Awaiting publish": "प्रकाशन की प्रतीक्षा में",
+    "Draw not published yet.": "ड्रॉ अभी प्रकाशित नहीं हुआ है।",
     "{count} schools": "{count} स्कूल",
     "Official fixtures desk": "आधिकारिक फ़िक्स्चर डेस्क",
     "Open menu": "मेनू खोलें",

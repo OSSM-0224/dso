@@ -19,20 +19,23 @@ export interface LandingTournament {
   year: number;
   status: string;
   teamCount: number;
+  /** False for drafts / generated-but-unpublished draws. */
+  drawPublished: boolean;
 }
 
 export interface LandingLiveMatch {
   id: string;
   matchNumber: number;
   roundName: string;
-  venue: string | null;
-  teamAName: string | null;
-  teamBName: string | null;
+  teamAName: string;
+  teamBName: string;
   tournamentId: string;
   tournamentName: string;
   sport: string;
   ageGroup: string;
   gender: "boys" | "girls";
+  /** "starting" when the public score feed cannot serve a snapshot yet. */
+  scoreState: "live" | "starting";
 }
 
 export interface LandingChampion {
@@ -112,9 +115,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   counts,
 }) => {
   const { t } = useI18n();
-  const hasPublicDraws = tournaments.length > 0;
+  const hasTournaments = tournaments.length > 0;
+  const publicDrawCount = tournaments.filter((tournament) => tournament.drawPublished).length;
   const boardMeta = [
-    t("{count} public draws", { count: tournaments.length }),
+    t("{count} tournaments", { count: tournaments.length }),
+    publicDrawCount > 0
+      ? t("{count} public draws", { count: publicDrawCount })
+      : null,
     counts.teams > 0
       ? t("{count} teams", { count: counts.teams })
       : null,
@@ -122,6 +129,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       ? t("{count} schools", { count: counts.schools })
       : null,
   ].filter(Boolean) as string[];
+
+  const tournamentBadge = (
+    tournament: LandingTournament
+  ): { tone: "live" | "won" | "upcoming"; label: string } => {
+    if (tournament.status === "ongoing") {
+      return { tone: "live", label: t("Live") };
+    }
+    if (tournament.status === "completed") {
+      return { tone: "won", label: t("Completed") };
+    }
+    if (tournament.status === "fixtures-generated") {
+      return { tone: "upcoming", label: t("Awaiting publish") };
+    }
+    if (tournament.status === "draft") {
+      return { tone: "upcoming", label: t("Draw pending") };
+    }
+    return { tone: "upcoming", label: t("Published") };
+  };
 
   return (
     <div className="min-h-[100dvh] bg-canvas font-sans text-ink">
@@ -234,13 +259,40 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                         {match.sport} · {match.ageGroup} {match.gender}
                       </span>
                     </div>
-                    <PublicMatchLiveScore
-                      matchId={match.id}
-                      title={t("Match #{number} · {round}", {
-                        number: match.matchNumber,
-                        round: match.roundName,
-                      })}
-                    />
+                    {match.scoreState === "live" ? (
+                      <PublicMatchLiveScore
+                        matchId={match.id}
+                        title={t("Match #{number} · {round}", {
+                          number: match.matchNumber,
+                          round: match.roundName,
+                        })}
+                      />
+                    ) : (
+                      <div className="rounded-[10px] border border-hairline bg-canvas/60 px-4 py-5">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+                            {t("Match #{number} · {round}", {
+                              number: match.matchNumber,
+                              round: match.roundName,
+                            })}
+                          </p>
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-surface px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-muted">
+                            {t("Starting soon")}
+                          </span>
+                        </div>
+                        <p className="mt-3 text-sm font-semibold text-ink">
+                          {match.teamAName}{" "}
+                          <span className="font-normal text-muted">{t("vs")}</span>{" "}
+                          {match.teamBName}
+                        </p>
+                        <p className="mt-1 text-xs font-medium text-ink">
+                          {t("Match not started yet")}
+                        </p>
+                        <p className="mt-0.5 text-xs leading-relaxed text-muted">
+                          {t("Score updates will appear here once play begins.")}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -449,6 +501,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     "Published fixtures are server-rendered, shareable, and updated as matches finish."
                   )}
                 </p>
+                <p className="mt-2 max-w-[58ch] text-[13px] leading-relaxed text-muted">
+                  {t(
+                    "Tournaments whose draw is not published yet are listed here as pending."
+                  )}
+                </p>
               </div>
               {boardMeta.length > 0 && (
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-faint">
@@ -457,50 +514,59 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               )}
             </div>
 
-            {hasPublicDraws ? (
+            {hasTournaments ? (
               <div className="reveal mt-10 grid gap-4 grid-cols-1 md:grid-cols-3">
-                {tournaments.map((tournament) => (
-                  <Link
-                    key={tournament.id}
-                    href={`/public/tournaments/${tournament.id}`}
-                    className="group flex flex-col rounded-[12px] border border-hairline bg-surface p-5 shadow-rest transition-all duration-200 hover:-translate-y-0.5 hover:border-faint hover:shadow-raise"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
-                        {tournament.sport} Â· {tournament.ageGroup}{" "}
-                        {tournament.gender}
-                      </span>
-                      <Badge
-                        tone={
-                          tournament.status === "ongoing"
-                            ? "live"
-                            : tournament.status === "completed"
-                              ? "won"
-                              : "upcoming"
-                        }
-                      >
-                        {tournament.status === "ongoing"
-                          ? t("Live")
-                          : tournament.status === "completed"
-                            ? t("Completed")
-                            : t("Published")}
-                      </Badge>
+                {tournaments.map((tournament) => {
+                  const badge = tournamentBadge(tournament);
+                  const card = (
+                    <>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
+                          {tournament.sport} Â· {tournament.ageGroup}{" "}
+                          {tournament.gender}
+                        </span>
+                        <Badge tone={badge.tone}>{badge.label}</Badge>
+                      </div>
+                      <h3 className="mt-4 font-serif text-xl font-semibold leading-snug tracking-[-0.01em] text-ink">
+                        {tournament.name}
+                      </h3>
+                      {!tournament.drawPublished && (
+                        <p className="mt-2 text-xs leading-relaxed text-muted">
+                          {t("Draw not published yet.")}
+                        </p>
+                      )}
+                      <div className="mt-6 flex items-center justify-between gap-3 border-t border-hairline pt-4 text-[11px] text-muted">
+                        <span>
+                          {tournament.year} Â·{" "}
+                          {t("{count} teams", { count: tournament.teamCount })}
+                        </span>
+                        {tournament.drawPublished && (
+                          <span className="inline-flex items-center gap-1.5 font-semibold text-ink transition-colors group-hover:text-accent">
+                            {t("View bracket")}
+                            <Icon name="arrowRight" size="xs" />
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  );
+
+                  return tournament.drawPublished ? (
+                    <Link
+                      key={tournament.id}
+                      href={`/public/tournaments/${tournament.id}`}
+                      className="group flex flex-col rounded-[12px] border border-hairline bg-surface p-5 shadow-rest transition-all duration-200 hover:-translate-y-0.5 hover:border-faint hover:shadow-raise"
+                    >
+                      {card}
+                    </Link>
+                  ) : (
+                    <div
+                      key={tournament.id}
+                      className="flex flex-col rounded-[12px] border border-dashed border-hairline bg-surface p-5 shadow-rest"
+                    >
+                      {card}
                     </div>
-                    <h3 className="mt-4 font-serif text-xl font-semibold leading-snug tracking-[-0.01em] text-ink">
-                      {tournament.name}
-                    </h3>
-                    <div className="mt-6 flex items-center justify-between gap-3 border-t border-hairline pt-4 text-[11px] text-muted">
-                      <span>
-                        {tournament.year} Â·{" "}
-                        {t("{count} teams", { count: tournament.teamCount })}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 font-semibold text-ink transition-colors group-hover:text-accent">
-                        {t("View bracket")}
-                        <Icon name="arrowRight" size="xs" />
-                      </span>
-                    </div>
-                  </Link>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="mt-10 grid gap-6 rounded-[12px] border border-dashed border-hairline bg-surface px-6 py-10 sm:grid-cols-[auto_1fr_auto] sm:items-center">

@@ -10,6 +10,7 @@ import { matchRepository } from '@/server/repositories/matchRepository.ts';
 import { pastTournamentRepository } from '@/server/repositories/pastTournamentRepository.ts';
 import { schoolRepository } from '@/server/repositories/schoolRepository.ts';
 import { teamRepository } from '@/server/repositories/teamRepository.ts';
+import { scoringService } from '@/server/services/scoringService.ts';
 import { tournamentService } from '@/server/services/tournamentService.ts';
 
 export const dynamic = 'force-dynamic';
@@ -25,7 +26,9 @@ const PUBLIC_STATUSES = new Set(['published', 'ongoing', 'completed']);
 function statusRank(status: string) {
   if (status === 'ongoing') return 0;
   if (status === 'published') return 1;
-  return 2;
+  if (status === 'fixtures-generated') return 2;
+  if (status === 'draft') return 3;
+  return 4;
 }
 
 export default async function HomePage() {
@@ -44,14 +47,14 @@ export default async function HomePage() {
         matchRepository.findAll(),
       ]);
 
-    const publicTournaments = allTournaments.filter((tournament) =>
-      PUBLIC_STATUSES.has(tournament.status)
-    );
+    // The public board lists every tournament, including drafts whose draw has
+    // not been generated yet. Those cards stay unlinked and are labelled as
+    // pending; fixture data is still withheld until the draw is published.
     const tournamentById = new Map(
-      publicTournaments.map((tournament) => [tournament.id, tournament])
+      allTournaments.map((tournament) => [tournament.id, tournament])
     );
 
-    tournaments = publicTournaments
+    tournaments = allTournaments
       .slice()
       .sort(
         (a, b) =>
@@ -59,7 +62,7 @@ export default async function HomePage() {
           b.year - a.year ||
           b.createdAt.localeCompare(a.createdAt)
       )
-      .slice(0, 3)
+      .slice(0, 6)
       .map((tournament) => ({
         id: tournament.id,
         name: tournament.name,
@@ -69,37 +72,56 @@ export default async function HomePage() {
         year: tournament.year,
         status: tournament.status,
         teamCount: tournament.teams.length,
+        drawPublished: PUBLIC_STATUSES.has(tournament.status),
       }));
 
-    liveMatches = allMatches
-      .filter(
-        (match) =>
-          match.status === 'live' &&
-          !match.isBye &&
-          tournamentById.has(match.tournamentId)
-      )
+    const liveCandidates = allMatches
+      .filter((match) => {
+        if (match.status !== 'live' || match.isBye || !match.teamA || !match.teamB) {
+          return false;
+        }
+        const tournament = tournamentById.get(match.tournamentId);
+        // Live fixtures stay private until their tournament's draw is public.
+        return Boolean(tournament && PUBLIC_STATUSES.has(tournament.status));
+      })
       .sort((a, b) => {
         const timeA = a.scheduledAt ? new Date(a.scheduledAt).getTime() : Infinity;
         const timeB = b.scheduledAt ? new Date(b.scheduledAt).getTime() : Infinity;
         return timeA - timeB || a.matchNumber - b.matchNumber;
       })
-      .slice(0, 6)
-      .map((match) => {
+      .slice(0, 6);
+
+    liveMatches = await Promise.all(
+      liveCandidates.map(async (match) => {
         const tournament = tournamentById.get(match.tournamentId)!;
+        let scoreState: LandingLiveMatch['scoreState'] = 'starting';
+
+        // A live fixture can exist without a readable score (scoring not started,
+        // or an older score session that can no longer be replayed). Probe once
+        // on the server so the client never mounts a poller that will keep
+        // failing, and show a calm "starting soon" card instead.
+        try {
+          await scoringService.getScoreForReaders(match.id, null);
+          scoreState = 'live';
+        } catch {
+          scoreState = 'starting';
+        }
+
         return {
           id: match.id,
           matchNumber: match.matchNumber,
           roundName: match.roundName,
-          venue: match.venue,
-          teamAName: match.teamA?.name ?? null,
-          teamBName: match.teamB?.name ?? null,
+          teamAName: match.teamA!.name,
+          teamBName: match.teamB!.name,
           tournamentId: tournament.id,
           tournamentName: tournament.name,
           sport: tournament.sport,
           ageGroup: tournament.ageGroup,
           gender: tournament.gender,
+          scoreState,
         };
-      });
+      })
+    );
 
     champions = allChampions.slice(0, 3).map((champion) => ({
       id: champion.id,

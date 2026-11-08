@@ -118,8 +118,15 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
 
   return (
     <div className="space-y-6 print:space-y-3">
-      {/* Back and Title Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-sm print:border-0 print:p-0 print:pb-2 print:shadow-none">
+      {/* Back and Title Header. Published/preview views print their own
+          letterhead, so this interactive header is hidden on paper. */}
+      <div
+        className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-sm ${
+          tournament.status === 'draft'
+            ? 'print:border-0 print:p-0 print:pb-2 print:shadow-none'
+            : 'print:hidden'
+        }`}
+      >
         <div className="space-y-1">
           <div className="flex items-center gap-2 min-w-0 flex-wrap print:hidden">
             <button

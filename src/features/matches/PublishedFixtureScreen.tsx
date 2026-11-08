@@ -7,6 +7,10 @@ import { Icon } from '@/components/ui/Icon.tsx';
 import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { BracketView } from '../../components/bracket/BracketView.tsx';
 import { FixturePrintStyle } from '../../components/bracket/FixturePrintStyle.tsx';
+import {
+  FixturePrintFooter,
+  FixturePrintHeader,
+} from '../../components/bracket/FixturePrintChrome.tsx';
 import { ResultEntryModal } from '../../components/matches/ResultEntryModal.tsx';
 import { ScheduleModal } from '../../components/matches/ScheduleModal.tsx';
 import { ScorerAssignModal } from './ScorerAssignModal.tsx';
@@ -127,8 +131,9 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
       : matches.filter((m) => m.round === selectedRoundFilter);
 
   return (
-    <div className="space-y-6 print:space-y-3">
+    <div className="print-sheet space-y-6 print:space-y-3">
       <FixturePrintStyle />
+      <FixturePrintHeader tournament={tournament} documentLabel="Official Fixture Sheet" />
       {/* Alert Notices */}
       {error && (
         <div className="p-4 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200 print:hidden">
@@ -144,7 +149,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
 
       {/* Champion Banner if completed */}
       {tournament.status === 'completed' && tournament.winnerName && (
-        <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 text-white rounded-xl p-6 shadow-md flex items-center justify-between">
+        <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 text-white rounded-xl p-6 shadow-md flex items-center justify-between print:hidden">
           <div className="space-y-1">
             <span className="text-xs uppercase font-bold tracking-wider text-amber-100">
               {t("Tournament Champion Crowned")}
@@ -213,7 +218,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
 
       {/* View Mode: Bracket View */}
       {viewMode === 'bracket' && (
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm print:border-0 print:p-0 print:shadow-none">
+        <div className="print-bracket-slot bg-white border border-slate-200 rounded-xl p-4 shadow-sm print:border-0 print:p-0 print:shadow-none">
           <BracketView
             matches={matches}
             strongTeamIds={tournament.strongTeams}
@@ -228,7 +233,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
 
       {/* View Mode: Match Schedule List */}
       {viewMode === 'list' && (
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4 print:border-0 print:p-0 print:shadow-none">
+        <div className="print-list-slot bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4 print:border-0 print:p-0 print:shadow-none">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-slate-100 pb-3">
             <h3 className="text-sm font-bold text-slate-900">
               {t("Round-wise Match List & Results")}
@@ -256,7 +261,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
             </div>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="fixture-print-list divide-y divide-slate-100">
             {filteredMatches.map((m) => (
               <div
                 key={m.id}
@@ -368,9 +373,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
       )}
 
       {/* Print-only provenance line */}
-      <p className="hidden print:block text-center text-[10px] text-slate-500">
-        Official fixture sheet · District Sports Office (DSO) Navi Mumbai
-      </p>
+      <FixturePrintFooter note="Official fixture sheet" />
 
       {/* Result Entry Modal (new result) */}
       {selectedMatchForResult && (

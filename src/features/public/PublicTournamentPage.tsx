@@ -4,6 +4,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { BracketView } from '../../components/bracket/BracketView.tsx';
 import { FixturePrintStyle } from '../../components/bracket/FixturePrintStyle.tsx';
+import {
+  FixturePrintFooter,
+  FixturePrintHeader,
+} from '../../components/bracket/FixturePrintChrome.tsx';
 import { api } from '@/lib/api.ts';
 import { MatchDoc, TeamDoc, TournamentDoc } from '@/shared/types.ts';
 import { PublicMatchLiveScore } from '@/features/scoring/LiveScorePanel.tsx';
@@ -86,10 +90,11 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 print:max-w-none print:px-0 print:py-0 print:space-y-3">
+    <div className="print-sheet max-w-7xl mx-auto px-4 py-8 space-y-6 print:max-w-none print:px-0 print:py-0 print:space-y-3">
       <FixturePrintStyle />
+      <FixturePrintHeader tournament={tournament} documentLabel="Official Fixture Draw" />
       {/* Public Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-xl p-6 shadow-sm print:hidden">
         <div>
           <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
             <span>District Sports Office (DSO) Navi Mumbai</span>
@@ -134,7 +139,7 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
 
       {/* Champion Announcement */}
       {tournament.status === 'completed' && tournament.winnerName && (
-        <div className="bg-amber-500 text-white rounded-xl p-4 sm:p-5 shadow-sm flex flex-wrap items-center justify-between gap-2">
+        <div className="bg-amber-500 text-white rounded-xl p-4 sm:p-5 shadow-sm flex flex-wrap items-center justify-between gap-2 print:hidden">
           <div className="min-w-0">
             <div className="text-[11px] uppercase tracking-wider font-semibold text-amber-100">
               Championship Winner
@@ -176,7 +181,7 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
       )}
 
       {/* Read-Only Bracket */}
-      <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-4 md:p-5 shadow-sm print:border-0 print:p-0 print:shadow-none">
+      <div className="print-bracket-slot bg-white border border-slate-200 rounded-xl p-3 sm:p-4 md:p-5 shadow-sm print:border-0 print:p-0 print:shadow-none">
         <div className="text-xs text-slate-500 mb-2 print:hidden">
           Public Read-Only Bracket · Live match results and progression
         </div>
@@ -190,9 +195,7 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
       </div>
 
       {/* Print-only provenance line */}
-      <p className="hidden print:block text-center text-[10px] text-slate-500">
-        Official fixture draw · District Sports Office (DSO) Navi Mumbai
-      </p>
+      <FixturePrintFooter note="Official fixture draw" />
     </div>
   );
 };

@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext.tsx';
 import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { MatchDetailModal } from './MatchDetailModal.tsx';
 import { PlayersScreen } from '../players/PlayersScreen.tsx';
+import { MyMatchLiveScore } from '@/features/scoring/LiveScorePanel.tsx';
 
 interface ParticipantPortalScreenProps {
   onOpenPublicBracket?: (tournamentId: string) => void;
@@ -20,6 +21,46 @@ interface ParticipantPortalScreenProps {
   /** Auto-open the detail modal for this match id (used by /school/matches/[id]). */
   openMatchId?: string | null;
 }
+
+/** Live score cards for the signed-in school's matches that are on the court. */
+const SchoolLiveMatchesSection: React.FC<{ matches: any[] }> = ({ matches }) => {
+  const { t } = useI18n();
+  if (matches.length === 0) return null;
+
+  return (
+    <div className="rounded-2xl border border-red-200 bg-white shadow-xs overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-red-100 bg-red-50/70 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+          </span>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-red-700">
+            {t("Live now")}
+          </h2>
+          <span className="rounded-full border border-red-200 bg-white px-2 py-0.5 text-[10px] font-bold text-red-700">
+            {t("{count} live", { count: matches.length })}
+          </span>
+        </div>
+        <p className="text-[11px] font-medium text-slate-500">
+          {t("Your school teams currently on the court.")}
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 p-4 sm:p-5 lg:grid-cols-2">
+        {matches.map((match) => (
+          <MyMatchLiveScore
+            key={match.id}
+            matchId={match.id}
+            enabled
+            title={`${match.tournament?.name ?? ''} · ${t("Match #{number}", {
+              number: match.matchNumber,
+            })}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = ({
   onOpenPublicBracket,
@@ -217,6 +258,7 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
   const school = dashboardData?.school;
   const stats = dashboardData?.stats;
   const nextMatch = dashboardData?.nextMatch;
+  const liveMatches = matches.filter((match: any) => match.status === 'live');
 
   return (
     <div className="space-y-6 pb-12">
@@ -338,6 +380,8 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
       {/* TAB 1: DASHBOARD */}
       {activeTab === 'dashboard' && (
         <div className="space-y-6">
+          <SchoolLiveMatchesSection matches={liveMatches} />
+
           {/* Highlight Next Match Card */}
           {nextMatch ? (
             <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-800 rounded-2xl p-5 sm:p-6 text-white shadow-lg">
@@ -573,6 +617,8 @@ export const ParticipantPortalScreen: React.FC<ParticipantPortalScreenProps> = (
       {/* TAB 3: MY SCHEDULE */}
       {activeTab === 'schedule' && (
         <div className="space-y-4">
+          <SchoolLiveMatchesSection matches={liveMatches} />
+
           {/* Filter Bar */}
           <div className="bg-white p-4 border border-slate-200 rounded-2xl shadow-xs space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">

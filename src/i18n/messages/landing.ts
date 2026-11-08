@@ -66,6 +66,11 @@ export const landing: AreaMessages = {
     "Published fixtures are server-rendered, shareable, and updated as matches finish.":
       "प्रकाशित सामने सर्व्हर-रेंडर केलेले, शेअर करण्यायोग्य आणि सामने संपताच अपडेट होतात.",
     "Live": "थेट",
+    "Live now": "आता थेट",
+    "{count} live": "{count} थेट",
+    "On the court right now.": "आता मैदानावर.",
+    "Matches in progress across the district, updating as points are scored.":
+      "जिल्ह्यभर सुरू असलेले सामने, गुण पडताच अपडेट होतात.",
     "Completed": "पूर्ण",
     "Published": "प्रकाशित",
     "View bracket": "ब्रॅकेट पहा",
@@ -179,6 +184,11 @@ export const landing: AreaMessages = {
     "Published fixtures are server-rendered, shareable, and updated as matches finish.":
       "प्रकाशित मुकाबले सर्वर-रेंडर, साझा करने योग्य और मैच खत्म होते ही अपडेट होते हैं।",
     "Live": "लाइव",
+    "Live now": "अभी लाइव",
+    "{count} live": "{count} लाइव",
+    "On the court right now.": "अभी मैदान पर।",
+    "Matches in progress across the district, updating as points are scored.":
+      "जिले भर में जारी मैच, अंक बनते ही अपडेट होते हैं।",
     "Completed": "पूर्ण",
     "Published": "प्रकाशित",
     "View bracket": "ब्रैकेट देखें",

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Icon } from "@/components/ui/Icon.tsx";
 import { useI18n } from "@/i18n/LanguageProvider.tsx";
 import { Badge } from "@/components/ui/Card.tsx";
+import { PublicMatchLiveScore } from "@/features/scoring/LiveScorePanel.tsx";
 import { BracketDiagram } from "./BracketDiagram.tsx";
 import { LandingNav } from "./LandingNav.tsx";
 
@@ -18,6 +19,20 @@ export interface LandingTournament {
   year: number;
   status: string;
   teamCount: number;
+}
+
+export interface LandingLiveMatch {
+  id: string;
+  matchNumber: number;
+  roundName: string;
+  venue: string | null;
+  teamAName: string | null;
+  teamBName: string | null;
+  tournamentId: string;
+  tournamentName: string;
+  sport: string;
+  ageGroup: string;
+  gender: "boys" | "girls";
 }
 
 export interface LandingChampion {
@@ -34,6 +49,7 @@ export interface LandingChampion {
 interface LandingPageProps {
   tournaments: LandingTournament[];
   champions: LandingChampion[];
+  liveMatches: LandingLiveMatch[];
   counts: {
     schools: number;
     teams: number;
@@ -92,6 +108,7 @@ const steps = [
 export const LandingPage: React.FC<LandingPageProps> = ({
   tournaments,
   champions,
+  liveMatches,
   counts,
 }) => {
   const { t } = useI18n();
@@ -173,6 +190,63 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </dl>
           </div>
         </section>
+
+        {liveMatches.length > 0 && (
+          <section
+            id="live"
+            className="scroll-mt-20 border-t border-hairline bg-surface py-12 sm:py-16"
+          >
+            <div className="mx-auto max-w-6xl px-3 sm:px-6 lg:px-8">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div className="max-w-2xl">
+                  <p className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-red-600">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+                    </span>
+                    {t("Live now")}
+                  </p>
+                  <h2 className="mt-3 font-serif text-3xl font-semibold leading-[1.08] tracking-[-0.02em] text-ink sm:text-[2.35rem]">
+                    {t("On the court right now.")}
+                  </h2>
+                  <p className="mt-3 max-w-[58ch] text-[15px] leading-relaxed text-muted">
+                    {t(
+                      "Matches in progress across the district, updating as points are scored."
+                    )}
+                  </p>
+                </div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-faint">
+                  {t("{count} live", { count: liveMatches.length })}
+                </p>
+              </div>
+
+              <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+                {liveMatches.map((match) => (
+                  <div key={match.id} className="flex flex-col gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <Link
+                        href={`/public/tournaments/${match.tournamentId}`}
+                        className="min-w-0 truncate text-[13px] font-semibold text-ink transition-colors hover:text-accent"
+                      >
+                        {match.tournamentName}
+                      </Link>
+                      <span className="shrink-0 font-mono text-[9px] uppercase tracking-[0.12em] text-muted">
+                        {match.sport} · {match.ageGroup} {match.gender}
+                      </span>
+                    </div>
+                    <PublicMatchLiveScore
+                      matchId={match.id}
+                      title={t("Match #{number} · {round}", {
+                        number: match.matchNumber,
+                        round: match.roundName,
+                      })}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         <section
           id="platform"

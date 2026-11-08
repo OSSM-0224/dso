@@ -41,6 +41,27 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
   const maxRound = Math.max(...matches.map((m) => m.round));
   const rounds = Array.from({ length: maxRound }, (_, i) => i + 1);
 
+  // Estimate how tall the busiest round column is relative to one match card.
+  // The print sheet is a single landscape page; when a draw needs more room
+  // than that (e.g. a 32-team bracket) the whole chart is scaled down gently
+  // instead of spilling onto a second page.
+  const columnUnits = rounds.map((round) => {
+    const inRound = matches.filter((m) => m.round === round);
+    const realMatches = round === 1 ? inRound.filter((m) => !m.isBye).length : inRound.length;
+    if (round !== 1) return realMatches + 0.4;
+
+    const byeCount = inRound.filter((m) => m.isBye).length;
+    const byeColumns = byeCount > 8 ? 2 : 1;
+    const byeBlockUnits = byeCount ? 0.45 + Math.ceil(byeCount / byeColumns) * 0.3 : 0;
+    return realMatches + 0.4 + byeBlockUnits;
+  });
+  const maxColumnUnits = Math.max(...columnUnits, 1);
+  const printScale = Math.round(Math.max(0.35, Math.min(1, 8.5 / maxColumnUnits)) * 100) / 100;
+  const printStyle = {
+    '--print-zoom': printScale,
+    '--print-width': `${Math.round((100 / printScale) * 100) / 100}%`,
+  } as React.CSSProperties;
+
   const getRoundTitle = (round: number, totalRounds: number, matchesInRound: MatchDoc[]) => {
     if (round === totalRounds) return t('Final');
     if (round === totalRounds - 1) return t('Semi Finals');
@@ -88,15 +109,15 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
   const isChampion = (teamId?: string) => Boolean(canWrite && teamId && championTeamIds.includes(teamId));
 
   return (
-    <div className="w-full print-bracket">
+    <div className="w-full print-bracket" style={printStyle}>
       {/* Scroll hint for small screens only */}
       <div className="mb-1.5 flex justify-end lg:hidden px-2 print:hidden">
         <span className="text-[10px] text-slate-400 flex items-center gap-1">
           {t("Swipe to view later rounds")} <Icon name="arrowRight" size="xs" />
         </span>
       </div>
-      <div className="w-full overflow-x-auto pb-6 pt-2 touch-pan-x touch-pan-y -mx-2 sm:mx-0 px-2 sm:px-0 print:overflow-visible print:pb-0 print:pt-0 print:mx-0 print:px-0">
-        <div className="flex gap-4 sm:gap-6 lg:gap-8 min-w-[520px] sm:min-w-[640px] lg:min-w-[800px] items-stretch print:min-w-0 print:gap-2">
+      <div className="print-bracket-scroll w-full overflow-x-auto pb-6 pt-2 touch-pan-x touch-pan-y -mx-2 sm:mx-0 px-2 sm:px-0 print:overflow-visible print:pb-0 print:pt-0 print:mx-0 print:px-0">
+        <div className="print-bracket-columns flex gap-4 sm:gap-6 lg:gap-8 min-w-[520px] sm:min-w-[640px] lg:min-w-[800px] items-stretch print:min-w-0 print:gap-2">
         {rounds.map((round) => {
           const allRoundMatches = matches
             .filter((m) => m.round === round)
@@ -112,9 +133,9 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
             : [];
 
           return (
-            <div key={round} className="flex-1 flex flex-col min-w-[240px] sm:min-w-[280px] print:min-w-0">
+            <div key={round} className="print-round flex-1 flex flex-col min-w-[240px] sm:min-w-[280px] print:min-w-0">
               {/* Round Column Header */}
-              <div className="mb-4 pb-2 border-b border-slate-200 text-center">
+              <div className="print-round-header mb-4 pb-2 border-b border-slate-200 text-center">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-800">
                   {getRoundTitle(round, maxRound, allRoundMatches)}
                 </h4>
@@ -133,9 +154,9 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
               </div>
 
               {/* Match Nodes */}
-              <div className="flex flex-col justify-around flex-grow gap-4">
+              <div className="print-round-matches flex flex-col justify-around flex-grow gap-4">
                 {realMatches.length === 0 && isRound1 ? (
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-center text-xs text-slate-500">
+                  <div className="print-empty-note p-4 bg-slate-50 border border-slate-200 rounded-lg text-center text-xs text-slate-500">
                     {t("No play-in matches required. All teams advance directly to next round.")}
                   </div>
                 ) : (
@@ -163,10 +184,10 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                       <div
                         key={match.id}
                         data-match-card
-                        className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm hover:border-slate-300 transition-colors relative print:break-inside-avoid print:p-1.5 print:shadow-none"
+                        className="print-match-card bg-white border border-slate-200 rounded-lg p-3 shadow-sm hover:border-slate-300 transition-colors relative print:break-inside-avoid print:p-1.5 print:shadow-none"
                       >
                         {/* Match Meta (Number & Schedule) */}
-                        <div className="flex items-center justify-between text-[11px] text-slate-400 mb-2">
+                        <div className="match-meta flex items-center justify-between text-[11px] text-slate-400 mb-2">
                           <span className="font-semibold text-slate-600">
                             M#{match.matchNumber} {metaLabel ? `· ${metaLabel}` : ''}
                           </span>
@@ -189,7 +210,7 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                         {/* Team A */}
                         <div
                           onClick={() => canSwapA && onSelectTeamForSwap(match.teamA!)}
-                          className={`flex items-center justify-between p-2 rounded text-xs transition-colors ${
+                          className={`print-team-row flex items-center justify-between p-2 rounded text-xs transition-colors ${
                             canSwapA ? 'cursor-pointer hover:bg-slate-50' : ''
                           } ${
                             selectedTeamForSwap?.id === match.teamA?.id
@@ -216,7 +237,7 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                               )}
                             </div>
                             {match.teamA && (
-                              <span className="text-[10px] text-slate-400 truncate">
+                              <span className="print-team-subline text-[10px] text-slate-400 truncate">
                                 {match.teamA.schoolName} · {match.teamA.medium}
                               </span>
                             )}
@@ -226,18 +247,18 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                           </span>
                         </div>
 
-                        <div className="my-1 border-t border-slate-100" />
+                        <div className="match-divider my-1 border-t border-slate-100" />
 
                         {/* Team B / BYE */}
                         {isBye ? (
-                          <div className="flex items-center justify-between p-2 rounded text-xs bg-slate-50 text-slate-400">
+                          <div className="print-bye-row flex items-center justify-between p-2 rounded text-xs bg-slate-50 text-slate-400">
                             <span className="font-medium tracking-wide">{t("BYE: advances to next round")}</span>
                             <span className="text-[10px] text-emerald-600 font-medium">{t("Adv.")}</span>
                           </div>
                         ) : (
                           <div
                             onClick={() => canSwapB && onSelectTeamForSwap(match.teamB!)}
-                            className={`flex items-center justify-between p-2 rounded text-xs transition-colors ${
+                            className={`print-team-row flex items-center justify-between p-2 rounded text-xs transition-colors ${
                               canSwapB ? 'cursor-pointer hover:bg-slate-50' : ''
                             } ${
                               selectedTeamForSwap?.id === match.teamB?.id
@@ -264,7 +285,7 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                                 )}
                               </div>
                               {match.teamB && (
-                                <span className="text-[10px] text-slate-400 truncate">
+                                <span className="print-team-subline text-[10px] text-slate-400 truncate">
                                   {match.teamB.schoolName} · {match.teamB.medium}
                                 </span>
                               )}
@@ -309,7 +330,7 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                 {/* Compact BYE List for Round 1:
                     "show them as a compact 'BYE -> advances to Quarter Finals' list below" */}
                 {isRound1 && byeMatchesInR1.length > 0 && (
-                  <div className="mt-2 pt-2 border-t border-dashed border-slate-200">
+                  <div className="print-bye-panel mt-2 pt-2 border-t border-dashed border-slate-200">
                     <div className="bg-slate-50/80 border border-slate-200/80 rounded-lg p-3 space-y-2">
                       <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-slate-200 text-[11px] flex-wrap">
                         <span className="font-semibold text-emerald-800 flex items-center gap-1.5">
@@ -321,7 +342,7 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                         </span>
                       </div>
 
-                      <div className="space-y-1.5 max-h-[280px] sm:max-h-[360px] overflow-y-auto pr-1 print:max-h-none print:overflow-visible">
+                      <div className="print-bye-list space-y-1.5 max-h-[280px] sm:max-h-[360px] overflow-y-auto pr-1 print:max-h-none print:overflow-visible">
                         {byeMatchesInR1.map((byeMatch) => {
                           const byeTeam = byeMatch.teamA || byeMatch.winner;
                           if (!byeTeam) return null;
@@ -336,7 +357,7 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                               key={byeMatch.id}
                               data-bye-card
                               onClick={() => canSwapBye && onSelectTeamForSwap(byeTeam)}
-                              className={`flex items-center justify-between p-2 rounded text-xs bg-white border transition-colors ${
+                              className={`print-bye-card flex items-center justify-between p-2 rounded text-xs bg-white border transition-colors ${
                                 canSwapBye ? 'cursor-pointer hover:border-slate-300' : ''
                               } ${
                                 selectedTeamForSwap?.id === byeTeam.id
@@ -361,12 +382,12 @@ const BracketViewInner: React.FC<BracketViewProps> = ({
                                     </span>
                                   )}
                                 </div>
-                                <span className="text-[10px] text-slate-400 truncate">
+                                <span className="print-team-subline text-[10px] text-slate-400 truncate">
                                   {byeTeam.schoolName} · {byeTeam.medium}
                                 </span>
                               </div>
 
-                              <div className="flex items-center gap-1.5 shrink-0">
+                              <div className="flex items-center gap-1.5 shrink-0 print-bye-badge">
                                 <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
                                   QF Bye <Icon name="check" size="xs" />
                                 </span>

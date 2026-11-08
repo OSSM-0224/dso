@@ -3,6 +3,10 @@ import React, { useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { BracketView } from '../../components/bracket/BracketView.tsx';
 import { FixturePrintStyle } from '../../components/bracket/FixturePrintStyle.tsx';
+import {
+  FixturePrintFooter,
+  FixturePrintHeader,
+} from '../../components/bracket/FixturePrintChrome.tsx';
 import { api } from '@/lib/api.ts';
 import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { FixtureSnapshotDoc, MatchDoc, TeamDoc, TournamentDoc } from '@/shared/types.ts';
@@ -118,8 +122,9 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
   };
 
   return (
-    <div className="space-y-6 print:space-y-3">
+    <div className="print-sheet space-y-6 print:space-y-3">
       <FixturePrintStyle />
+      <FixturePrintHeader tournament={tournament} documentLabel="Fixture Draw Preview" />
       {/* Alert Notices */}
       {error && (
         <div className="p-4 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200 print:hidden">
@@ -216,7 +221,7 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
       )}
 
       {/* Interactive Bracket */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm print:border-0 print:p-0 print:shadow-none">
+      <div className="print-bracket-slot bg-white border border-slate-200 rounded-xl p-4 shadow-sm print:border-0 print:p-0 print:shadow-none">
         <BracketView
           matches={matches}
           strongTeamIds={tournament.strongTeams}
@@ -229,13 +234,11 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
       </div>
 
       {/* Print-only provenance line */}
-      <p className="hidden print:block text-center text-[10px] text-slate-500">
-        Fixture draw preview · District Sports Office (DSO) Navi Mumbai
-      </p>
+      <FixturePrintFooter note="Fixture draw preview" />
 
       {/* Swap Confirmation Modal when rule violation is detected */}
       {swapWarningModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 print:hidden">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-4 sm:p-6 border border-slate-200 max-h-full overflow-y-auto">
             <div className="flex items-center gap-2 text-amber-700 pb-2 border-b border-slate-100 mb-3">
               <Icon name="triangleExclamation" size="lg" className="text-red-text" />

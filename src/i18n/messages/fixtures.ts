@@ -2,6 +2,14 @@ import type { AreaMessages } from "../types.ts";
 
 export const fixtures: AreaMessages = {
   mr: {
+    "Official Fixture Sheet": "अधिकृत सामना पत्रक",
+    "Fixture Draw Preview": "सामना ड्रॉ पूर्वावलोकन",
+    "Official Fixture Draw": "अधिकृत सामना ड्रॉ",
+    "Official fixture sheet": "अधिकृत सामना पत्रक",
+    "Official fixture draw": "अधिकृत सामना ड्रॉ",
+    "Fixture draw preview": "सामना ड्रॉ पूर्वावलोकन",
+    "Printed {date}": "छापले: {date}",
+    "Champion: {name}": "विजेता: {name}",
     "Failed to update strong teams": "मजबूत संघ अद्ययावत करण्यात अयशस्वी",
     "Failed to generate fixtures": "सामने तयार करण्यात अयशस्वी",
     "Play-In Bracket Geometry Preview": "प्ले-इन ब्रॅकेट रचना पूर्वावलोकन",
@@ -96,6 +104,14 @@ export const fixtures: AreaMessages = {
     "Confirm Override & Swap": "ओव्हरराइड आणि बदलीची पुष्टी करा",
   },
   hi: {
+    "Official Fixture Sheet": "आधिकारिक फ़िक्स्चर शीट",
+    "Fixture Draw Preview": "फ़िक्स्चर ड्रॉ पूर्वावलोकन",
+    "Official Fixture Draw": "आधिकारिक फ़िक्स्चर ड्रॉ",
+    "Official fixture sheet": "आधिकारिक फ़िक्स्चर शीट",
+    "Official fixture draw": "आधिकारिक फ़िक्स्चर ड्रॉ",
+    "Fixture draw preview": "फ़िक्स्चर ड्रॉ पूर्वावलोकन",
+    "Printed {date}": "मुद्रित: {date}",
+    "Champion: {name}": "चैंपियन: {name}",
     "Failed to update strong teams": "मजबूत टीमें अपडेट करने में विफल",
     "Failed to generate fixtures": "फ़िक्स्चर बनाने में विफल",
     "Play-In Bracket Geometry Preview": "प्ले-इन ब्रैकेट संरचना पूर्वावलोकन",

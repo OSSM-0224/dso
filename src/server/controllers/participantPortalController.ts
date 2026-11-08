@@ -160,7 +160,7 @@ export async function getDashboard(user: UserSession) {
   }
 
   const upcomingMatches = myMatchesWithMeta
-    .filter((item) => item.match.status !== 'completed')
+    .filter((item) => item.match.status !== 'completed' && item.match.status !== 'live')
     .sort((a, b) => {
       const timeA = a.match.scheduledAt ? new Date(a.match.scheduledAt).getTime() : Infinity;
       const timeB = b.match.scheduledAt ? new Date(b.match.scheduledAt).getTime() : Infinity;

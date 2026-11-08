@@ -3,6 +3,13 @@ import { collections } from '../db/docStore.ts';
 import { MatchDoc } from '../../shared/types.ts';
 
 export class MatchRepository {
+  async findAll(): Promise<MatchDoc[]> {
+    return (await collections.matches.all()).sort((a, b) => {
+      if (a.round !== b.round) return a.round - b.round;
+      return a.matchNumber - b.matchNumber;
+    });
+  }
+
   async findByTournamentId(tournamentId: string): Promise<MatchDoc[]> {
     return (await collections.matches.findWhere({ tournamentId })).sort((a, b) => {
       if (a.round !== b.round) return a.round - b.round;

@@ -124,7 +124,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         {t("Skip to content")}
       </a>
 
-      <div className="min-h-[100dvh] flex flex-col bg-canvas font-sans">
+      <div className="min-h-[100dvh] flex flex-col bg-canvas font-sans print:min-h-0 print:bg-white">
         <Header />
 
         <main id="main-content" className="flex-1 mx-auto w-full max-w-6xl px-3 sm:px-4 py-6 pb-[calc(88px+env(safe-area-inset-bottom))] sm:pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-8 lg:px-8 print:max-w-none print:px-0 print:py-0">

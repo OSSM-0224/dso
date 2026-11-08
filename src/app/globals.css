@@ -234,15 +234,26 @@ html {
 }
 
 /* ────────────────────────────────────────────────────────────────
-   Print — fixture charts
-   The bracket is a horizontal scroller on screen; on paper every
-   round must be visible and cards must not split across pages.
+   Print — fixture sheets
+   A fixture sheet is a single A4 landscape page: compact letterhead,
+   the complete bracket scaled to the remaining height, and a footer.
+   Screen-only chrome is hidden, so the PDF reads like an official
+   fixture document instead of a screenshot of the admin screen.
    ──────────────────────────────────────────────────────────────── */
+
+/* Print-only chrome is removed from the screen layout entirely. */
+.fixture-print-header,
+.fixture-print-footer {
+  display: none;
+}
+
 @media print {
   html,
   body {
     background: #fff !important;
     background-image: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   body {
@@ -250,75 +261,395 @@ html {
     print-color-adjust: exact;
   }
 
-  .print-bracket {
-    width: 100% !important;
+  /* @page is declared by FixturePrintStyle (A4 landscape, zero margin).
+     The sheet below supplies its own safe page padding, which removes the
+     browser's URL/date header and keeps content clear of printer edges. */
+  .print-sheet {
+    box-sizing: border-box;
+    display: block !important;
+    min-height: 209mm;
+    margin: 0 !important;
+    padding: 8mm 9mm 12mm !important;
+    overflow: visible !important;
+    color: #111814;
+    background: #fff !important;
+    font-family: var(--font-sans);
   }
 
-  /* Kill the screen-only minimum widths so all rounds fit the sheet. */
-  .print-bracket [class*="min-w-"] {
+  /* The screen `space-y-*` wrapper adds margins that fight the print gap. */
+  .print-sheet > * {
+    margin-top: 0 !important;
+  }
+
+  /* Letterhead ------------------------------------------------------- */
+  .fixture-print-header {
+    display: flex !important;
+    flex: 0 0 auto;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10mm;
+    padding-bottom: 3mm;
+    border-bottom: 1.6px solid #184a33;
+  }
+
+  .fixture-print-identity {
+    min-width: 0;
+  }
+
+  .fixture-print-org {
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+    margin-bottom: 1.5mm;
+    color: #5b655f;
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    line-height: 1.25;
+    text-transform: uppercase;
+  }
+
+  .fixture-print-crest {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 7mm;
+    height: 7mm;
+    border: 1px solid #184a33;
+    border-radius: 2px;
+    color: #184a33;
+    font-family: var(--font-serif);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+
+  .fixture-print-title {
+    margin: 0;
+    color: #111814;
+    font-family: var(--font-serif);
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+
+  .fixture-print-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1mm 2mm;
+    margin-top: 1.8mm;
+    color: #38423c;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.35;
+  }
+
+  .fixture-print-meta strong {
+    color: #184a33;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+  }
+
+  .fixture-print-winner {
+    margin-top: 1mm;
+    color: #7d5600;
+    font-size: 8.5px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .fixture-print-document {
+    flex: 0 0 auto;
+    min-width: 46mm;
+    text-align: right;
+  }
+
+  .fixture-print-document-label {
+    color: #184a33;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1.3;
+    text-transform: uppercase;
+  }
+
+  .fixture-print-document-rule {
+    display: block;
+    width: 100%;
+    height: 1px;
+    margin: 2mm 0 1.5mm;
+    background: #cbd2c9;
+  }
+
+  .fixture-print-document-date {
+    color: #6b766f;
+    font-size: 7.5px;
+    line-height: 1.3;
+  }
+
+  /* Bracket ---------------------------------------------------------- */
+  .print-bracket-slot,
+  .print-list-slot {
+    display: block !important;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-top: 3.5mm !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .print-bracket {
+    width: var(--print-width, 100%) !important;
+    zoom: var(--print-zoom, 1);
+  }
+
+  .print-bracket-scroll {
+    width: 100% !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .print-bracket-columns {
+    align-items: stretch;
+    min-width: 0 !important;
+    gap: 3mm !important;
+  }
+
+  .print-round {
     min-width: 0 !important;
   }
 
-  .print-bracket [class*="gap-"] {
-    gap: 6px !important;
+  .print-round-header {
+    margin-bottom: 1.6mm !important;
+    padding-bottom: 0.8mm !important;
+    border-color: #cbd2c9 !important;
   }
 
-  .print-bracket .overflow-x-auto {
-    overflow: visible !important;
+  .print-round-header h4 {
+    color: #111814 !important;
+    font-size: 8px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1.2 !important;
   }
 
-  .print-bracket [data-match-card] {
-    padding: 6px !important;
+  .print-round-header span {
+    color: #6b766f !important;
+    font-size: 7px !important;
+    line-height: 1.2 !important;
+  }
+
+  .print-round-matches {
+    gap: 2mm !important;
+  }
+
+  .print-match-card {
+    padding: 1mm 1.8mm !important;
+    border-color: #cbd2c9 !important;
+    border-radius: 1.2mm !important;
     box-shadow: none !important;
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
-  .print-bracket [data-bye-card] {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  /* Compact type so a 16-team / 4-round draw fits one landscape page. */
-  .print-bracket .text-sm {
-    font-size: 10.5px !important;
-    line-height: 1.25 !important;
-  }
-
-  .print-bracket .text-xs {
-    font-size: 9.5px !important;
-    line-height: 1.25 !important;
-  }
-
-  .print-bracket .text-\[11px\] {
-    font-size: 8.5px !important;
+  .match-meta {
+    margin-bottom: 0.6mm !important;
+    color: #6b766f !important;
+    font-size: 6.8px !important;
     line-height: 1.2 !important;
   }
 
-  .print-bracket .text-\[10px\],
-  .print-bracket .text-\[9px\] {
-    font-size: 8px !important;
+  .match-meta span {
+    font-size: 6.8px !important;
     line-height: 1.2 !important;
   }
 
-  .print-bracket h4 {
-    font-size: 10px !important;
+  .match-meta .font-semibold {
+    color: #4b554f !important;
   }
 
-  /* Let long school/team names wrap instead of being clipped on paper. */
-  .print-bracket .truncate {
+  .print-team-row,
+  .print-bye-row {
+    padding: 0.35mm 0.6mm !important;
+    border-radius: 0.8mm !important;
+    font-size: 8.3px !important;
+    line-height: 1.25 !important;
+  }
+
+  .print-team-row span,
+  .print-bye-row span {
+    font-size: 8.3px !important;
+    line-height: 1.25 !important;
+  }
+
+  .print-team-row .font-mono {
+    font-size: 8.3px !important;
+  }
+
+  /* School + medium is usually already inside the team name; dropping the
+     second line keeps every card short enough for a one-page draw. */
+  .print-team-subline {
+    display: none !important;
+  }
+
+  .match-divider {
+    margin: 0.35mm 0 !important;
+    border-color: #eceee9 !important;
+  }
+
+  /* Long names wrap on paper instead of being clipped. */
+  .print-match-card .truncate {
     overflow: visible !important;
     text-overflow: clip !important;
     white-space: normal !important;
   }
 
-  .print-bracket .max-w-\[120px\] {
+  .print-match-card [class*="max-w-"] {
     max-width: none !important;
   }
 
-  .print-bracket .max-h-\[280px\],
-  .print-bracket .max-h-\[360px\] {
+  /* Bye list --------------------------------------------------------- */
+  .print-bye-panel {
+    min-width: 0;
+    margin-top: 1.5mm !important;
+    padding-top: 1.2mm !important;
+    border-color: #d8ded6 !important;
+  }
+
+  .print-bye-panel > div {
+    min-width: 0;
+    padding: 1.5mm !important;
+    border-radius: 1.2mm !important;
+  }
+
+  .print-bye-panel > div > div:first-child span {
+    font-size: 7.2px !important;
+    line-height: 1.25 !important;
+  }
+
+  .print-bye-list {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.8mm !important;
     max-height: none !important;
     overflow: visible !important;
+  }
+
+  /* Large bye fields use two columns (30 byes still fit one page). */
+  .print-bye-list:has([data-bye-card]:nth-child(9)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1.5mm !important;
+  }
+
+  .print-bye-card {
+    min-width: 0;
+    padding: 0.5mm 0.8mm !important;
+    overflow: hidden;
+    border-radius: 0.8mm !important;
+    font-size: 8px !important;
+    line-height: 1.2 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-bye-card > div {
+    min-width: 0;
+  }
+
+  .print-bye-card span {
+    font-size: 8px !important;
+  }
+
+  /* The panel heading already says "BYE"; the badge only steals width. */
+  .print-bye-badge {
+    display: none !important;
+  }
+
+  .print-bye-card .truncate {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+
+  .print-empty-note {
+    padding: 2mm !important;
+    border-radius: 1.2mm !important;
+    font-size: 8px !important;
+  }
+
+  /* Match schedule list --------------------------------------------- */
+  .fixture-print-list {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 7mm;
+  }
+
+  .fixture-print-list > div {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 3mm !important;
+    padding: 1.4mm 0 !important;
+    border-bottom: 1px solid #eceee9 !important;
+    font-size: 8px !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .fixture-print-list > div span,
+  .fixture-print-list > div div {
+    font-size: 8px !important;
+    line-height: 1.25 !important;
+  }
+
+  .fixture-print-list .w-10 {
+    width: 8mm !important;
+  }
+
+  .fixture-print-list .shrink-0 {
+    flex-shrink: 0 !important;
+  }
+
+  .fixture-print-list .text-right {
+    text-align: right !important;
+  }
+
+  .fixture-print-list .font-mono {
+    font-size: 8px !important;
+  }
+
+  /* Print-only provenance footer ------------------------------------ */
+  .fixture-print-footer {
+    display: flex !important;
+    position: fixed;
+    right: 9mm;
+    bottom: 5mm;
+    left: 9mm;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6mm;
+    padding-top: 2mm;
+    border-top: 1px solid #e6e8e2;
+    color: #6b766f;
+    font-size: 7px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    line-height: 1.3;
+    text-transform: uppercase;
+  }
+
+  /* Modal overlays never belong on paper. */
+  [role="dialog"] {
+    display: none !important;
   }
 }

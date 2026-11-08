@@ -31,7 +31,7 @@ export const BottomNav: React.FC = () => {
   return (
     <nav
       aria-label={t("Mobile")}
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-surface/95 backdrop-blur-sm lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-surface/95 backdrop-blur-sm lg:hidden print:hidden"
     >
       <div className="mx-auto flex max-w-6xl gap-1 px-2 py-1 pb-[calc(4px+env(safe-area-inset-bottom))]">
         {isParticipant ? (

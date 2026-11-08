@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { BracketView } from '../../components/bracket/BracketView.tsx';
+import { FixturePrintStyle } from '../../components/bracket/FixturePrintStyle.tsx';
 import { api } from '@/lib/api.ts';
 import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { FixtureSnapshotDoc, MatchDoc, TeamDoc, TournamentDoc } from '@/shared/types.ts';
@@ -117,15 +118,16 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:space-y-3">
+      <FixturePrintStyle />
       {/* Alert Notices */}
       {error && (
-        <div className="p-4 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200">
+        <div className="p-4 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200 print:hidden">
           {t(error)}
         </div>
       )}
       {successMsg && (
-        <div className="p-4 bg-emerald-50 text-emerald-800 text-xs rounded-lg border border-emerald-200 flex items-center justify-between">
+        <div className="p-4 bg-emerald-50 text-emerald-800 text-xs rounded-lg border border-emerald-200 flex items-center justify-between print:hidden">
           <span>{t(successMsg)}</span>
           <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4" aria-label={t("Dismiss message")}><Icon name="xmark" size="sm" /></button>
         </div>
@@ -133,7 +135,7 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
 
       {/* Snapshot & Warnings Panel */}
       {snapshot && (
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-3">
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-3 print:hidden">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <h3 className="text-sm font-bold text-slate-900">
@@ -145,6 +147,14 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
             </div>
 
         <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => window.print()}
+                className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-md transition-colors shadow-sm flex items-center gap-1.5"
+                title={t('Print the fixture chart or save it as a PDF')}
+              >
+                <Icon name="print" size="sm" />
+                {t('Print / Save PDF')}
+              </button>
               <button
                 onClick={handleRegenerate}
                 disabled={isRegenerating || !canWrite}
@@ -185,7 +195,7 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
 
       {/* Manual Swap Instruction Card */}
       {canWrite && (
-        <div className="p-3 bg-indigo-50/50 border border-indigo-200 rounded-lg text-xs text-indigo-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="p-3 bg-indigo-50/50 border border-indigo-200 rounded-lg text-xs text-indigo-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2 print:hidden">
           <div className="flex items-center gap-2 min-w-0">
             <span className="font-semibold shrink-0">{t("Manual Swap:")}</span>
             <span>
@@ -206,7 +216,7 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
       )}
 
       {/* Interactive Bracket */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm print:border-0 print:p-0 print:shadow-none">
         <BracketView
           matches={matches}
           strongTeamIds={tournament.strongTeams}
@@ -217,6 +227,11 @@ export const FixturePreviewScreen: React.FC<FixturePreviewScreenProps> = ({
           canWrite={canWrite}
         />
       </div>
+
+      {/* Print-only provenance line */}
+      <p className="hidden print:block text-center text-[10px] text-slate-500">
+        Fixture draw preview · District Sports Office (DSO) Navi Mumbai
+      </p>
 
       {/* Swap Confirmation Modal when rule violation is detected */}
       {swapWarningModal && (

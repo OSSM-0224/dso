@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
+import { flushSync } from 'react-dom';
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { useI18n } from '@/i18n/LanguageProvider.tsx';
 import { BracketView } from '../../components/bracket/BracketView.tsx';
+import { FixturePrintStyle } from '../../components/bracket/FixturePrintStyle.tsx';
 import { ResultEntryModal } from '../../components/matches/ResultEntryModal.tsx';
 import { ScheduleModal } from '../../components/matches/ScheduleModal.tsx';
 import { ScorerAssignModal } from './ScorerAssignModal.tsx';
@@ -109,6 +111,10 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
   };
 
   const handlePrint = () => {
+    // Always print the complete fixture sheet, never just the filtered round.
+    if (viewMode === 'list' && selectedRoundFilter !== 'all') {
+      flushSync(() => setSelectedRoundFilter('all'));
+    }
     window.print();
   };
 
@@ -121,15 +127,16 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
       : matches.filter((m) => m.round === selectedRoundFilter);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:space-y-3">
+      <FixturePrintStyle />
       {/* Alert Notices */}
       {error && (
-        <div className="p-4 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200">
+        <div className="p-4 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200 print:hidden">
           {t(error)}
         </div>
       )}
       {successMsg && (
-        <div className="p-4 bg-emerald-50 text-emerald-800 text-xs rounded-lg border border-emerald-200 flex items-center justify-between">
+        <div className="p-4 bg-emerald-50 text-emerald-800 text-xs rounded-lg border border-emerald-200 flex items-center justify-between print:hidden">
           <span>{t(successMsg)}</span>
           <button onClick={() => setSuccessMsg(null)} className="text-emerald-600 font-bold ml-4" aria-label={t("Dismiss message")}><Icon name="xmark" size="sm" /></button>
         </div>
@@ -158,7 +165,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
       )}
 
       {/* Controls & Share Strip */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4 print:hidden">
         {/* View Switcher Tabs */}
         <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg self-start">
           <button
@@ -206,7 +213,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
 
       {/* View Mode: Bracket View */}
       {viewMode === 'bracket' && (
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm print:border-0 print:p-0 print:shadow-none">
           <BracketView
             matches={matches}
             strongTeamIds={tournament.strongTeams}
@@ -221,14 +228,14 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
 
       {/* View Mode: Match Schedule List */}
       {viewMode === 'list' && (
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4 print:border-0 print:p-0 print:shadow-none">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-slate-100 pb-3">
             <h3 className="text-sm font-bold text-slate-900">
               {t("Round-wise Match List & Results")}
             </h3>
 
             {/* Round Filter */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 print:hidden">
               <span className="text-xs text-slate-500">{t("Filter Round:")}</span>
               <select
                 value={selectedRoundFilter}
@@ -253,7 +260,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
             {filteredMatches.map((m) => (
               <div
                 key={m.id}
-                className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs print:break-inside-avoid"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="font-mono font-bold text-slate-400 w-10 shrink-0">
@@ -305,7 +312,7 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
                     ) : null}
 
                     {canWrite && !m.isBye && (
-                      <div className="flex items-center gap-1.5 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-wrap print:hidden">
                         {m.status === 'live' && m.teamA && m.teamB && (
                           <Link
                             href={`/score/${m.tournamentId}/${m.id}`}
@@ -359,6 +366,11 @@ export const PublishedFixtureScreen: React.FC<PublishedFixtureScreenProps> = ({
           </div>
         </div>
       )}
+
+      {/* Print-only provenance line */}
+      <p className="hidden print:block text-center text-[10px] text-slate-500">
+        Official fixture sheet · District Sports Office (DSO) Navi Mumbai
+      </p>
 
       {/* Result Entry Modal (new result) */}
       {selectedMatchForResult && (

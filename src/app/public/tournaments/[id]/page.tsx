@@ -47,7 +47,7 @@ export default async function PublicTournamentRoute({ params }: PageProps) {
   // Unpublished / unknown tournament: the client component loads the exact
   // same error state the old client-only page displayed.
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 print:min-h-0 print:bg-white">
       <PublicBracketView id={id} payload={payload} />
     </div>
   );

@@ -119,7 +119,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       {/* Skip-to-content for keyboard users */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[70] focus:rounded-[6px] focus:bg-ink focus:px-3 focus:py-1.5 focus:text-xs focus:text-white"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[70] focus:rounded-[6px] focus:bg-ink focus:px-3 focus:py-1.5 focus:text-xs focus:text-white print:hidden"
       >
         {t("Skip to content")}
       </a>
@@ -127,14 +127,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <div className="min-h-[100dvh] flex flex-col bg-canvas font-sans">
         <Header />
 
-        <main id="main-content" className="flex-1 mx-auto w-full max-w-6xl px-3 sm:px-4 py-6 pb-[calc(88px+env(safe-area-inset-bottom))] sm:pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-8 lg:px-8">
+        <main id="main-content" className="flex-1 mx-auto w-full max-w-6xl px-3 sm:px-4 py-6 pb-[calc(88px+env(safe-area-inset-bottom))] sm:pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-8 lg:px-8 print:max-w-none print:px-0 print:py-0">
           {children}
         </main>
 
         {/* Mandatory Password Change on First Login */}
         <ForcePasswordChangeModal />
 
-        <footer className="hidden border-t border-hairline py-5 text-center text-xs text-faint md:block">
+        <footer className="hidden border-t border-hairline py-5 text-center text-xs text-faint md:block print:hidden">
           <div className="mx-auto max-w-6xl px-4">
             {t("District Sports Office (DSO) Navi Mumbai · Fixture administration platform")}
           </div>

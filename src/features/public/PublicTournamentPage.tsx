@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Icon } from '@/components/ui/Icon.tsx';
 import { BracketView } from '../../components/bracket/BracketView.tsx';
+import { FixturePrintStyle } from '../../components/bracket/FixturePrintStyle.tsx';
 import { api } from '@/lib/api.ts';
 import { MatchDoc, TeamDoc, TournamentDoc } from '@/shared/types.ts';
 import { PublicMatchLiveScore } from '@/features/scoring/LiveScorePanel.tsx';
@@ -85,7 +86,8 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 print:max-w-none print:px-0 print:py-0 print:space-y-3">
+      <FixturePrintStyle />
       {/* Public Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
         <div>
@@ -112,10 +114,12 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 print:hidden">
           <button
+            type="button"
             onClick={() => window.print()}
             className="px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 shadow-sm transition-colors"
+            title="Print the fixture chart or save it as a PDF"
           >
             <Icon name="print" size="sm" className="mr-1" />Print / Save PDF
           </button>
@@ -147,7 +151,7 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
 
       {/* LIVE NOW strip — one polling card per live match */}
       {liveMatches.length > 0 && (
-        <div className="rounded-2xl border border-red-200/70 bg-red-50/60 p-4 sm:p-5 shadow-sm">
+        <div className="rounded-2xl border border-red-200/70 bg-red-50/60 p-4 sm:p-5 shadow-sm print:hidden">
           <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-red-700">
             <span className="relative flex h-2.5 w-2.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
@@ -172,8 +176,8 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
       )}
 
       {/* Read-Only Bracket */}
-      <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-4 md:p-5 shadow-sm">
-        <div className="text-xs text-slate-500 mb-2">
+      <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-4 md:p-5 shadow-sm print:border-0 print:p-0 print:shadow-none">
+        <div className="text-xs text-slate-500 mb-2 print:hidden">
           Public Read-Only Bracket · Live match results and progression
         </div>
         <BracketView
@@ -184,6 +188,11 @@ export const PublicTournamentPage: React.FC<PublicTournamentPageProps> = ({
           canWrite={false}
         />
       </div>
+
+      {/* Print-only provenance line */}
+      <p className="hidden print:block text-center text-[10px] text-slate-500">
+        Official fixture draw · District Sports Office (DSO) Navi Mumbai
+      </p>
     </div>
   );
 };

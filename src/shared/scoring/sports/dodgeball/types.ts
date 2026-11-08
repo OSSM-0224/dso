@@ -2,11 +2,12 @@
  * Dodgeball scoring: config, event vocabulary, state and scoreboard types.
  *
  * The values follow the DSO dodgeball rulebook:
- * - 6 main + 4 substitute players, jerseys 1-99 (single or double digit).
- * - best of 3 sets of 3 minutes (configurable), 3-minute interval, teams
- *   change ends after each set.
- * - 2-minute extra time when a set is tied, then sudden death (first point).
- * - points for hits, line/area violations, revival failures and red cards.
+ * - two 1:30 sets; a third set is played only when the first two leave the
+ *   match level (0-0 or 1-1). A set winner earns one match point for the team.
+ * - no toss: the scorer goes straight to set 1.
+ * - no jersey numbers: every team fields six anonymous players (Player 1-6).
+ * - each team has three balls to attack with.
+ * - points are team points only; no individual player scoring.
  * - all six out => +2 bonus (excluding the point for the sixth out) and a
  *   5-second revival window.
  * - 5-second / 3-second delay penalties, yellow/red cards, injury stoppages.
@@ -17,16 +18,22 @@
 import type { ScoringEventBase, ScoringTeamRef } from "../../types.ts";
 
 export interface DodgeballScoringConfig {
-  bestOf: number; // best-of-N sets (default 3 -> first to 2 set wins)
-  setDurationSec: number; // 3 minutes (180); tournaments may override this
-  intervalSec: number; // 3-minute interval (display only)
-  extraTimeSec: number; // 2-minute extra time when a set is tied
-  suddenDeathEnabled: boolean; // first point after extra time wins the set
+  /** Legacy alias for the maximum number of sets (regulation + decider). */
+  bestOf: number;
+  /** Sets scheduled before a decider (DSO default: 2). */
+  regulationSets: number;
+  /** Play one extra set when regulation ends level (DSO default: true). */
+  decidingSetOnTie: boolean;
+  setDurationSec: number; // 1:30 (90 seconds) per set
+  intervalSec: number; // interval between sets (display only)
+  extraTimeSec: number; // legacy extra-time length (0 = not used)
+  suddenDeathEnabled: boolean; // legacy flag (false = not used)
   playersOnCourt: number; // 6 main players
-  minPlayersToStart: number; // 4 players is the minimum to take the court
-  maxRosterSize: number; // 10 named players
-  maxSubstitutes: number; // 4 substitutes
-  jerseyMin: number; // jerseys 1-99 (single or double digit)
+  minPlayersToStart: number; // legacy lineup minimum
+  maxRosterSize: number; // legacy roster cap
+  maxSubstitutes: number; // legacy substitute cap
+  ballsPerTeam: number; // 3 balls to attack with
+  jerseyMin: number; // legacy lineup validation only
   jerseyMax: number;
   hitPoints: number; // direct hit on an opponent
   lineOutPoints: number; // opponent touches/crosses a boundary line
@@ -39,21 +46,24 @@ export interface DodgeballScoringConfig {
   delayPenaltyPoints: number; // 5s/3s delay penalty
   redCardPoints: number; // opponent point for a red card
   injuryOutPoints: number; // opponent point when an injured player leaves
-  /** Team display colors (hex). Optional — only used in the scorer console. */
+  /** Legacy team display colors (hex); the DSO console no longer uses them. */
   teamAColor?: string;
   teamBColor?: string;
 }
 
 export const DEFAULT_DODGEBALL_SCORING_CONFIG: DodgeballScoringConfig = {
   bestOf: 3,
-  setDurationSec: 180,
+  regulationSets: 2,
+  decidingSetOnTie: true,
+  setDurationSec: 90,
   intervalSec: 180,
-  extraTimeSec: 120,
-  suddenDeathEnabled: true,
+  extraTimeSec: 0,
+  suddenDeathEnabled: false,
   playersOnCourt: 6,
   minPlayersToStart: 4,
   maxRosterSize: 10,
   maxSubstitutes: 4,
+  ballsPerTeam: 3,
   jerseyMin: 1,
   jerseyMax: 99,
   hitPoints: 1,
@@ -67,8 +77,8 @@ export const DEFAULT_DODGEBALL_SCORING_CONFIG: DodgeballScoringConfig = {
   delayPenaltyPoints: 1,
   redCardPoints: 1,
   injuryOutPoints: 1,
-  teamAColor: "#2563EB", // Blue-600
-  teamBColor: "#DC2626", // Red-600
+  teamAColor: "#2563EB", // legacy default
+  teamBColor: "#DC2626", // legacy default
 };
 
 /** Rules are identical across age groups for now — hook for later DSO tweaks. */
@@ -111,6 +121,18 @@ export interface DodgeballSubstitutionEvent extends ScoringEventBase {
 export interface DodgeballSetStartEvent extends ScoringEventBase {
   type: "SET_START";
   setNo: number;
+}
+
+/**
+ * DSO team point: one tap awards points to the team only. No player is
+ * selected or attributed, and no player is put out.
+ */
+export interface DodgeballTeamPointEvent extends ScoringEventBase {
+  type: "TEAM_POINT";
+  teamId: string;
+  /** Points to add (default 1). */
+  points?: number;
+  reason?: string;
 }
 
 export interface DodgeballHitEvent extends ScoringEventBase {
@@ -230,6 +252,7 @@ export type DodgeballScoreEvent =
   | DodgeballLineupEvent
   | DodgeballSubstitutionEvent
   | DodgeballSetStartEvent
+  | DodgeballTeamPointEvent
   | DodgeballHitEvent
   | DodgeballLineOutEvent
   | DodgeballCatchEvent
@@ -302,8 +325,12 @@ export interface DodgeballSetEntry {
 export interface DodgeballTeamState {
   teamId: string;
   teamName: string;
+  /** Team points in the current set (never attributed to a player). */
   points: number;
+  /** Match points: one per set won by this team. */
   setWins: number;
+  /** Balls available to attack with (DSO rule: 3). */
+  balls: number;
   onCourt: string[];
   subs: string[];
   activePlayerIds: string[];
@@ -324,7 +351,7 @@ export interface DodgeballRevivalState {
 export interface DodgeballWinnerEvaluation {
   resolved: boolean;
   winnerTeamId: string | null;
-  kind: "sets" | "manual" | null;
+  kind: "sets" | "manual" | "draw" | null;
   label: string;
   /** Set wins per team (this is what the bracket records). */
   scores: Record<string, number>;
@@ -332,8 +359,6 @@ export interface DodgeballWinnerEvaluation {
 }
 
 export type DodgeballNextAction =
-  | { action: "prompt_toss" }
-  | { action: "require_lineups"; missingTeamIds: string[] }
   | { action: "start_set"; setNo: number; deciding: boolean }
   | { action: "record_events"; setNo: number }
   | {
@@ -345,8 +370,6 @@ export type DodgeballNextAction =
     }
   | { action: "set_paused"; remainingMs: number | null; period: DodgeballTimePeriod }
   | { action: "end_set"; setNo: number }
-  | { action: "prompt_extra_time"; setNo: number }
-  | { action: "prompt_sudden_death"; setNo: number }
   | { action: "sudden_death"; setNo: number }
   | { action: "completed"; winner: DodgeballWinnerEvaluation };
 

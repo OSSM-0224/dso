@@ -109,6 +109,11 @@ function playerKey(teamId: string, playerId: string): string {
   return `${teamId}:${playerId}`;
 }
 
+/** Anonymous on-court slots — the DSO game does not use jersey numbers. */
+function defaultPlayerIds(count: number): string[] {
+  return Array.from({ length: Math.max(1, count) }, (_, index) => `p${index + 1}`);
+}
+
 function emptyPoints(teams: ScoringTeamRef[]): Record<string, number> {
   const points: Record<string, number> = {};
   for (const team of teams) points[team.id] = 0;
@@ -248,6 +253,16 @@ function completeSet(
   if (d.currentSet === set) d.currentSet = null;
 }
 
+/** Close a level set as a draw (no set point is awarded). */
+function drawSet(d: DerivedMatch, set: DerivedSet, atMs: number): void {
+  set.completed = true;
+  set.winnerTeamId = null;
+  set.endedAtMs = atMs;
+  set.revivalPendingTeamId = null;
+  set.revivalDeadlineMs = null;
+  if (d.currentSet === set) d.currentSet = null;
+}
+
 function handleAllOut(
   d: DerivedMatch,
   set: DerivedSet,
@@ -300,25 +315,54 @@ function winnerOf(d: DerivedMatch, state: DodgeballScoringState): DodgeballWinne
       setWins: wins,
     };
   }
-  const needed = Math.ceil(state.config.bestOf / 2);
-  for (const team of state.teams) {
-    const count = wins[team.id] ?? 0;
-    if (count >= needed) {
+
+  const completedSets = d.sets.filter((set) => set.completed);
+  const regulationSets = Math.max(1, state.config.regulationSets);
+  if (completedSets.length < regulationSets) {
+    return {
+      resolved: false,
+      winnerTeamId: null,
+      kind: null,
+      label: '',
+      scores: wins,
+      setWins: wins,
+    };
+  }
+
+  const counts = state.teams.map((team) => wins[team.id] ?? 0);
+  const best = Math.max(...counts);
+  const leaders = state.teams.filter((team) => (wins[team.id] ?? 0) === best);
+
+  if (leaders.length !== 1) {
+    // DSO rule: if the two regulation sets leave the match level, play one
+    // deciding set. If the decider is also drawn, the match is a draw.
+    if (state.config.decidingSetOnTie && completedSets.length === regulationSets) {
       return {
-        resolved: true,
-        winnerTeamId: team.id,
-        kind: 'sets',
-        label: `WON BY ${count} SETS`,
+        resolved: false,
+        winnerTeamId: null,
+        kind: null,
+        label: '',
         scores: wins,
         setWins: wins,
       };
     }
+    return {
+      resolved: true,
+      winnerTeamId: null,
+      kind: 'draw',
+      label: 'MATCH DRAWN',
+      scores: wins,
+      setWins: wins,
+    };
   }
+
+  const winner = leaders[0];
+  const count = wins[winner.id] ?? 0;
   return {
-    resolved: false,
-    winnerTeamId: null,
-    kind: null,
-    label: '',
+    resolved: true,
+    winnerTeamId: winner.id,
+    kind: 'sets',
+    label: `WON BY ${count} ${count === 1 ? 'SET' : 'SETS'}`,
     scores: wins,
     setWins: wins,
   };
@@ -380,6 +424,18 @@ function deriveMatch(state: DodgeballScoringState): DerivedMatch {
     for (const playerId of lineup.subs) history.add(playerId);
     d.lineupHistory.set(teamId, history);
   };
+
+  // DSO dodgeball has no jersey numbers and no lineup screen: every team
+  // starts with six anonymous slots. Legacy LINEUP_SET events still override
+  // these defaults when an older session is replayed.
+  for (const team of state.teams) {
+    const lineup: DerivedLineup = {
+      onCourt: defaultPlayerIds(state.config.playersOnCourt),
+      subs: [],
+    };
+    d.lineups.set(team.id, lineup);
+    rememberLineup(team.id, lineup);
+  }
 
   const applyPrimaryScore = (
     set: DerivedSet,
@@ -461,6 +517,19 @@ function deriveMatch(state: DodgeballScoringState): DerivedMatch {
         };
         d.sets.push(set);
         d.currentSet = set;
+        break;
+      }
+
+      case 'TEAM_POINT': {
+        const set = d.currentSet;
+        if (!set || set.completed) break;
+        const points =
+          typeof event.points === 'number' && Number.isFinite(event.points) && event.points > 0
+            ? Math.floor(event.points)
+            : 1;
+        applyPrimaryScore(set, event.teamId, points);
+        set.lastEventId = event.eventId;
+        if (set.suddenDeath) completeSet(d, set, event.teamId, event.atMs);
         break;
       }
 
@@ -660,14 +729,13 @@ function deriveMatch(state: DodgeballScoringState): DerivedMatch {
       case 'SET_END': {
         const set = d.currentSet;
         if (!set || set.completed) break;
-        const winner = pointsTied(set, state.teams)
-          ? null
-          : state.teams.find(
-              (team) =>
-                (set.points[team.id] ?? 0) >
-                Math.max(...state.teams.filter((t) => t.id !== team.id).map((t) => set.points[t.id] ?? 0)),
-            )?.id ?? null;
-        if (winner) completeSet(d, set, winner, event.atMs);
+        const winner = leaderOf(set, state.teams);
+        if (winner) {
+          completeSet(d, set, winner, event.atMs);
+        } else {
+          // Level set: record the draw, no set point to either team.
+          drawSet(d, set, event.atMs);
+        }
         break;
       }
 
@@ -717,8 +785,6 @@ function phaseOf(
     if (set.extraTime) return 'extra_time';
     return 'set_live';
   }
-  if (!d.toss) return 'awaiting_toss';
-  if (teamsNeedingLineup(d, state).length > 0) return 'awaiting_lineups';
   if (d.sets.length === 0) return 'awaiting_set_start';
   return 'set_break';
 }
@@ -765,30 +831,22 @@ function nextActionOf(
     }
     if (set.suddenDeath) return { action: 'sudden_death', setNo: set.setNo };
     if (time.expired) {
-      if (pointsTied(set, state.teams)) {
-        if (time.period === 'extra_time') {
-          return state.config.suddenDeathEnabled
-            ? { action: 'prompt_sudden_death', setNo: set.setNo }
-            : { action: 'end_set', setNo: set.setNo };
-        }
-        return { action: 'prompt_extra_time', setNo: set.setNo };
-      }
+      // DSO rule: a level set is recorded as a draw; there is no extra time.
       return { action: 'end_set', setNo: set.setNo };
     }
     return { action: 'record_events', setNo: set.setNo };
   }
 
-  if (!d.toss) return { action: 'prompt_toss' };
-  const missing = teamsNeedingLineup(d, state);
-  if (missing.length > 0) return { action: 'require_lineups', missingTeamIds: missing };
   const nextSetNo = d.sets.length + 1;
-  if (nextSetNo > state.config.bestOf) {
+  const regulationSets = Math.max(1, state.config.regulationSets);
+  const maxSets = regulationSets + (state.config.decidingSetOnTie ? 1 : 0);
+  if (nextSetNo > maxSets) {
     return { action: 'completed', winner };
   }
   return {
     action: 'start_set',
     setNo: nextSetNo,
-    deciding: nextSetNo === state.config.bestOf,
+    deciding: nextSetNo > regulationSets,
   };
 }
 
@@ -854,6 +912,7 @@ function getScoreboardInternal(
       teamName: team.name,
       points: points[team.id] ?? 0,
       setWins: setWins[team.id] ?? 0,
+      balls: state.config.ballsPerTeam,
       onCourt,
       subs,
       activePlayerIds,
@@ -1073,9 +1132,6 @@ function validateEventInternal(
       if (!knownTeam(candidate.teamId)) {
         throw new ScoringRuleError('TEAM_NOT_FOUND', 'Lineup team is not part of this match.');
       }
-      if (!d.toss) {
-        throw new ScoringRuleError('TOSS_REQUIRED', 'Record the toss before setting lineups.');
-      }
       if (d.currentSet) {
         throw new ScoringRuleError(
           'BAD_LINEUP',
@@ -1134,9 +1190,6 @@ function validateEventInternal(
     }
 
     case 'SET_START': {
-      if (!d.toss) {
-        throw new ScoringRuleError('TOSS_REQUIRED', 'Record the toss before starting a set.');
-      }
       if (d.currentSet) {
         throw new ScoringRuleError('SET_ALREADY_LIVE', 'A set is already live.');
       }
@@ -1147,7 +1200,9 @@ function validateEventInternal(
           `Set ${candidate.setNo} cannot start; the next set is ${expected}.`,
         );
       }
-      if (expected > state.config.bestOf) {
+      const regulationSets = Math.max(1, state.config.regulationSets);
+      const maxSets = regulationSets + (state.config.decidingSetOnTie ? 1 : 0);
+      if (expected > maxSets) {
         throw new ScoringRuleError('SET_NO_MISMATCH', 'The match has no further sets.');
       }
       const missing = teamsNeedingLineup(d, state);
@@ -1155,6 +1210,25 @@ function validateEventInternal(
         throw new ScoringRuleError(
           'LINEUP_REQUIRED',
           `Set a valid lineup for: ${missing.join(', ')}.`,
+        );
+      }
+      return;
+    }
+
+    case 'TEAM_POINT': {
+      requirePlayableSet(d, state.config, candidate.atMs);
+      if (!knownTeam(candidate.teamId)) {
+        throw new ScoringRuleError('TEAM_NOT_FOUND', 'Scoring team is not part of this match.');
+      }
+      if (
+        candidate.points !== undefined &&
+        (!Number.isFinite(candidate.points) ||
+          candidate.points <= 0 ||
+          !Number.isInteger(candidate.points))
+      ) {
+        throw new ScoringRuleError(
+          'MALFORMED_EVENT',
+          'Team points must be a positive whole number.',
         );
       }
       return;
@@ -1411,20 +1485,8 @@ function validateEventInternal(
       if (reason === 'TIMER' && !time.expired) {
         throw new ScoringRuleError('SET_TIME_NOT_EXPIRED', 'Set time is not over yet.');
       }
-      if (pointsTied(set, state.teams)) {
-        if (set.extraTime) {
-          throw new ScoringRuleError(
-            state.config.suddenDeathEnabled ? 'TIE_REQUIRES_SUDDEN_DEATH' : 'TIE_REQUIRES_MANUAL_DECISION',
-            state.config.suddenDeathEnabled
-              ? 'Scores are still tied; start sudden death.'
-              : 'Scores are tied; record a manual decision.',
-          );
-        }
-        throw new ScoringRuleError(
-          'TIE_REQUIRES_EXTRA_TIME',
-          'Scores are tied; start the 2-minute extra time.',
-        );
-      }
+      // A level set is valid in DSO dodgeball: it is recorded as a draw and
+      // no set point is awarded to either team.
       return;
     }
 
@@ -1594,21 +1656,23 @@ export const dodgeballScoringEngine = {
     ];
   },
 
+  /**
+   * Team-level statistics only. DSO dodgeball awards points to the team, never
+   * to an individual player, so every row has `playerId: null`.
+   */
   getPlayerStats(state: DodgeballScoringState): DodgeballStatsRow[] {
     const d = deriveMatch(state);
     const config = state.config;
     const view = activeView(state.events);
     const rows = new Map<string, DodgeballStatsRow>();
 
-    const ensure = (teamId: string, playerId: string | null): DodgeballStatsRow => {
-      const key = `${teamId}:${playerId ?? '__team__'}`;
-      let row = rows.get(key);
+    const ensure = (teamId: string): DodgeballStatsRow => {
+      let row = rows.get(teamId);
       if (!row) {
         row = {
-          playerId,
+          playerId: null,
           teamId,
-          jerseyNumber:
-            playerId && /^\d+$/.test(playerId) ? Number(playerId) : null,
+          jerseyNumber: null,
           values: {
             points: 0,
             hits: 0,
@@ -1619,85 +1683,73 @@ export const dodgeballScoringEngine = {
             delays: 0,
           },
         };
-        rows.set(key, row);
+        rows.set(teamId, row);
       }
       return row;
     };
 
-    for (const team of state.teams) {
-      const history = d.lineupHistory.get(team.id);
-      if (history) {
-        for (const playerId of history) ensure(team.id, playerId);
-      }
-      ensure(team.id, null);
-    }
+    for (const team of state.teams) ensure(team.id);
 
     for (const event of view.active) {
       switch (event.type) {
+        case 'TEAM_POINT': {
+          const points =
+            typeof event.points === 'number' && Number.isFinite(event.points) && event.points > 0
+              ? Math.floor(event.points)
+              : 1;
+          ensure(event.teamId).values.points += points;
+          break;
+        }
         case 'HIT': {
           const rival = rivalOf(state.teams, event.teamId);
-          if (event.playerId) {
-            const row = ensure(event.teamId, event.playerId);
-            row.values.points += config.hitPoints;
-            row.values.hits += 1;
-          } else {
-            ensure(event.teamId, null).values.points += config.hitPoints;
-          }
-          const victim = ensure(rival, event.targetPlayerId);
-          victim.values.outs += 1;
+          const row = ensure(event.teamId);
+          row.values.points += config.hitPoints;
+          row.values.hits += 1;
+          ensure(rival).values.outs += 1;
           break;
         }
         case 'LINE_OUT': {
           const rival = rivalOf(state.teams, event.teamId);
-          ensure(event.teamId, null).values.points += config.lineOutPoints;
-          ensure(rival, event.targetPlayerId).values.outs += 1;
+          ensure(event.teamId).values.points += config.lineOutPoints;
+          ensure(rival).values.outs += 1;
           break;
         }
         case 'CATCH': {
-          ensure(event.teamId, event.playerId).values.catches += 1;
-          if (event.throwerPlayerId) {
-            ensure(event.throwerTeamId, event.throwerPlayerId).values.outs += 1;
-          }
-          if (event.revivePlayerId) {
-            ensure(event.teamId, event.revivePlayerId).values.revives += 1;
-          } else if (config.catchRevivesTeammate) {
-            // The engine auto-revives the first out team-mate; attribute that
-            // revival to the catcher's team at team level when no jersey was
-            // supplied by the scorer.
-            ensure(event.teamId, null).values.revives += 1;
-          }
+          const row = ensure(event.teamId);
+          row.values.catches += 1;
+          if (event.throwerPlayerId) ensure(event.throwerTeamId).values.outs += 1;
+          if (config.catchRevivesTeammate) row.values.revives += 1;
           break;
         }
         case 'CARD': {
-          ensure(event.teamId, event.playerId).values.cards += 1;
+          const row = ensure(event.teamId);
+          row.values.cards += 1;
           if (event.cardType === 'RED') {
             const rival = rivalOf(state.teams, event.teamId);
-            ensure(event.teamId, event.playerId).values.outs += 1;
-            ensure(rival, null).values.points += config.redCardPoints;
+            row.values.outs += 1;
+            ensure(rival).values.points += config.redCardPoints;
           }
           break;
         }
         case 'INJURY': {
           const rival = rivalOf(state.teams, event.teamId);
-          ensure(event.teamId, event.playerId).values.outs += 1;
-          ensure(rival, null).values.points += config.injuryOutPoints;
+          ensure(event.teamId).values.outs += 1;
+          ensure(rival).values.points += config.injuryOutPoints;
           break;
         }
         case 'DELAY': {
           const rival = rivalOf(state.teams, event.teamId);
-          if (event.playerId) ensure(event.teamId, event.playerId).values.delays += 1;
-          ensure(rival, null).values.points += config.delayPenaltyPoints;
+          ensure(event.teamId).values.delays += 1;
+          ensure(rival).values.points += config.delayPenaltyPoints;
           break;
         }
         case 'REVIVE': {
-          for (const playerId of event.playerIds) {
-            ensure(event.teamId, playerId).values.revives += 1;
-          }
+          ensure(event.teamId).values.revives += 1;
           break;
         }
         case 'REVIVAL_FAILED': {
           const rival = rivalOf(state.teams, event.teamId);
-          ensure(rival, null).values.points += config.revivalFailurePoints;
+          ensure(rival).values.points += config.revivalFailurePoints;
           break;
         }
         default:
@@ -1712,17 +1764,13 @@ export const dodgeballScoringEngine = {
         if (count === 0) continue;
         const awarded = config.allOutBonusRepeats ? count : Math.min(1, count);
         const rival = rivalOf(state.teams, team.id);
-        ensure(rival, null).values.points += awarded * config.allOutBonusPoints;
+        ensure(rival).values.points += awarded * config.allOutBonusPoints;
       }
     }
 
-    return Array.from(rows.values()).sort((a, b) => {
-      if (a.teamId !== b.teamId) return (a.teamId ?? '').localeCompare(b.teamId ?? '');
-      if (a.jerseyNumber === null && b.jerseyNumber === null) return 0;
-      if (a.jerseyNumber === null) return 1;
-      if (b.jerseyNumber === null) return -1;
-      return a.jerseyNumber - b.jerseyNumber;
-    });
+    return Array.from(rows.values()).sort((a, b) =>
+      (a.teamId ?? '').localeCompare(b.teamId ?? ''),
+    );
   },
 };
 

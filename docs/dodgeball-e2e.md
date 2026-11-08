@@ -1,7 +1,7 @@
 # Dodgeball — End-to-End Verification
 
 This checklist covers the dodgeball module end to end: tournament setup, scorer
-console, live reader views, jersey-wise statistics, and kho-kho/sepak-takraw
+console, live reader views, team statistics, and kho-kho/sepak-takraw
 regression.
 
 ## What is wired
@@ -20,19 +20,16 @@ regression.
 
 | Item | Value |
 | --- | --- |
-| Match | Best of 3 sets (first to 2 set wins) |
-| Set | 3 minutes |
-| Extra time | 2 minutes when a set is tied |
-| Sudden death | First point wins the set |
-| On court | 6 players; minimum 4 to start |
-| Squad | Up to 10 (6 on court + 4 substitutes), jerseys 1–99 |
-| Point actions | Hit, line-out, catch, red card, injury, delay, revival failure |
-| All-out | +2 bonus and a 5-second revival window |
-| Revival failure | Opponent point, then the team re-enters so play continues |
-| Catch | Thrower out and one team-mate revived (both configurable) |
-| Cards | Yellow warning; red disqualifies for the match and awards a point |
-| Delays | 5-second and 3-second delay types |
-| Substitutions | Between sets only; red-carded players cannot return |
+| Match | Two 1:30 sets; a third set is played only when the first two leave the match level |
+| Set | 1 minute 30 seconds |
+| Tie | A level set is recorded as a draw; no set point, no extra time, no sudden death |
+| Court | 6 players per side (not listed in the console) |
+| Balls | 3 balls per team to attack with |
+| Points | Team points only; no individual player points |
+| Scoring | Tap **Team point +1** on a team card; no player selection |
+| Player selection | None — no jerseys, no on-court/out picks, no dropdowns |
+| Toss | Not used; set 1 starts straight away |
+| Legacy events | Older hit/catch/card/revival events still replay, but the console exposes team points only |
 
 ## 1. Automated gates
 
@@ -43,7 +40,7 @@ npm run build
 ```
 
 Expected: `tsc` is silent; `npm test` ends with
-`Total: 158, Passed: 158`; the production build completes.
+`Total: 160, Passed: 160`; the production build completes.
 
 In the app (staff): open `/engine-tests` and click **Run All Engine Tests**.
 The dodgeball suite is included, plus `TEST_REGISTRY_*` and the shared scoring
@@ -69,122 +66,81 @@ Console/LiveView wiring.
 
 ## 3. Scorer console checklist
 
-### Session start and lineups
+### Session start
 
-- [ ] **Start scoring session** → phase shows `awaiting toss`.
-- [ ] Toss: pick the winning team and click **Record toss**. The rulebook gives
-      the toss winner the choice of court only.
-- [ ] Each team's lineup panel: enter at least 4 and up to 6 distinct jersey
-      numbers (1–99, single or double digit) on court; enter up to 4 substitute
-      jerseys.
-- [ ] Saving a lineup with 3 players, a duplicate jersey, or jersey `100`/`0`
-      is rejected with a clear message.
-- [ ] Double-digit jerseys such as `11` and `23` are accepted and appear as
-      separate players in the stats table.
-- [ ] Save both lineups, then **Start set 1**.
-- [ ] If a team has substitutes, the interval panel offers an outgoing player
-      and an incoming substitute before the next set.
-
-> Jersey numbers typed here are the player identifiers used by every stat.
-> Scorers do not need the school roster; they enter the numbers worn on court.
-
-### Team colors
-
-- [ ] As scorer/admin, click a team's color chip in the console header to open
-      its picker; choose a preset swatch or enter a custom hex value.
-- [ ] After a color is chosen the picker closes automatically; the compact chip
-      remains for a later change.
-- [ ] The team name, score card border and score use the selected color in the
-      console.
-- [ ] The same colors appear on the public/reader live view for this match.
-- [ ] Refresh the page: the colors persist because they are stored in the match
-      score config.
+- [ ] **Start scoring session** → the console shows **Ready for set 1** with a
+      **Start set 1** button.
+- [ ] There is no toss step, no lineup entry, no jersey-number input and no
+      player selection of any kind.
+- [ ] There is no team-colour picker in the console header or score cards.
+- [ ] Each team card shows the team's set points and **3 balls**; there are no
+      player slots, player chips or player dropdowns.
+- [ ] Start set 1 → the clock shows `1:30` and counts down.
 
 ### Clock and pause
 
-- [ ] The set clock starts at `3:00` and counts down in the console header.
+- [ ] The set clock starts at `1:30` and counts down in the console header.
 - [ ] **Stop clock** freezes the countdown; **Resume clock** continues from the
       same remaining time.
-- [ ] After regulation expires the console shows **Set time is over** and
-      scoring buttons are replaced by **End set**.
+- [ ] After 1:30 the console shows **Set time is over** and the scoring buttons
+      are replaced by **End set**.
 - [ ] Ending a set before the timer expires is rejected by the engine.
 
-### Point actions
+### Team points
 
-- [ ] Select an opponent player and click **Hit** → the scoring team gains one
-      point and the target appears in the out list with a red jersey chip.
-- [ ] Select an opponent player and click **Line out** → one point and the
-      target is out.
-- [ ] Select an own player and click **Catch** → the catcher is credited, the
-      chosen opponent thrower is out, and one own out player is revived.
-      Leaving the revival target on “Automatic” revives the first out player.
-- [ ] **Yellow card** records a warning; a second yellow for the same player is
-      rejected and must be entered as a red.
-- [ ] **Red card** puts the player out, disqualifies them for the match, and
-      awards the opponent a point.
-- [ ] **Injury out** puts the player out and awards the opponent a point.
-- [ ] **Delay** (5-second or 3-second) awards the opponent a point but does not
-      put the player out.
-- [ ] Attempting to score after the target is already out is rejected.
-
-### All-out and revival
-
-- [ ] Put all six players of one team out with hits/line-outs.
-- [ ] The scoreboard shows **Revival window**, the six out jerseys, and a
-      5-second countdown.
-- [ ] **All back in** returns all six players and closes the window.
-- [ ] Repeating the all-out cycle awards the +2 bonus again (default
-      `allOutBonusRepeats: true`).
-- [ ] **Revival failed** awards the opponent a point, then returns all six so
-      play can continue.
-- [ ] No other action is accepted while the revival window is open.
+- [ ] Each team card has a **Team point +1** button and no player controls.
+- [ ] Tap a team's button → that team's set points increase by one; no player
+      is selected, put out, credited or shown.
+- [ ] The team's set points update on the score card and in the set history.
+- [ ] **Undo last event** removes the point and restores the previous total.
+- [ ] Scoring after the 1:30 clock expires is rejected until the set is ended.
+- [ ] Legacy sessions with older hit/catch events still replay correctly, but
+      the DSO console never asks for a player.
 
 ### Set and match flow
 
-- [ ] After the set clock expires with a non-tied score, click **End set** →
+- [ ] After the 1:30 clock expires with a non-tied score, click **End set** →
       the set appears in the history with its winner and the console offers
       **Start set 2**.
-- [ ] Substitutions are available between sets and update the on-court list.
-- [ ] If the set is tied at the end of regulation, the console offers
-      **Start 2-minute extra time**.
-- [ ] If extra time ends tied, the console offers **Start sudden death**.
-- [ ] The first point in sudden death completes the set immediately.
-- [ ] Win two sets → console shows **Match decided** → click **Complete match**.
+- [ ] If a set is level at the end of regulation, it is recorded as a **Draw**
+      and awards no set point; there is no extra-time or sudden-death prompt.
+- [ ] If the first two sets are level (`0-0` or `1-1`), the console offers
+      **Start set 3** labelled as the deciding set.
+- [ ] A third set is not offered when one team has won both regulation sets.
+- [ ] Win two sets, or win the deciding set, → console shows **Match decided** →
+      click **Complete match**.
+- [ ] A deciding set that is itself level ends the match as a draw; the
+      **Override winner** flow records the official result.
 - [ ] The winner advances in the bracket; if this was the final, the tournament
       completes and the result is audited/notified.
-- [ ] After a red card, the next set's lineup panel rejects the disqualified
-      jersey; replace that player with another squad number.
 
 ### Statistics
 
-- [ ] The console's **Player stats (by jersey)** table shows a row per jersey
-      and columns for Pts, Hit, Out, Catch, Rev, Card, Delay.
-- [ ] A hit credits the thrower with a point and a hit; the victim gets an out.
-- [ ] A catch credits the catcher with a catch and the thrower with an out.
-- [ ] A revival credits the returning jersey with a revive.
-- [ ] The all-out bonus appears on the team-level row, separate from player
-      rows.
-- [ ] **Undo last event** voids the latest action and removes its stats.
+- [ ] The console shows only team-level points; there is no per-player or
+      per-jersey stats table and no player point attribution.
+- [ ] Every **Team point +1** tap adds exactly one point to that team.
+- [ ] **Undo last event** voids the latest point and restores the total.
 
 ### Corrections / emergency
 
 - [ ] Undo works mid-match while the event queue is drained.
 - [ ] **Override winner** requires a reason of at least 5 characters and
       records the result through the bracket pipeline.
-- [ ] The recent-events ticker shows toss, lineups, sets, hits, catches, cards,
-      revivals, time events and voids without scorer identity.
+- [ ] The recent-events ticker shows sets, team points, time events and voids
+      without scorer identity.
 
 ## 4. Reader surfaces
 
 - [ ] Public tournament page (`/public/tournaments/<id>`) shows the live card
       for the ongoing match.
 - [ ] School portal (`/school/...` → match) shows the same card.
-- [ ] Card shows: phase badge (In play / Extra time / Sudden death / Final),
-      current points, set wins, set clock, active jersey chips, out jersey chips
-      (struck through), and the revival banner while the window is open.
-- [ ] Set history shows regulation, extra-time and sudden-death states.
-- [ ] Player stats are grouped by team and jersey.
-- [ ] Completed match shows the winner and set-win label.
+- [ ] Card shows: phase badge (In play / Clock stopped / Final), current set
+      points, set wins, the 1:30 clock and the three balls per team.
+- [ ] There are no player chips, player selections, jersey numbers or
+      player-level statistics anywhere on the card.
+- [ ] Set history shows completed sets, draws, and the deciding set.
+- [ ] Completed match shows the winner and set-win label, or **Match drawn**.
+- [ ] No team colours are used on the card.
 - [ ] No scorer name, email, seed, strong-team flag or internal key appears in
       the reader payload or the card.
 
